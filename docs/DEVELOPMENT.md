@@ -265,3 +265,5 @@
 - 成品包必须带运行时依赖，不要求用户安装 GCC、CMake、MSYS2 或自行编译。用户只需配置管理令牌并运行启动脚本。
 
 - 成品包另外包含 CA 根证书 bundle，并由启动脚本设置 `CURL_CA_BUNDLE`，避免目标机器没有开发环境证书目录时 HTTPS 请求因找不到 CA 文件而失败。
+
+- Windows runner 的 MINGW64 软件源当前无法通过包数据库解析 `mingw-w64-x86_64-libmicrohttpd`，构建流程改为下载固定版本归档并校验 SHA-256 后通过 pacman 安装；其余依赖仍由签名软件源解析。
