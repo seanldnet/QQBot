@@ -403,9 +403,15 @@ static enum MHD_Result handler(void *cls, struct MHD_Connection *c, const char *
             free(response); free(event_type); free(event_data);
             return json_reply(c, 400, "{\"error\":\"invalid_webhook_payload\"}");
         }
-        if (status == 200 && event_type && event_data) store_qq_event(event_type, event_data);
+        if (status == 200 && event_type && event_data) {
+            store_qq_event(event_type, event_data);
+            pthread_mutex_lock(&g_app.lock);
+            if (strcmp(g_app.connection_mode, "webhook") == 0)
+                snprintf(g_app.connection_state, sizeof(g_app.connection_state), "webhook_active");
+            pthread_mutex_unlock(&g_app.lock);
+        }
         free(event_type); free(event_data);
-        if (status == 200) { pthread_mutex_lock(&g_app.lock); if (strcmp(g_app.connection_mode, "webhook") == 0) snprintf(g_app.connection_state, sizeof(g_app.connection_state), "webhook_active"); pthread_mutex_unlock(&g_app.lock); log_line("INFO", "QQ Webhook payload accepted; signature/challenge processed"); }
+        if (status == 200) log_line("INFO", "QQ Webhook payload accepted; signature/challenge processed");
         enum MHD_Result result = json_reply(c, status, response);
         free(response);
         return result;
