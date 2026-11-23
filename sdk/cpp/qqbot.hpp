@@ -209,5 +209,34 @@ public:
         if(out){response.assign(out);qqb_free_string(out);}return rc;
     }
 
+
+    int get_group_info(const std::string& group,std::string& response,long& status) const {
+        char*out=nullptr;int rc=qqb_get_group_info(p_,group.c_str(),&out,&status);
+        if(out){response.assign(out);qqb_free_string(out);}return rc;
+    }
+    int get_group_bot_state(const std::string& group,std::string& response,long& status) const {
+        char*out=nullptr;int rc=qqb_get_group_bot_state(p_,group.c_str(),&out,&status);
+        if(out){response.assign(out);qqb_free_string(out);}return rc;
+    }
+    int get_group_mute_state(const std::string& group,std::string& response,long& status) const {
+        char*out=nullptr;int rc=qqb_get_group_mute_state(p_,group.c_str(),&out,&status);
+        if(out){response.assign(out);qqb_free_string(out);}return rc;
+    }
+    int set_group_member_mutes(const std::string& group,const std::string& body,std::string& response,long& status) const {
+        char*out=nullptr;int rc=qqb_set_group_member_mutes(p_,group.c_str(),body.c_str(),&out,&status);
+        if(out){response.assign(out);qqb_free_string(out);}return rc;
+    }
+    int list_group_members(const std::string& group,const std::string& cursor,unsigned int limit,std::string& response,long& status) const {
+        char*out=nullptr;int rc=qqb_list_group_members(p_,group.c_str(),cursor.empty()?nullptr:cursor.c_str(),limit,&out,&status);
+        if(out){response.assign(out);qqb_free_string(out);}return rc;
+    }
+    int get_group_member(const std::string& group,const std::string& member,std::string& response,long& status) const {
+        char*out=nullptr;int rc=qqb_get_group_member(p_,group.c_str(),member.c_str(),&out,&status);
+        if(out){response.assign(out);qqb_free_string(out);}return rc;
+    }
+    int batch_remove_group_members(const std::string& group,const std::string& body,std::string& response,long& status) const {
+        char*out=nullptr;int rc=qqb_batch_remove_group_members(p_,group.c_str(),body.c_str(),&out,&status);
+        if(out){response.assign(out);qqb_free_string(out);}return rc;
+    }
 };
 }
