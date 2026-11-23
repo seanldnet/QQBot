@@ -212,3 +212,11 @@
 - [ ] 实现 delivery worker、租约 claim、指数退避、dead-letter 和单插件故障隔离。
 - [ ] 完成 Windows Winsock 适配和 Windows 构建验证。
 - [ ] 只有完整 SSRF 防护通过后才允许实际 HTTP callback。
+
+
+## Callback DNS 跨平台适配
+
+- [x] 增加 Windows Winsock2/WS2TCPIP 条件编译与初始化/清理路径。
+- [x] CMake 与 Makefile 增加 Windows `ws2_32` 链接。
+- [ ] 在 Windows MSVC 与 MinGW 环境分别构建并运行 callback security tests。
+- [ ] 接入 callback_url 写入校验，再实现 DNS pinning 与安全 HTTP worker；完成前禁止实际出站投递。
