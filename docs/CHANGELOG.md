@@ -46,3 +46,13 @@
 - 策略列表分页 cursor 做 URL 编码，limit 固定 50；执行接口由 SDK 发送空 JSON object。
 - 具体请求字段、策略数量上限、群绑定限制、白名单号码限制和执行时效来自第三方维护 fork 的交叉核验，官方自动生成页面尚待逐项复核，不纳入 verified endpoint 统计。
 - CI 将由本批代码提交触发；Windows DLL、易语言 IDE 和 QQ 实机权限测试未执行。
+
+
+## 2026-11-23 — QQ 群事件模型与归一化解析器
+
+- 新增 `src/qq/events.h`、`src/qq/events.c`：内部函数 `qq_event_normalize` 将 Gateway 事件类型与内层 JSON payload 转为统一插件事件 JSON；支持四种群管理事件和 `GROUP_AT_MESSAGE_CREATE`，拒绝未知事件/缺少必要字段，完整保留 `raw_event`。
+- 新增 `tests/test_event_parser.c`：覆盖群机器人加入事件、群 @ 消息、msg_id 映射、raw_event 保留、未知事件拒绝和必需字段校验。
+- 修改 `CMakeLists.txt`、`Makefile`：宿主编译纳入 events.c；增加 Make `test` 与 CTest `qq_group_event_parser`。
+- 新增 `sdk/group-events.md`；更新 `sdk/event-schema.md`、`sdk/e-language/event-fields.md`，同步 C/C++/易语言插件事件字段契约。
+- 官方核验：腾讯 bot-docs 群管理事件页确认四种事件均为 Intent `1<<25`；消息事件页确认 `GROUP_AT_MESSAGE_CREATE` 同为 `1<<25`，群作者字段为 `author.member_openid`，消息 ID 为 `id`，timestamp 为 RFC3339。全量群消息事件仍标注私域/暂不开放。
+- 验证状态：新增 Make/CMake 测试目标，尚未运行本轮 CI；WebSocket transport、Gateway 心跳/重连、插件分发/回调、msg_id 持久化去重和 QQ 实机事件接收仍未实现。
