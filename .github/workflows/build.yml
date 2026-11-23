@@ -63,8 +63,10 @@ jobs:
       - name: Refresh package databases and install native dependencies
         run: |
           pacman -Syyu --noconfirm
-          pacman -S --needed --noconfirm mingw-w64-x86_64-gcc mingw-w64-x86_64-cmake mingw-w64-x86_64-ninja mingw-w64-x86_64-pkgconf mingw-w64-x86_64-libmicrohttpd mingw-w64-x86_64-curl mingw-w64-x86_64-sqlite3 mingw-w64-x86_64-cjson mingw-w64-x86_64-openssl zip ca-certificates
-          pacman -Ss libmicrohttpd
+          pacman -S --needed --noconfirm mingw-w64-x86_64-gcc mingw-w64-x86_64-cmake mingw-w64-x86_64-ninja mingw-w64-x86_64-pkgconf mingw-w64-x86_64-gnutls mingw-w64-x86_64-curl mingw-w64-x86_64-sqlite3 mingw-w64-x86_64-cjson mingw-w64-x86_64-openssl zip ca-certificates
+          curl -fL https://mirror.msys2.org/mingw/mingw64/mingw-w64-x86_64-libmicrohttpd-1.0.10-1-any.pkg.tar.zst -o libmicrohttpd.pkg.tar.zst
+          echo "560a836a918d7bdc5cf5f8a032a43d0700cf1dc7140097e1a1ba1a971b760095  libmicrohttpd.pkg.tar.zst" | sha256sum -c -
+          pacman -U --needed --noconfirm ./libmicrohttpd.pkg.tar.zst
       - name: Configure Windows Server 2012 API baseline
         run: cmake -S . -B build-win -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=stage -DCMAKE_C_FLAGS="-D_WIN32_WINNT=0x0602 -DWINVER=0x0602"
       - name: Build Windows host and SDK
