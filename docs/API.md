@@ -4,7 +4,7 @@
 
 ## 1. 通用约定
 
-- 管理面板与插件 API 使用 JSON；请求/响应使用 UTF-8。
+- 管理面板与插件 API 使用 JSON；请求/响应使用 UTF-8。管理面板正式会话与 CSRF 尚未完成；当前插件管理 API 临时使用 QQBOT_ADMIN_TOKEN Bearer 鉴权。
 - 所有接口设置请求体大小上限、连接/读取超时和统一错误结构。
 - 管理接口必须通过会话认证与 CSRF 防护；插件接口使用插件 ID + 高熵随机 token 的 SHA-256 摘要及常量时间比较鉴权；插件创建/启停/删除要求 `QQBOT_ADMIN_TOKEN`（至少 24 字符）作为 Bearer 管理令牌。
 - 凭据仅在创建/轮换时展示一次；日志禁止记录完整 token、AppSecret、Authorization 头。
