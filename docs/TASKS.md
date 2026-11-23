@@ -332,3 +332,12 @@
 
 - [x] 将错误提示中的 shell 变量也改为 `$$p`，避免 Make 提前展开导致错误输出为空。
 - [ ] 完整 CI run 45188880579 的 Linux check-deps 仍失败；本次修复提交 81a6624 触发新 CI，待验证。
+
+
+## 2026-11-23 — 登录与消息日志测试包构建验证结果
+
+- [x] GitHub Actions run 45189464000 三个 job 全部成功：Linux build、Windows callback-security、Windows full-build。
+- [x] Linux Make/CMake 构建、Make unit tests、CTest 成功。
+- [x] Windows x64 宿主与 SDK DLL 构建、CTest、DLL 依赖闭包扫描、PE 子系统基线审计成功。
+- [x] Windows 一键运行 ZIP 已生成并下载核验：47 个文件，ZIP CRC 检查通过，包含 qqbot.exe、SDK DLL、启动 BAT、管理页面与 admin-token.txt。
+- [ ] 使用真实 QQ AppID/AppSecret 完成 WSS READY、群 @ 消息、C2C 单聊和 Webhook 实机验收。
