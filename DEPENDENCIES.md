@@ -22,4 +22,4 @@ make
 
 默认监听 `127.0.0.1:8080`。可通过 `QQBOT_BIND` 显式指定 IPv4 监听地址。可通过 `QQBOT_PORT` 调整端口，`QQBOT_API_BASE` 调整 API 根地址，`QQBOT_TOKEN_BASE` 单独覆盖令牌服务根地址。生产部署应放在 HTTPS 反向代理后，并限制管理端网络访问。
 
-当前已包含 Webhook Ed25519 challenge 与事件验签模块；尚未加入 libwebsockets 依赖。WebSocket、插件 API、QQ 消息发送/自动回复和端到端测试仍未完成，不应视为完整版本。
+仓库包含 GitHub Actions 自动构建工作流（Make + CMake）。当前已包含 Webhook Ed25519 challenge 与事件验签模块；尚未加入 libwebsockets 依赖。WebSocket、插件 API、QQ 消息发送/自动回复和端到端测试仍未完成，不应视为完整版本。
