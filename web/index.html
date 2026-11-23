@@ -11,7 +11,7 @@ async function loadLogs() {
     const rows = await response.json();
     document.querySelector('#logs').textContent = rows.slice().reverse()
       .map(x => '[' + x.created_at + '] [' + x.level + '] [' + x.component + '] ' + x.message)
-      .join('\\n') || '暂无日志';
+      .join('\n') || '暂无日志';
   } catch (error) {
     document.querySelector('#logs').textContent = '日志读取失败：' + error.message;
   }
@@ -21,9 +21,9 @@ async function loadStatus() {
     const response = await fetch('/api/v1/status');
     const data = await response.json();
     document.querySelector('#runtime').textContent =
-      '凭据认证：' + (data.authenticated ? '已获取 access_token' : '未登录') + '\\n' +
-      '接入方式：' + data.mode + '\\n' +
-      '连接状态：' + data.connection_state + '\\n' +
+      '凭据认证：' + (data.authenticated ? '已获取 access_token' : '未登录') + '\n' +
+      '接入方式：' + data.mode + '\n' +
+      '连接状态：' + data.connection_state + '\n' +
       '传输就绪：' + (data.transport_ready ? '是' : '否（等待连接或平台事件）');
   } catch (error) {
     document.querySelector('#runtime').textContent = '状态读取失败：' + error.message;
