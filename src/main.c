@@ -18,8 +18,8 @@
 
 #define DEFAULT_PORT 8080
 #define MAX_BODY (1024U * 1024U)
-#define API_BASE_DEFAULT "https://api.bot.qq.com"
-#define TOKEN_PATH "/app/getAppAccessToken"
+#define API_BASE_DEFAULT "https://api.sgroup.qq.com"
+#define TOKEN_URL_DEFAULT "https://bots.qq.com/app/getAppAccessToken"
 
 typedef struct { char *data; size_t len; } buffer_t;
 typedef struct {
@@ -183,7 +183,7 @@ static void request_completed(void *cls, struct MHD_Connection *c, void **con_cl
 int main(void) {
     memset(&g_app, 0, sizeof(g_app)); pthread_mutex_init(&g_app.lock, NULL);
     snprintf(g_app.api_base, sizeof(g_app.api_base), "%s", getenv("QQBOT_API_BASE") ? getenv("QQBOT_API_BASE") : API_BASE_DEFAULT);
-    snprintf(g_app.token_url, sizeof(g_app.token_url), "%s%s", getenv("QQBOT_TOKEN_BASE") ? getenv("QQBOT_TOKEN_BASE") : g_app.api_base, TOKEN_PATH);
+    snprintf(g_app.token_url, sizeof(g_app.token_url), "%s", getenv("QQBOT_TOKEN_URL") ? getenv("QQBOT_TOKEN_URL") : TOKEN_URL_DEFAULT);
     if (curl_global_init(CURL_GLOBAL_DEFAULT) != CURLE_OK) return 1;
     if (mkdir("data", 0700) != 0 && access("data", F_OK) != 0) { perror("mkdir data"); return 1; }
     if (db_init() != 0) return 1;
