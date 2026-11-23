@@ -160,7 +160,7 @@ public sealed class MainForm : AntdUI.Window
         }
         catch (Exception ex)
         {
-            AntdUI.Message.error(ex.Message, "宿主启动失败");
+            AntdUI.Message.error(this, ex.Message);
         }
     }
 
@@ -168,7 +168,7 @@ public sealed class MainForm : AntdUI.Window
     {
         if (string.IsNullOrWhiteSpace(_appId.Text) || string.IsNullOrWhiteSpace(_appSecret.Text))
         {
-            AntdUI.Message.warning("请填写 AppID 和 AppSecret。", "缺少登录信息");
+            AntdUI.Message.warn(this, "请填写 AppID 和 AppSecret。");
             return;
         }
         _loginButton.Loading = true;
@@ -188,11 +188,11 @@ public sealed class MainForm : AntdUI.Window
             _content.Visible = true;
             _refreshTimer.Start();
             await RefreshDataAsync();
-            AntdUI.Message.success("机器人登录请求已提交。", "QQBot");
+            AntdUI.Message.success(this, "机器人登录请求已提交。");
         }
         catch (Exception ex)
         {
-            AntdUI.Message.error(ex.Message, "登录失败");
+            AntdUI.Message.error(this, ex.Message);
         }
         finally
         {
