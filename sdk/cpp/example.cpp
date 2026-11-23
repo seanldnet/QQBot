@@ -22,11 +22,11 @@ int main() {
             bot.list_guild_members("GUILD_ID", "0", 100, response, status);
             bot.get_guild_member("GUILD_ID", "USER_ID", response, status);
             bot.list_guild_roles("GUILD_ID", response, status);
-            bot.create_guild_role("GUILD_ID", "{\\"name\\":\\"member\\"}", response, status);
+            bot.create_guild_role("GUILD_ID", "{\"name\":\"member\"}", response, status);
             bot.mute_guild("GUILD_ID", "", "0", response, status);
             bot.mute_guild_member("GUILD_ID", "USER_ID", "", "60", response, status);
             bot.list_channel_schedules("CHANNEL_ID", "", response, status);
-            bot.create_channel_schedule("CHANNEL_ID", "{\\"schedule\\":{}}", response, status);
+            bot.create_channel_schedule("CHANNEL_ID", "{\"schedule\":{}}", response, status);
             bot.audio_mic_up("VOICE_CHANNEL_ID", response, status);
         }
         // Passive message replies should include event_id and/or msg_id from the event.
