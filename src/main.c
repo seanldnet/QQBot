@@ -192,7 +192,7 @@ static enum MHD_Result plugin_proxy(struct MHD_Connection *c,const char *plugin_
     if(!cJSON_IsString(m)||!cJSON_IsString(p)||p->valuestring[0]!='/'||
        (strcmp(m->valuestring,"GET")&&strcmp(m->valuestring,"POST")&&strcmp(m->valuestring,"PUT")&&strcmp(m->valuestring,"PATCH")&&strcmp(m->valuestring,"DELETE"))||
        strstr(p->valuestring,"..")||strstr(p->valuestring,"://")||strchr(p->valuestring,'\r')||strchr(p->valuestring,'\n')||
-       (b&&!cJSON_IsObject(b)&&!cJSON_IsArray(b))){cJSON_Delete(j);return json_reply(c,400,"{\"error\":\"invalid_qq_api_request\"}");}
+       (b&&!cJSON_IsNull(b)&&!cJSON_IsObject(b)&&!cJSON_IsArray(b))){cJSON_Delete(j);return json_reply(c,400,"{\"error\":\"invalid_qq_api_request\"}");}
     if(ensure_token()!=0){cJSON_Delete(j);return json_reply(c,502,"{\"error\":\"qq_token_unavailable\"}");}
     char token_copy[sizeof(g_app.access_token)]={0};pthread_mutex_lock(&g_app.lock);snprintf(token_copy,sizeof(token_copy),"%s",g_app.access_token);pthread_mutex_unlock(&g_app.lock);
     char url[1024];if(strlen(g_app.api_base)+strlen(p->valuestring)+1>=sizeof(url)){OPENSSL_cleanse(token_copy,sizeof(token_copy));cJSON_Delete(j);return json_reply(c,414,"{\"error\":\"qq_api_path_too_long\"}");}
@@ -206,7 +206,7 @@ static enum MHD_Result plugin_proxy(struct MHD_Connection *c,const char *plugin_
       curl_easy_setopt(curl,CURLOPT_CONNECTTIMEOUT,5L);curl_easy_setopt(curl,CURLOPT_TIMEOUT,10L);curl_easy_setopt(curl,CURLOPT_FOLLOWLOCATION,0L);
       curl_easy_setopt(curl,CURLOPT_SSL_VERIFYPEER,1L);curl_easy_setopt(curl,CURLOPT_SSL_VERIFYHOST,2L);curl_easy_setopt(curl,CURLOPT_NOSIGNAL,1L);
       cr=curl_easy_perform(curl);curl_easy_getinfo(curl,CURLINFO_RESPONSE_CODE,&status);}
-    curl_easy_cleanup(curl);curl_slist_free_all(headers);free(payload);cJSON_Delete(j);
+    if(curl)curl_easy_cleanup(curl);curl_slist_free_all(headers);free(payload);cJSON_Delete(j);
     if(cr!=CURLE_OK){free(response.data);log_line("ERROR","Plugin QQ API proxy transport failed");return json_reply(c,502,"{\"error\":\"qq_api_transport_failed\"}");}
     if(!response.data)response.data=strdup("{}");
     enum MHD_Result ret=reply(c,(unsigned int)(status>=100&&status<=599?status:502),response.data?response.data:"{}","application/json; charset=utf-8");
@@ -245,6 +245,25 @@ static enum MHD_Result handler(void *cls, struct MHD_Connection *c, const char *
     if (strcmp(method,"GET")==0 && strcmp(url,"/api/v1/plugins")==0) return plugin_list(c);
     if (strncmp(url,"/api/v1/plugins/",16)==0) {
         const char *id=url+16; const char *slash=strchr(id,'/');
+        if(slash && strcmp(method,"DELETE")==0 && slash[1]!=0 && admin_authorized(c)) {
+            size_t idlen=(size_t)(slash-id);if(idlen==0||idlen>=128)return json_reply(c,404,"{\"error\":\"plugin_not_found\"}");
+            char plugin_id[128];memcpy(plugin_id,id,idlen);plugin_id[idlen]=0;
+            pthread_mutex_lock(&g_app.lock);sqlite3_stmt *st=NULL;int rc=sqlite3_prepare_v2(g_app.db,"DELETE FROM plugins WHERE id=?1",-1,&st,NULL);
+            if(rc==SQLITE_OK){sqlite3_bind_text(st,1,plugin_id,-1,SQLITE_TRANSIENT);rc=sqlite3_step(st);}int changed=sqlite3_changes(g_app.db);sqlite3_finalize(st);pthread_mutex_unlock(&g_app.lock);
+            if(rc!=SQLITE_DONE||!changed)return json_reply(c,404,"{\"error\":\"plugin_not_found\"}");
+            return json_reply(c,200,"{\"ok\":true}");
+        }
+        if(slash && strcmp(method,"PATCH")==0 && slash[1]!=0) {
+            if(!admin_authorized(c))return json_reply(c,401,"{\"error\":\"admin_auth_required\"}");
+            size_t idlen=(size_t)(slash-id);if(idlen==0||idlen>=128)return json_reply(c,404,"{\"error\":\"plugin_not_found\"}");
+            char plugin_id[128];memcpy(plugin_id,id,idlen);plugin_id[idlen]=0;
+            cJSON *patch=cJSON_Parse(q->body?q->body:"");cJSON *enabled=patch?cJSON_GetObjectItemCaseSensitive(patch,"enabled"):NULL;
+            if(!cJSON_IsBool(enabled)){cJSON_Delete(patch);return json_reply(c,400,"{\"error\":\"enabled_boolean_required\"}");}
+            pthread_mutex_lock(&g_app.lock);sqlite3_stmt *st=NULL;int rc=sqlite3_prepare_v2(g_app.db,"UPDATE plugins SET enabled=?1 WHERE id=?2",-1,&st,NULL);
+            if(rc==SQLITE_OK){sqlite3_bind_int(st,1,cJSON_IsTrue(enabled)?1:0);sqlite3_bind_text(st,2,plugin_id,-1,SQLITE_TRANSIENT);rc=sqlite3_step(st);}int changed=sqlite3_changes(g_app.db);sqlite3_finalize(st);pthread_mutex_unlock(&g_app.lock);cJSON_Delete(patch);
+            if(rc!=SQLITE_DONE||!changed)return json_reply(c,404,"{\"error\":\"plugin_not_found\"}");
+            return json_reply(c,200,"{\"ok\":true}");
+        }
         if(slash && strcmp(slash,"/qq-api")==0 && strcmp(method,"POST")==0) {
             size_t idlen=(size_t)(slash-id); if(idlen==0||idlen>=128)return json_reply(c,404,"{\"error\":\"plugin_not_found\"}");
             char plugin_id[128];memcpy(plugin_id,id,idlen);plugin_id[idlen]=0;
