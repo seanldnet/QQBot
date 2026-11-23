@@ -1,6 +1,6 @@
 # 宿主 HTTP API 与插件协议
 
-> 本文件是接口契约基线。具体路由、字段、状态码在实现前需固定，并在代码变更时同步更新。当前尚未实现任何业务路由。
+> 本文件是宿主与插件接口契约。标注“首版已实现”的路由已写入代码，但仍须通过编译、集成和安全测试后才能视为已验证可用。
 
 ## 1. 通用约定
 
@@ -22,10 +22,10 @@
 | POST | `/api/v1/plugins` | 管理员注册插件；注册返回一次性插件 Token（需 Authorization: Bearer 管理令牌） |
 | PATCH/DELETE | `/api/v1/plugins/{id}` | 管理员启停/删除插件（PATCH body: `{"enabled":true}`） |
 | POST | `/api/v1/plugins/{id}/messages` | 插件发送宿主标准消息（待实现） |
-| POST | `/api/v1/plugins/{id}/qq-api` | SDK 官方 API 代理：插件 ID + Token 鉴权，JSON `{method,path,body}`（SDK 已按此契约编写，宿主路由待实现） |
+| POST | `/api/v1/plugins/{id}/qq-api` | SDK 官方 API 代理：插件 ID + Token 鉴权，JSON `{method,path,body}`（首版已实现，未实测） |
 | POST | `/webhook/qq` | QQ 官方 Webhook 回调；op=13 challenge、op=0 Ed25519 验签与 op=12 ACK（首版已实现） |
 
-其中 `/api/v1/auth/login`、`/api/v1/status`、`/api/v1/logs` 和 `/webhook/qq` 已有首版实现；插件列表/注册/启停/删除和 `/api/v1/plugins/{id}/qq-api` 官方 API 代理已有首版实现；管理操作通过环境变量 `QQBOT_ADMIN_TOKEN` 做 Bearer 鉴权。插件事件回调分发、完整管理会话认证、插件消息抽象 API 和实时流尚未实现。SDK 当前通过该代理契约调用。
+其中 `/api/v1/auth/login`、`/api/v1/status`、`/api/v1/logs` 和 `/webhook/qq` 已有首版实现；插件列表/注册/启停/删除和 `/api/v1/plugins/{id}/qq-api` 官方 API 代理已有首版实现；管理操作通过环境变量 `QQBOT_ADMIN_TOKEN` 做 Bearer 鉴权。插件事件回调分发、完整管理会话认证、插件消息抽象 API 和实时流尚未实现。SDK 当前通过该代理路由调用；尚未执行端到端测试。
 
 ### 2.1 SDK 官方 API 代理请求
 
