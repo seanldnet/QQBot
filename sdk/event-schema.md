@@ -11,10 +11,9 @@
   "chat_id": "GROUP_OPENID",
   "user_id": "USER_OPENID",
   "content": "hello",
-  "event_id": "official-event-id",
-  "msg_id": "official-message-id",
-  "msg_seq": 1,
-  "timestamp": "2026-11-23T00:00:00Z",
+  "event_id": null,
+  "msg_id": null,
+  "msg_seq": null,
   "raw_event": {}
 }
 
@@ -25,8 +24,12 @@
 - chat_id：群场景使用 group_openid，单聊使用 user_openid，频道场景使用 channel_id。
 - user_id：对应场景中的用户 openid；不存在时为 null。
 - content：从官方消息事件中提取的文本内容；媒体/富文本仍完整保留于 raw_event。
-- event_id、msg_id、msg_seq：被动回复所需上下文；有官方值时原样传递，缺失时为 null。
+- event_id、msg_id、msg_seq：被动回复所需上下文；只有官方事件明确提供时才填充，缺失时为 null。
 - raw_event：官方原始 JSON 对象，供插件访问未标准化字段。
+
+## QQ 群事件实现状态
+
+详见 [group-events.md](group-events.md)。当前 C11 内部解析器支持四种群管理事件和 GROUP_AT_MESSAGE_CREATE；该解析器只完成 JSON 归一化，不代表 Gateway/WebSocket 接收或插件 HTTP 投递已实现。
 
 ## 兼容原则
 
