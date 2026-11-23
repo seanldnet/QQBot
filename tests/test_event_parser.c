@@ -40,6 +40,17 @@ int main(void) {
                       "raw event is retained");
     free(json); json = NULL;
 
+    const char *c2c = "{\"author\":{\"user_openid\":\"user-9\"},\"content\":\"private hello\",\"id\":\"c2c-1\",\"timestamp\":\"2026-11-23T12:00:00+08:00\"}";
+    failures += check(qq_event_normalize("C2C_MESSAGE_CREATE", c2c, &json) == 0,
+                      "normalize C2C_MESSAGE_CREATE");
+    failures += check(json && strstr(json, "\"chat_type\":\"c2c\"") != NULL,
+                      "C2C event uses c2c chat type");
+    failures += check(json && strstr(json, "\"user_id\":\"user-9\"") != NULL,
+                      "C2C sender is mapped to user_id");
+    failures += check(json && strstr(json, "\"content\":\"private hello\"") != NULL,
+                      "C2C message content is normalized");
+    free(json); json = NULL;
+
     failures += check(qq_event_normalize("MESSAGE_CREATE", message, &json) == -2,
                       "unsupported event is rejected");
     failures += check(qq_event_normalize("GROUP_ADD_ROBOT", "{}", &json) == -1,
