@@ -1,0 +1,25 @@
+# 构建依赖
+
+当前首阶段服务端依赖：
+
+- C 编译器：支持 C11（GCC / Clang）
+- libmicrohttpd：HTTP 服务
+- libcurl：HTTPS 客户端
+- SQLite 3：持久化
+- cJSON：JSON 解析与生成
+- OpenSSL：安全内存清理；Webhook Ed25519 验签模块后续使用 EVP
+- POSIX pthreads
+
+Debian / Ubuntu 示例：
+
+```sh
+sudo apt-get update
+sudo apt-get install -y build-essential cmake pkg-config libmicrohttpd-dev libcurl4-openssl-dev libsqlite3-dev libcjson-dev libssl-dev
+make check-deps
+make
+./build/qqbot
+```
+
+默认监听 `0.0.0.0:8080`。可通过 `QQBOT_PORT` 调整端口，`QQBOT_API_BASE` 调整 API 根地址，`QQBOT_TOKEN_BASE` 单独覆盖令牌服务根地址。生产部署应放在 HTTPS 反向代理后，并限制管理端网络访问。
+
+后续 WebSocket 阶段将增加 libwebsockets 依赖；当前首阶段尚未完成 WebSocket / Webhook / 插件 API 实现，不应视为完整版本。
