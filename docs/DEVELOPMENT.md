@@ -133,3 +133,14 @@
 - C ABI/C++/易语言类型化入口：25 条 endpoint；其余已登记路由可通过通用 `qqb_api_request` / `qqbot::Client::request` 调用。
 - 当前类型化范围：消息发送 4、频道管理 6、成员/身份组/禁言 8、日程/音频 7。
 - 易语言内容仍是 DLL ABI 声明映射文档，未声称已在易语言 IDE 编译验证。
+
+
+## 2026-11-23 — 第六批：成员、身份组与子频道权限类型化 SDK
+
+- 新增 8 个独立 C ABI 导出：身份组成员分页、踢出成员、身份组成员添加/移除、成员权限查询/修改、身份组权限查询/修改。
+- 新增 8 个 C++ `qqbot::Client` 对应方法，响应缓冲区统一复制到 `std::string` 后释放。
+- 易语言 DLL 映射同步列出全部导出及参数语义，统一使用 `__stdcall` 与 `qqb_free_string`。
+- C 层对所有路径 ID 做安全字符校验，分页 limit 限制为 1–400；body 需为 JSON object；拒绝空/非法路径参数。
+- 官方 endpoint manifest 中对应 8 条路由补充 typed wrapper 映射。覆盖统计更新为 42 条已核验 endpoint 中 33 条具有三语言类型化入口；仍为增量清单，不代表全量 API。
+- 易语言 ABI 文档明确踢人权限、撤回天数、身份组 type 5 的 channel 参数及权限位图 add/remove 冲突语义。
+- 尚未执行本批次 CI、Windows DLL 实际加载、易语言 IDE 编译和 QQ 实机权限测试；不得将这些项目标记为已验证完成。
