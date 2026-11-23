@@ -167,3 +167,11 @@
 - 文件：`scripts/package-windows.sh`。原因：Windows full-build 编译、CTest 3/3、运行目录安装和 CA bundle 下载均通过，但递归 PE 导入扫描发现 `libgnutls-30.dll` 依赖 `ncrypt.dll`，扫描器未将其识别为 Windows 系统组件。
 - 行为变化：将 `ncrypt.dll` 加入系统 DLL 白名单；该 DLL 由 Windows 提供，不复制进包；未知非系统 DLL 仍触发失败，保持完整性检查。
 - 验证：修复提交 `1fb5e24` 已提交；新 CI 尚未完成，ZIP/Artifact 尚未确认生成。Server 2012–2026 实机矩阵未执行。
+
+
+## 2026-11-23 — Windows PE 子系统版本基线审计
+
+- 新增 `scripts/check-windows-pe-baseline.sh`：扫描指定运行目录中的 EXE/DLL，检查 PE 格式为 x64，并验证 SubsystemVersion 不高于 6.2；缺少元数据、非 x64 或超出基线均失败关闭。
+- 修改 `.github/workflows/build.yml`：在创建 Windows 一键运行 ZIP 前执行 PE 基线审计，阻止超出目标子系统标记的文件进入发行包。
+- 对当前已生成 ZIP 的离线检查结果：宿主和大部分依赖标记 5.2，libmicrohttpd 标记 6.0；未发现高于 6.2 的 PE 子系统标记。
+- 验证边界：本次离线检查不是 Server 2012 实机测试，也不能证明依赖 DLL 的所有导入 API 均受 Server 2012 支持；新的 CI 将负责验证脚本与流水线接线。
