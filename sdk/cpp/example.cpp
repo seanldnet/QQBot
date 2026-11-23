@@ -10,7 +10,7 @@ int main() {
         // Generic access: this same method exposes every officially documented REST route.
         int rc = bot.request("GET", "/users/@me", "", response, status);
         std::cout << "transport=" << rc << " http=" << status << "\n" << response << "\n";
-        // Passive replies should include event_id and/or msg_id. Use the C ABI overload
+        // Typed channel management helpers are available for verified routes.\n        // int list_rc = bot.list_channels("GUILD_ID", response, status);\n        // Passive replies should include event_id and/or msg_id. Use the C ABI overload
         // qqb_send_group_text when those fields are required by the event context.
     } catch (const std::exception& e) { std::cerr << e.what() << "\n"; return 1; }
 }
