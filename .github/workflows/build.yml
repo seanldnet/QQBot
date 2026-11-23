@@ -79,6 +79,13 @@ jobs:
           mkdir -p stage/data
           cp -r web stage/
           cp README.md DEPENDENCIES.md stage/
+          cat > stage/桌面版说明.txt <<'EOF'
+          QQBot 桌面版
+          双击 bin\QQBot.exe 启动原生 Windows 窗口。
+          输入 QQ 官方机器人 AppID / AppSecret，选择 WSS 或 Webhook 后登录。
+          登录后在消息日志页查看本机收到的事件与运行日志。
+          Webhook 模式仍需公网 HTTPS 回调地址并在 QQ 开放平台完成配置。
+          EOF
           openssl rand -hex 32 > stage/admin-token.txt
           mkdir -p stage/certs
           curl -fL --retry 3 --retry-all-errors https://curl.se/ca/cacert.pem -o stage/certs/ca-bundle.crt
@@ -105,7 +112,7 @@ jobs:
           EOF
       - name: Bundle and verify all non-system DLL dependencies
         run: |
-          bash scripts/package-windows.sh stage/bin stage/bin/qqbot.exe stage/bin/libqqbot_sdk.dll
+          bash scripts/package-windows.sh stage/bin stage/bin/qqbot-core.exe stage/bin/QQBot.exe stage/bin/libqqbot_sdk.dll
       - name: Audit PE subsystem baseline
         run: bash scripts/check-windows-pe-baseline.sh stage/bin 6 2
       - name: Create ready-to-run ZIP
