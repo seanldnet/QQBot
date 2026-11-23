@@ -254,3 +254,12 @@
 - 新增 `scripts/package-windows.sh`：递归检查 PE 导入表并收集 MinGW 运行时 DLL；遇到无法解析的非系统 DLL 时失败，避免产出缺少依赖的压缩包。
 - 成品包计划包含 `qqbot.exe`、SDK DLL、依赖 DLL、`web/`、启动 BAT、数据目录和随机生成的管理员 API Token 文件。
 - 当前构建流水线正在首次验证；未通过 Windows runner 前不能宣称 Server 2012–2026 全版本已验证。2012/2012 R2、2016、2019、2022、2025/2026 的实际系统矩阵测试仍需逐步补齐。
+
+
+## Windows 成品交付目标（新增验收约束）
+
+- 目标交付不是源码压缩包，而是 Windows x64 可直接解压启动的运行目录 ZIP，内含宿主 EXE、C ABI SDK DLL、运行时 DLL、默认 Web 页面、启动脚本和空数据目录。
+- Windows 完整构建必须编译宿主与 SDK，并运行全部 CTest；仅 callback DNS 单模块通过不算 Windows 宿主支持。
+- Windows Server 2012/2012 R2、2016、2019、2022、2025、2026 分别作为兼容目标。CI 编译成功只证明构建环境可编译，不代表每个 Server 版本均实机兼容。
+- 发布前必须验证 DLL 依赖闭包、TLS 1.2/证书链、SQLite 数据目录写入、端口监听、启动/退出；尤其需要对 Server 2012/2012 R2 做旧系统 API 与 TLS 验证。
+- 成品包必须带运行时依赖，不要求用户安装 GCC、CMake、MSYS2 或自行编译。用户只需配置管理令牌并运行启动脚本。
