@@ -30,10 +30,6 @@ target_link_libraries(qqbot PRIVATE PkgConfig::MHD PkgConfig::CURL PkgConfig::SQ
 if(WIN32)
   target_link_libraries(qqbot PRIVATE ws2_32)
   set_target_properties(qqbot PROPERTIES OUTPUT_NAME qqbot-core)
-  add_executable(QQBot WIN32 src/windows_gui.c)
-  target_compile_options(QQBot PRIVATE -Wall -Wextra -Wpedantic)
-  target_link_libraries(QQBot PRIVATE winhttp bcrypt comctl32)
-  install(TARGETS QQBot RUNTIME DESTINATION bin)
 endif()
 
 enable_testing()
