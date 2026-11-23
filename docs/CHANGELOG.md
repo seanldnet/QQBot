@@ -64,3 +64,14 @@
 - 中间提交的 C++ SDK 示例编译失败，原因是示例源码误写入字面量 `\\n`，导致换行符未生效；已修正为真实换行并重新触发 CI。
 - 失败发生在 C++ 示例编译步骤，Make/CMake/解析器测试因此被跳过；此前独立提交 run 45160609516 已通过 Make unit tests 与 CMake/CTest 步骤，但不包含后续 timestamp 增量。
 - 最终修复提交对应 run 45160886586 已成功：C++ SDK 示例、Make 构建、Make 单元测试、CMake 构建及 CTest 所在步骤均通过。该 run 覆盖 timestamp 解析代码与修复后的 C++ 示例。
+
+
+## 2026-11-23 — 验签 Webhook 事件持久化
+
+- 新增 `src/qq/event_queue.h/.c`：SQLite `event_inbox` 表、唯一 dedupe_key、pending 状态和入箱函数。
+- 新增 `tests/test_event_queue.c`：验证新事件插入、重复事件忽略、非法键拒绝和 pending 记录数；纳入 Make `make test` 与 CMake/CTest。
+- 扩展 `qq_webhook_process_ex`，op=0 签名验证通过后提取 `t` 和 `d`；保留旧 `qq_webhook_process` 兼容包装。
+- Webhook handler 只对已验签且能被群事件解析器识别的事件入箱；其他事件仍按原 ACK 逻辑处理。
+- 新增管理员 `GET /api/v1/events` 查询最近100条持久化事件。
+- 事件去重键：群消息为 event_type/group_openid/author_openid/msg_id；群管理事件为 event_type/group_openid/op_member_openid/timestamp。
+- 安全边界：事件仅持久化，不会向 callback_url 发起出站请求；插件投递 worker、逐插件 delivery 状态、重试与 SSRF 防护尚未实现。
