@@ -440,7 +440,8 @@
       "description": "指定身份组成员列表；返回 data 与 next。",
       "response": "{data: Member[], next: string}",
       "errors": "详见官方 OpenAPI 错误码总表；对应页面未逐项列出错误码。",
-      "sdk_access": "qqb_api_request / qqbot::Client::request / 易语言 qqb_api_request"
+      "sdk_access": "typed C ABI / C++ / 易语言 DLL wrapper",
+      "sdk_wrapper": "qqb_list_guild_role_members / qqbot::Client::list_guild_role_members / 易语言 qqb_list_guild_role_members"
     },
     {
       "id": "guild.member.get",
@@ -504,7 +505,8 @@
       "description": "踢出成员；成功 HTTP 204；不能移除管理员；可同步加入黑名单及撤回消息。",
       "response": "HTTP 204",
       "errors": "详见官方 OpenAPI 错误码总表；对应页面未逐项列出错误码。",
-      "sdk_access": "qqb_api_request / qqbot::Client::request / 易语言 qqb_api_request"
+      "sdk_access": "typed C ABI / C++ / 易语言 DLL wrapper",
+      "sdk_wrapper": "qqb_kick_guild_member / qqbot::Client::kick_guild_member / 易语言 qqb_kick_guild_member"
     },
     {
       "id": "guild.roles.list",
@@ -673,7 +675,8 @@
       "description": "将用户加入身份组。",
       "response": "HTTP 204",
       "errors": "详见官方 OpenAPI 错误码总表；对应页面未逐项列出错误码。",
-      "sdk_access": "qqb_api_request / qqbot::Client::request / 易语言 qqb_api_request"
+      "sdk_access": "typed C ABI / C++ / 易语言 DLL wrapper",
+      "sdk_wrapper": "qqb_add_guild_member_role / qqbot::Client::add_guild_member_role / 易语言 qqb_add_guild_member_role"
     },
     {
       "id": "guild.member_role.remove",
@@ -710,7 +713,8 @@
       "description": "将用户移出身份组。",
       "response": "HTTP 204",
       "errors": "详见官方 OpenAPI 错误码总表；对应页面未逐项列出错误码。",
-      "sdk_access": "qqb_api_request / qqbot::Client::request / 易语言 qqb_api_request"
+      "sdk_access": "typed C ABI / C++ / 易语言 DLL wrapper",
+      "sdk_wrapper": "qqb_remove_guild_member_role / qqbot::Client::remove_guild_member_role / 易语言 qqb_remove_guild_member_role"
     },
     {
       "id": "channel.member_permissions.get",
@@ -735,7 +739,8 @@
       "description": "获取子频道指定用户权限。",
       "response": "ChannelPermissions 对象",
       "errors": "详见官方 OpenAPI 错误码总表；对应页面未逐项列出错误码。",
-      "sdk_access": "qqb_api_request / qqbot::Client::request / 易语言 qqb_api_request"
+      "sdk_access": "typed C ABI / C++ / 易语言 DLL wrapper",
+      "sdk_wrapper": "qqb_get_channel_member_permissions / qqbot::Client::get_channel_member_permissions / 易语言 qqb_get_channel_member_permissions"
     },
     {
       "id": "channel.member_permissions.update",
@@ -773,7 +778,8 @@
       "description": "修改用户权限；add 授权、remove 撤权；同一位同时置 1 时按删除处理；不支持修改“可管理子频道”权限。",
       "response": "HTTP 204",
       "errors": "详见官方 OpenAPI 错误码总表；对应页面未逐项列出错误码。",
-      "sdk_access": "qqb_api_request / qqbot::Client::request / 易语言 qqb_api_request"
+      "sdk_access": "typed C ABI / C++ / 易语言 DLL wrapper",
+      "sdk_wrapper": "qqb_update_channel_member_permissions / qqbot::Client::update_channel_member_permissions / 易语言 qqb_update_channel_member_permissions"
     },
     {
       "id": "channel.role_permissions.get",
@@ -798,7 +804,8 @@
       "description": "获取子频道身份组权限。",
       "response": "ChannelPermissions 对象",
       "errors": "详见官方 OpenAPI 错误码总表；对应页面未逐项列出错误码。",
-      "sdk_access": "qqb_api_request / qqbot::Client::request / 易语言 qqb_api_request"
+      "sdk_access": "typed C ABI / C++ / 易语言 DLL wrapper",
+      "sdk_wrapper": "qqb_get_channel_role_permissions / qqbot::Client::get_channel_role_permissions / 易语言 qqb_get_channel_role_permissions"
     },
     {
       "id": "channel.role_permissions.update",
@@ -836,7 +843,8 @@
       "description": "修改身份组权限；add 授权、remove 撤权；同一位同时置 1 时按删除处理；不支持修改“可管理子频道”权限。",
       "response": "HTTP 204",
       "errors": "详见官方 OpenAPI 错误码总表；对应页面未逐项列出错误码。",
-      "sdk_access": "qqb_api_request / qqbot::Client::request / 易语言 qqb_api_request"
+      "sdk_access": "typed C ABI / C++ / 易语言 DLL wrapper",
+      "sdk_wrapper": "qqb_update_channel_role_permissions / qqbot::Client::update_channel_role_permissions / 易语言 qqb_update_channel_role_permissions"
     },
     {
       "id": "guild.mute.all",
@@ -1341,5 +1349,5 @@
       "sdk_access": "qqb_api_request / qqbot::Client::request / 易语言 qqb_api_request"
     }
   ],
-  "typed_wrapper_status": "25 of 42 verified endpoint routes have dedicated C ABI/C++/E-language typed wrappers (4 message-send, 6 guild/channel management, 8 member/role/mute, 5 schedule and 2 audio controls); all remaining routes remain accessible through the generic request API."
+  "typed_wrapper_status": "33 of 42 verified endpoint routes have dedicated C ABI/C++/E-language typed wrappers (4 message-send, 6 guild/channel management, 8 member/role/mute, 7 schedule/audio, and 8 member-role-permission controls); all remaining routes remain accessible through the generic request API."
 }
