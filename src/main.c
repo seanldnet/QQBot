@@ -215,6 +215,39 @@ static enum MHD_Result event_inbox_list(struct MHD_Connection *c) {
     free(encoded);
     return result;
 }
+static enum MHD_Result event_delivery_list(struct MHD_Connection *c) {
+    if (!admin_authorized(c)) return json_reply(c, 401, "{\\"error\\":\\"admin_auth_required\\"}");
+    cJSON *array = cJSON_CreateArray();
+    sqlite3_stmt *st = NULL;
+    if (!array) return json_reply(c, 500, "{\\"error\\":\\"out_of_memory\\"}");
+    pthread_mutex_lock(&g_app.lock);
+    int rc = sqlite3_prepare_v2(g_app.db,
+        "SELECT id,event_id,plugin_id,state,attempts,last_error,next_attempt_at,created_at "
+        "FROM event_deliveries ORDER BY id DESC LIMIT 200", -1, &st, NULL);
+    if (rc == SQLITE_OK) {
+        while (sqlite3_step(st) == SQLITE_ROW) {
+            cJSON *item = cJSON_CreateObject();
+            if (!item) break;
+            cJSON_AddNumberToObject(item, "id", sqlite3_column_int64(st, 0));
+            cJSON_AddNumberToObject(item, "event_id", sqlite3_column_int64(st, 1));
+            cJSON_AddStringToObject(item, "plugin_id", (const char *)sqlite3_column_text(st, 2));
+            cJSON_AddStringToObject(item, "state", (const char *)sqlite3_column_text(st, 3));
+            cJSON_AddNumberToObject(item, "attempts", sqlite3_column_int(st, 4));
+            cJSON_AddStringToObject(item, "last_error", (const char *)sqlite3_column_text(st, 5));
+            cJSON_AddStringToObject(item, "next_attempt_at", (const char *)sqlite3_column_text(st, 6));
+            cJSON_AddStringToObject(item, "created_at", (const char *)sqlite3_column_text(st, 7));
+            cJSON_AddItemToArray(array, item);
+        }
+    }
+    sqlite3_finalize(st);
+    pthread_mutex_unlock(&g_app.lock);
+    char *encoded = cJSON_PrintUnformatted(array);
+    cJSON_Delete(array);
+    if (!encoded) return json_reply(c, 500, "{\\"error\\":\\"json_encode_failed\\"}");
+    enum MHD_Result result = json_reply(c, rc == SQLITE_OK ? 200 : 500, encoded);
+    free(encoded);
+    return result;
+}
 static enum MHD_Result plugin_proxy(struct MHD_Connection *c,const char *plugin_id,const char *body) {
     const char *header_id=MHD_lookup_connection_value(c,MHD_HEADER_KIND,"X-Plugin-ID");
     const char *token=MHD_lookup_connection_value(c,MHD_HEADER_KIND,"X-Plugin-Token");
@@ -293,10 +326,13 @@ static enum MHD_Result handler(void *cls, struct MHD_Connection *c, const char *
                          cJSON_IsString(user) ? user->valuestring : "", primary);
                 pthread_mutex_lock(&g_app.lock);
                 int queued = qq_event_queue_enqueue(g_app.db, dedupe, event_type, normalized);
+                int fanout = queued >= 0 ? qq_event_queue_fanout(g_app.db, dedupe) : -1;
                 pthread_mutex_unlock(&g_app.lock);
                 if (queued > 0) log_line("INFO", "Verified QQ group event stored in persistent inbox");
                 else if (queued == 0) log_line("INFO", "Duplicate QQ group event ignored");
                 else log_line("ERROR", "Failed to persist verified QQ group event");
+                if (fanout > 0) log_line("INFO", "Created per-plugin pending event deliveries");
+                else if (fanout < 0) log_line("ERROR", "Failed to create per-plugin event deliveries");
                 cJSON_Delete(evt);
                 free(normalized);
             }
@@ -308,6 +344,7 @@ static enum MHD_Result handler(void *cls, struct MHD_Connection *c, const char *
         return result;
     }
     if (strcmp(method,"GET")==0 && strcmp(url,"/api/v1/events")==0) return event_inbox_list(c);
+    if (strcmp(method,"GET")==0 && strcmp(url,"/api/v1/event-deliveries")==0) return event_delivery_list(c);
     if (strcmp(method,"POST")==0 && strcmp(url,"/api/v1/plugins")==0) return plugin_register(c,q->body);
     if (strcmp(method,"GET")==0 && strcmp(url,"/api/v1/plugins")==0) return plugin_list(c);
     if (strncmp(url,"/api/v1/plugins/",16)==0) {
