@@ -273,3 +273,11 @@
 - [x] 将 `wldap32.dll` 加入系统 DLL 白名单，其他未知非系统 DLL 仍严格报错。
 - [ ] 重新跑 DLL 递归扫描、ZIP 生成及 Artifact 上传。
 - [ ] Windows Server 2012–2026 实机矩阵验证。
+
+
+## Windows 一键包状态更新（2026-11-23，CNG 依赖扫描）
+
+- [x] 确认最新失败点为 `libgnutls-30.dll` 导入的 Windows 系统组件 `ncrypt.dll`。
+- [x] 将 `ncrypt.dll` 加入 PE 扫描器系统 DLL 白名单；其他未知非系统 DLL 仍严格报错。
+- [ ] 新 CI 验证递归 DLL 依赖闭包、ZIP 生成和 Artifact 上传。
+- [ ] Windows Server 2012/2012 R2、2016、2019、2022、2025/2026 实机矩阵验证。
