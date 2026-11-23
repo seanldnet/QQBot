@@ -3,6 +3,8 @@
 #include <cjson/cJSON.h>
 #include <sqlite3.h>
 #include <openssl/crypto.h>
+#include <openssl/evp.h>
+#include <openssl/rand.h>
 #include <pthread.h>
 #include <signal.h>
 #include <stdint.h>
@@ -106,6 +108,111 @@ static enum MHD_Result reply(struct MHD_Connection *c, unsigned int status, cons
     enum MHD_Result ret = MHD_queue_response(c, status, r); MHD_destroy_response(r); return ret;
 }
 static enum MHD_Result json_reply(struct MHD_Connection *c, unsigned int status, const char *body) { return reply(c, status, body, "application/json; charset=utf-8"); }
+
+static void bytes_hex(const unsigned char *src, size_t n, char *dst) {
+    static const char h[]="0123456789abcdef";
+    for(size_t i=0;i<n;i++){dst[i*2]=h[src[i]>>4];dst[i*2+1]=h[src[i]&15];}
+    dst[n*2]=0;
+}
+static int sha256_hex(const char *value, char out[65]) {
+    unsigned char digest[32]; unsigned int n=0;
+    if(EVP_Digest(value,strlen(value),digest,&n,EVP_sha256(),NULL)!=1||n!=32)return -1;
+    bytes_hex(digest,sizeof(digest),out); OPENSSL_cleanse(digest,sizeof(digest)); return 0;
+}
+static int admin_authorized(struct MHD_Connection *c) {
+    const char *expected=getenv("QQBOT_ADMIN_TOKEN");
+    const char *provided=MHD_lookup_connection_value(c,MHD_HEADER_KIND,"Authorization");
+    if(!expected||strlen(expected)<24||!provided||strncmp(provided,"Bearer ",7)!=0)return 0;
+    provided+=7; size_t a=strlen(expected),b=strlen(provided);
+    return a==b && CRYPTO_memcmp(expected,provided,a)==0;
+}
+static int plugin_authorized(const char *id,const char *token) {
+    char hash[65]; sqlite3_stmt *st=NULL; int ok=0;
+    if(!id||!token||sha256_hex(token,hash)!=0)return 0;
+    pthread_mutex_lock(&g_app.lock);
+    if(sqlite3_prepare_v2(g_app.db,"SELECT token_hash,enabled FROM plugins WHERE id=?1",-1,&st,NULL)==SQLITE_OK){
+        sqlite3_bind_text(st,1,id,-1,SQLITE_TRANSIENT);
+        if(sqlite3_step(st)==SQLITE_ROW){
+            const char *stored=(const char*)sqlite3_column_text(st,0);
+            int enabled=sqlite3_column_int(st,1);
+            if(stored&&enabled&&strlen(stored)==64&&CRYPTO_memcmp(stored,hash,64)==0)ok=1;
+        }
+    }
+    sqlite3_finalize(st); pthread_mutex_unlock(&g_app.lock); OPENSSL_cleanse(hash,sizeof(hash)); return ok;
+}
+typedef struct { char *data; size_t len; } proxy_buffer_t;
+static size_t proxy_write(char *ptr,size_t size,size_t nmemb,void *userdata) {
+    proxy_buffer_t *b=(proxy_buffer_t*)userdata; size_t n=size*nmemb;
+    if(n>8U*1024U*1024U-b->len)return 0;
+    char *p=(char*)realloc(b->data,b->len+n+1);if(!p)return 0;
+    b->data=p;memcpy(b->data+b->len,ptr,n);b->len+=n;b->data[b->len]=0;return n;
+}
+static enum MHD_Result plugin_register(struct MHD_Connection *c,const char *body) {
+    if(!admin_authorized(c))return json_reply(c,401,"{\"error\":\"admin_auth_required\"}");
+    cJSON *j=cJSON_Parse(body?body:"");cJSON *name=j?cJSON_GetObjectItemCaseSensitive(j,"name"):NULL;
+    cJSON *callback=j?cJSON_GetObjectItemCaseSensitive(j,"callback_url"):NULL;
+    if(!cJSON_IsString(name)||!name->valuestring[0]||strlen(name->valuestring)>128||
+       (callback&&!cJSON_IsString(callback))){cJSON_Delete(j);return json_reply(c,400,"{\"error\":\"invalid_plugin\"}");}
+    unsigned char idraw[16],tokenraw[32];char id[33],token[65],hash[65];
+    if(RAND_bytes(idraw,sizeof(idraw))!=1||RAND_bytes(tokenraw,sizeof(tokenraw))!=1){cJSON_Delete(j);return json_reply(c,500,"{\"error\":\"random_generation_failed\"}");}
+    bytes_hex(idraw,sizeof(idraw),id);bytes_hex(tokenraw,sizeof(tokenraw),token);
+    if(sha256_hex(token,hash)!=0){OPENSSL_cleanse(tokenraw,sizeof(tokenraw));cJSON_Delete(j);return json_reply(c,500,"{\"error\":\"token_hash_failed\"}");}
+    pthread_mutex_lock(&g_app.lock);sqlite3_stmt *st=NULL;
+    int rc=sqlite3_prepare_v2(g_app.db,"INSERT INTO plugins(id,name,callback_url,token_hash,enabled) VALUES(?1,?2,?3,?4,1)",-1,&st,NULL);
+    if(rc==SQLITE_OK){sqlite3_bind_text(st,1,id,-1,SQLITE_TRANSIENT);sqlite3_bind_text(st,2,name->valuestring,-1,SQLITE_TRANSIENT);
+      sqlite3_bind_text(st,3,cJSON_IsString(callback)?callback->valuestring:"",-1,SQLITE_TRANSIENT);sqlite3_bind_text(st,4,hash,-1,SQLITE_TRANSIENT);rc=sqlite3_step(st);}
+    sqlite3_finalize(st);pthread_mutex_unlock(&g_app.lock);cJSON_Delete(j);
+    OPENSSL_cleanse(tokenraw,sizeof(tokenraw));OPENSSL_cleanse(hash,sizeof(hash));
+    if(rc!=SQLITE_DONE){OPENSSL_cleanse(token,sizeof(token));return json_reply(c,500,"{\"error\":\"plugin_create_failed\"}");}
+    cJSON *out=cJSON_CreateObject();cJSON_AddStringToObject(out,"id",id);cJSON_AddStringToObject(out,"token",token);
+    cJSON_AddBoolToObject(out,"enabled",1);char *encoded=cJSON_PrintUnformatted(out);cJSON_Delete(out);OPENSSL_cleanse(token,sizeof(token));
+    if(!encoded)return json_reply(c,500,"{\"error\":\"json_encode_failed\"}");
+    enum MHD_Result ret=json_reply(c,201,encoded);free(encoded);log_line("INFO","Plugin registered; token returned once");return ret;
+}
+static enum MHD_Result plugin_list(struct MHD_Connection *c) {
+    if(!admin_authorized(c))return json_reply(c,401,"{\"error\":\"admin_auth_required\"}");
+    cJSON *arr=cJSON_CreateArray();sqlite3_stmt *st=NULL;if(!arr)return json_reply(c,500,"{\"error\":\"out_of_memory\"}");
+    pthread_mutex_lock(&g_app.lock);
+    if(sqlite3_prepare_v2(g_app.db,"SELECT id,name,enabled,created_at FROM plugins ORDER BY created_at DESC",-1,&st,NULL)==SQLITE_OK){
+      while(sqlite3_step(st)==SQLITE_ROW){cJSON *o=cJSON_CreateObject();if(!o)break;
+        cJSON_AddStringToObject(o,"id",(const char*)sqlite3_column_text(st,0));cJSON_AddStringToObject(o,"name",(const char*)sqlite3_column_text(st,1));
+        cJSON_AddBoolToObject(o,"enabled",sqlite3_column_int(st,2));cJSON_AddStringToObject(o,"created_at",(const char*)sqlite3_column_text(st,3));cJSON_AddItemToArray(arr,o);}
+    }
+    sqlite3_finalize(st);pthread_mutex_unlock(&g_app.lock);
+    char *encoded=cJSON_PrintUnformatted(arr);cJSON_Delete(arr);if(!encoded)return json_reply(c,500,"{\"error\":\"json_encode_failed\"}");
+    enum MHD_Result ret=json_reply(c,200,encoded);free(encoded);return ret;
+}
+static enum MHD_Result plugin_proxy(struct MHD_Connection *c,const char *plugin_id,const char *body) {
+    const char *header_id=MHD_lookup_connection_value(c,MHD_HEADER_KIND,"X-Plugin-ID");
+    const char *token=MHD_lookup_connection_value(c,MHD_HEADER_KIND,"X-Plugin-Token");
+    if(!header_id||strcmp(header_id,plugin_id)!=0||!plugin_authorized(plugin_id,token))
+      return json_reply(c,403,"{\"error\":\"plugin_auth_failed\"}");
+    cJSON *j=cJSON_Parse(body?body:"");cJSON *m=j?cJSON_GetObjectItemCaseSensitive(j,"method"):NULL;
+    cJSON *p=j?cJSON_GetObjectItemCaseSensitive(j,"path"):NULL;cJSON *b=j?cJSON_GetObjectItemCaseSensitive(j,"body"):NULL;
+    if(!cJSON_IsString(m)||!cJSON_IsString(p)||p->valuestring[0]!='/'||
+       (strcmp(m->valuestring,"GET")&&strcmp(m->valuestring,"POST")&&strcmp(m->valuestring,"PUT")&&strcmp(m->valuestring,"PATCH")&&strcmp(m->valuestring,"DELETE"))||
+       strstr(p->valuestring,"..")||strstr(p->valuestring,"://")||strchr(p->valuestring,'\r')||strchr(p->valuestring,'\n')||
+       (b&&!cJSON_IsObject(b)&&!cJSON_IsArray(b))){cJSON_Delete(j);return json_reply(c,400,"{\"error\":\"invalid_qq_api_request\"}");}
+    if(ensure_token()!=0){cJSON_Delete(j);return json_reply(c,502,"{\"error\":\"qq_token_unavailable\"}");}
+    char token_copy[sizeof(g_app.access_token)]={0};pthread_mutex_lock(&g_app.lock);snprintf(token_copy,sizeof(token_copy),"%s",g_app.access_token);pthread_mutex_unlock(&g_app.lock);
+    char url[1024];if(strlen(g_app.api_base)+strlen(p->valuestring)+1>=sizeof(url)){OPENSSL_cleanse(token_copy,sizeof(token_copy));cJSON_Delete(j);return json_reply(c,414,"{\"error\":\"qq_api_path_too_long\"}");}
+    snprintf(url,sizeof(url),"%s%s",g_app.api_base,p->valuestring);
+    char auth[4200];snprintf(auth,sizeof(auth),"Authorization: QQBot %s",token_copy);OPENSSL_cleanse(token_copy,sizeof(token_copy));
+    char *payload=b?cJSON_PrintUnformatted(b):NULL;struct curl_slist *headers=NULL;headers=curl_slist_append(headers,auth);headers=curl_slist_append(headers,"Content-Type: application/json");
+    CURL *curl=curl_easy_init();proxy_buffer_t response={0};long status=0;CURLcode cr=CURLE_FAILED_INIT;
+    if(curl){curl_easy_setopt(curl,CURLOPT_URL,url);curl_easy_setopt(curl,CURLOPT_CUSTOMREQUEST,m->valuestring);curl_easy_setopt(curl,CURLOPT_HTTPHEADER,headers);
+      if(payload){curl_easy_setopt(curl,CURLOPT_POSTFIELDS,payload);curl_easy_setopt(curl,CURLOPT_POSTFIELDSIZE,(long)strlen(payload));}
+      curl_easy_setopt(curl,CURLOPT_WRITEFUNCTION,proxy_write);curl_easy_setopt(curl,CURLOPT_WRITEDATA,&response);
+      curl_easy_setopt(curl,CURLOPT_CONNECTTIMEOUT,5L);curl_easy_setopt(curl,CURLOPT_TIMEOUT,10L);curl_easy_setopt(curl,CURLOPT_FOLLOWLOCATION,0L);
+      curl_easy_setopt(curl,CURLOPT_SSL_VERIFYPEER,1L);curl_easy_setopt(curl,CURLOPT_SSL_VERIFYHOST,2L);curl_easy_setopt(curl,CURLOPT_NOSIGNAL,1L);
+      cr=curl_easy_perform(curl);curl_easy_getinfo(curl,CURLINFO_RESPONSE_CODE,&status);}
+    curl_easy_cleanup(curl);curl_slist_free_all(headers);free(payload);cJSON_Delete(j);
+    if(cr!=CURLE_OK){free(response.data);log_line("ERROR","Plugin QQ API proxy transport failed");return json_reply(c,502,"{\"error\":\"qq_api_transport_failed\"}");}
+    if(!response.data)response.data=strdup("{}");
+    enum MHD_Result ret=reply(c,(unsigned int)(status>=100&&status<=599?status:502),response.data?response.data:"{}","application/json; charset=utf-8");
+    free(response.data);return ret;
+}
+
 static enum MHD_Result handler(void *cls, struct MHD_Connection *c, const char *url, const char *method, const char *version, const char *upload, size_t *upload_size, void **con_cls) {
     (void)cls; (void)version;
     if (!*con_cls) { request_t *q = calloc(1, sizeof(*q)); if (!q) return MHD_NO; *con_cls = q; return MHD_YES; }
@@ -133,6 +240,16 @@ static enum MHD_Result handler(void *cls, struct MHD_Connection *c, const char *
         if (rc != 0 || !response) { free(response); return json_reply(c, 400, "{\"error\":\"invalid_webhook_payload\"}"); }
         if (status == 200) log_line("INFO", "QQ Webhook payload accepted; signature/challenge processed");
         enum MHD_Result result = json_reply(c, status, response); free(response); return result;
+    }
+    if (strcmp(method,"POST")==0 && strcmp(url,"/api/v1/plugins")==0) return plugin_register(c,q->body);
+    if (strcmp(method,"GET")==0 && strcmp(url,"/api/v1/plugins")==0) return plugin_list(c);
+    if (strncmp(url,"/api/v1/plugins/",16)==0) {
+        const char *id=url+16; const char *slash=strchr(id,'/');
+        if(slash && strcmp(slash,"/qq-api")==0 && strcmp(method,"POST")==0) {
+            size_t idlen=(size_t)(slash-id); if(idlen==0||idlen>=128)return json_reply(c,404,"{\"error\":\"plugin_not_found\"}");
+            char plugin_id[128];memcpy(plugin_id,id,idlen);plugin_id[idlen]=0;
+            return plugin_proxy(c,plugin_id,q->body);
+        }
     }
     if (strcmp(method, "GET") == 0 && strcmp(url, "/api/v1/status") == 0) {
         char out[256]; snprintf(out, sizeof(out), "{\"ok\":true,\"authenticated\":%s,\"transport_ready\":%s,\"mode\":\"%s\",\"version\":\"0.1.0\"}", g_app.access_token[0] ? "true" : "false", strcmp(g_app.connection_mode, "webhook") == 0 ? "true" : "false", g_app.connection_mode[0] ? g_app.connection_mode : "none"); return json_reply(c, 200, out);
