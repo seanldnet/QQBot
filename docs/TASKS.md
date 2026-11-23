@@ -205,7 +205,7 @@
 
 - [x] 新增 HTTPS-only、443-only、拒绝 userinfo/IP literal 的 URL 解析策略。
 - [x] 新增 IPv4/IPv6 公网地址分类；DNS 返回任意非公网地址时整体拒绝。
-- [x] DNS 解析结果保存为结构化地址列表，供后续 DNS pinning 使用。
+- [x] DNS 解析结果保存为结构化地址列表，并提供 `CURLOPT_RESOLVE` 参数字符串格式化函数（尚未接入实际 HTTP 请求）。
 - [x] 增加确定性 IPv4/IPv6 地址分类和危险 URL 单元测试，并接入 Make/CMake/CTest。
 - [ ] 将校验接入插件 callback_url 创建/更新入口。
 - [ ] 实现 CURLOPT_RESOLVE DNS pinning、禁用代理和重定向、TLS 主机校验、连接/总超时及响应体上限。
