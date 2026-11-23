@@ -168,3 +168,24 @@
 - [channel.forum.thread.get](https://github.com/tencent-connect/bot-docs/blob/main/docs/develop/api-v2/server-inter/channel/content/forum/get_thread.md)
 - [channel.forum.thread.create](https://github.com/tencent-connect/bot-docs/blob/main/docs/develop/api-v2/server-inter/channel/content/forum/put_thread.md)
 - [channel.forum.thread.delete](https://github.com/tencent-connect/bot-docs/blob/main/docs/develop/api-v2/server-inter/channel/content/forum/delete_thread.md)
+
+
+## 第五批：成员踢出、身份组成员与子频道权限（类型化封装）
+
+| ID | 方法 | 路径 | 说明 |
+|---|---|---|---|
+| guild.role_members.list | GET | `/guilds/{guild_id}/roles/{role_id}/members` | 指定身份组成员分页查询 |
+| guild.member.delete | DELETE | `/guilds/{guild_id}/members/{user_id}` | 踢出成员；可加入黑名单及撤回历史消息 |
+| guild.member_role.add | PUT | `/guilds/{guild_id}/members/{user_id}/roles/{role_id}` | 将成员加入身份组 |
+| guild.member_role.remove | DELETE | `/guilds/{guild_id}/members/{user_id}/roles/{role_id}` | 将成员移出身份组 |
+| channel.member_permissions.get | GET | `/channels/{channel_id}/members/{user_id}/permissions` | 查询成员子频道权限 |
+| channel.member_permissions.update | PUT | `/channels/{channel_id}/members/{user_id}/permissions` | 修改成员子频道权限位图 |
+| channel.role_permissions.get | GET | `/channels/{channel_id}/roles/{role_id}/permissions` | 查询身份组子频道权限 |
+| channel.role_permissions.update | PUT | `/channels/{channel_id}/roles/{role_id}/permissions` | 修改身份组子频道权限位图 |
+
+- 踢出成员：body 必须包含 `add_blacklist:boolean` 与 `delete_history_msg_days:int`；允许 0、3、7、15、30、-1（全部历史）。不能踢出管理员，机器人必须为管理员并具有踢人权限。
+- 身份组成员分页：`start_index` 默认 0，`limit` 范围 1–400，使用响应的 `next` 继续分页。
+- 身份组成员添加/移除：子频道管理员身份组（type 5）需要提供 channel 对象。
+- 子频道权限更新：`add` / `remove` 均为权限位图字符串；同一权限位同时设置时按移除处理，且不能修改“可管理子频道”权限。
+- 以上接口的精确 method/path/字段/权限/错误码来源记录在 JSON manifest；官方页面未逐项列出的错误码仍引用官方总表，不作猜测。
+- SDK 本批增加 8 个独立 C ABI、C++ 和易语言 DLL 映射函数。
