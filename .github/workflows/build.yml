@@ -106,6 +106,8 @@ jobs:
       - name: Bundle and verify all non-system DLL dependencies
         run: |
           bash scripts/package-windows.sh stage/bin stage/bin/qqbot.exe stage/bin/libqqbot_sdk.dll
+      - name: Audit PE subsystem baseline
+        run: bash scripts/check-windows-pe-baseline.sh stage/bin 6 2
       - name: Create ready-to-run ZIP
         run: zip -qr QQBot-Windows-x64-Server2012plus.zip stage
       - name: Upload Windows ready-to-run package
