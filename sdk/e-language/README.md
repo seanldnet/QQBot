@@ -9,6 +9,7 @@
 # 参数说明：client 为 qqb_create 返回句柄；method 为 GET/POST/PUT/PATCH/DELETE；path 为 /v2/... 等官方相对路径；body_json 为合法 JSON 或空；response_json 和 http_status 均传址。
 # qqb_send_group_text(client, group_openid, content, event_id, msg_id, msg_seq, response_json*, http_status*) -> 整数型
 # qqb_send_c2c_text(client, user_openid, content, event_id, msg_id, msg_seq, response_json*, http_status*) -> 整数型
+# qqb_send_dms_text(client, guild_id, content, event_id, msg_id, msg_seq, response_json*, http_status*) -> 整数型
 # qqb_send_channel_text(client, channel_id, content, event_id, msg_id, msg_seq, response_json*, http_status*) -> 整数型
 # qqb_free_string(response_json) -> 无返回值
 # qqb_version() -> 文本型
