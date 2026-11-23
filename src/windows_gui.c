@@ -176,6 +176,7 @@ static void create_dashboard(void) {
 }
 static LRESULT CALLBACK wndproc(HWND hwnd,UINT msg,WPARAM wp,LPARAM lp) {
     switch(msg){
+    case WM_NCCREATE: g_main=hwnd; return TRUE;
     case WM_CREATE: create_login(); create_dashboard(); return 0;
     case WM_COMMAND:
         if(LOWORD(wp)==ID_LOGIN){do_login();return 0;}
