@@ -342,3 +342,10 @@
 
 
 Makefile 检查脚本的第一次修复只处理了 pkg-config 参数，错误提示中的 `$p` 仍被 Make 提前展开，CI 因空依赖名继续失败。已将错误提示也改为 `$$p`；提交 81a6624 触发新 CI 待验证。Windows 完整构建在 run 45188880579 已通过并成功上传 ZIP。
+
+
+### 登录与消息日志测试包 CI 验证（2026-11-23）
+- 最新代码 commit `d2933aa` 对应 GitHub Actions run `45189464000` 三个 job 全部成功：Linux build、Windows callback-security、Windows full-build。
+- Linux Make/CMake 构建与单元测试通过；Windows x64 宿主/SDK 编译、CTest、DLL 递归依赖收集、PE 子系统审计和 ZIP 上传通过。
+- Artifact ID `14824733729` 已下载，内层 ZIP CRC 校验通过，47 个文件，包含宿主、SDK DLL、启动 BAT、Web UI 和管理员 Token 文件。
+- 仍未使用用户真实机器人凭据进行 QQ 平台联调；WSS READY、实际消息事件和 Webhook 公网回调仍需用户实测。WSS RESUME 与更完整的网关错误恢复仍未完成。
