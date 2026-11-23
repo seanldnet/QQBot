@@ -5,6 +5,8 @@
 #include <openssl/crypto.h>
 #include <pthread.h>
 #include <signal.h>
+#include <stdint.h>
+#include <sys/stat.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -95,7 +97,7 @@ static int ensure_token(void) {
 }
 static enum MHD_Result reply(struct MHD_Connection *c, unsigned int status, const char *body, const char *type) {
     struct MHD_Response *r = MHD_create_response_from_buffer(strlen(body), (void *)body, MHD_RESPMEM_MUST_COPY);
-    if (!r) return MHD_NO; MHD_addанд
+    if (!r) return MHD_NO; MHD_add_response_header
     MHD_add_response_header(r, "Content-Type", type); MHD_add_response_header(r, "Cache-Control", "no-store");
     enum MHD_Result ret = MHD_queue_response(c, status, r); MHD_destroy_response(r); return ret;
 }
