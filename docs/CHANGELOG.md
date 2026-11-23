@@ -104,3 +104,12 @@
 - 新增 `qq_callback_target_resolve_entry`，将已校验的 DNS A/AAAA 地址格式化为 libcurl `CURLOPT_RESOLVE` 所需的 pinning entry，并增加格式化测试；尚未接入实际 HTTP 请求。
 - 当前仅为安全校验原语，未接入 callback_url 写入口，未实现 DNS pinning 和 HTTP worker；不允许出站投递。当前解析依赖 POSIX 网络 API，Windows 适配待做。
 - CI 将由本批代码提交触发；本地构建未执行。
+
+
+## 2026-11-23 — Callback DNS resolver Windows 适配（待 CI）
+
+- 修改 `src/qq/callback_security.c`：加入 Windows Winsock2/WS2TCPIP 分支，使用 `InetPtonA` / `InetNtopA` 处理地址格式，并在 DNS 解析前 `WSAStartup`、退出时 `WSACleanup`；POSIX 分支保持原有接口。
+- 修改 `CMakeLists.txt`：Windows 下为宿主和 callback security 测试链接 `ws2_32`。
+- 修改 `Makefile`：Windows_NT 下增加 `ws2_32` 链接参数。
+- 移除 `AI_ADDRCONFIG`，避免本机网卡配置导致地址族过滤；仍对 DNS 返回的每个 A/AAAA 地址执行公网分类。
+- 验证状态：提交后 CI 待运行；本轮没有 Windows 主机可用，MSVC/MinGW 实机编译与测试未执行。此改动不启用 callback 出站请求；DNS pinning、写入口校验和 worker 仍待完成。
