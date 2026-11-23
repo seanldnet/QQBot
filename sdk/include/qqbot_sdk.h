@@ -82,6 +82,25 @@ QQB_API int QQB_CALL qqb_mute_guild_member(qqb_client *client, const char *guild
     const char *user_id, const char *mute_end_timestamp, const char *mute_seconds,
     char **response_json, long *http_status);
 
+
+/* Typed schedule and audio-channel controls. since_ms is a decimal millisecond timestamp;
+ * pass NULL to use the platform's default current-day window.
+ */
+QQB_API int QQB_CALL qqb_list_channel_schedules(qqb_client *client, const char *channel_id,
+    const char *since_ms, char **response_json, long *http_status);
+QQB_API int QQB_CALL qqb_get_channel_schedule(qqb_client *client, const char *channel_id,
+    const char *schedule_id, char **response_json, long *http_status);
+QQB_API int QQB_CALL qqb_create_channel_schedule(qqb_client *client, const char *channel_id,
+    const char *body_json, char **response_json, long *http_status);
+QQB_API int QQB_CALL qqb_update_channel_schedule(qqb_client *client, const char *channel_id,
+    const char *schedule_id, const char *body_json, char **response_json, long *http_status);
+QQB_API int QQB_CALL qqb_delete_channel_schedule(qqb_client *client, const char *channel_id,
+    const char *schedule_id, char **response_json, long *http_status);
+QQB_API int QQB_CALL qqb_audio_mic_up(qqb_client *client, const char *channel_id,
+    char **response_json, long *http_status);
+QQB_API int QQB_CALL qqb_audio_mic_down(qqb_client *client, const char *channel_id,
+    char **response_json, long *http_status);
+
 QQB_API const char *QQB_CALL qqb_version(void);
 #ifdef __cplusplus
 }
