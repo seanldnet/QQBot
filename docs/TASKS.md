@@ -401,5 +401,5 @@
 - [x] `Desktop/QQBot.Desktop.csproj` 将 `SelfContained` 改为 `true`，启用 `IncludeNativeLibrariesForSelfExtract`。
 - [x] Windows CI `dotnet publish` 显式使用 `win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true`，将 .NET 8 Runtime 与 AntdUI/业务程序集打包进根目录 `QQBot.exe`。
 - [x] 更新 README、桌面 UI 规范和发布说明：目标电脑无需单独安装 .NET Runtime；C 宿主及其原生 DLL 仍放在 `runtime/`。
-- [ ] 等待 Windows CI 完成，核对自包含 EXE、依赖 DLL、ZIP 产物与压缩包大小。
+- [x] Windows CI run 45232366620 三个 job 全部成功；self-contained publish 生成约 165,276,961 bytes 的 QQBot.exe，Artifact 外层约 76.9 MB，内层 ZIP CRC 检查通过。
 - [ ] 在干净 Windows 环境（未安装 .NET Desktop Runtime）双击实测；构建成功本身不等于目标机启动验收。
