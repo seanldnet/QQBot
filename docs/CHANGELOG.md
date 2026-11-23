@@ -126,3 +126,13 @@
 - 更新易语言 SDK 接口映射文档；C++ 与易语言通过现有通用 C ABI 访问全部已登记路由。
 - 约束：公告推荐子频道与消息公告互斥；推荐子频道最多 3 条；精华消息每子频道最多 20 条；日程 since 单位毫秒；创建日程单管理员每天 10 次、单频道每天 100 次。
 - 验证：腾讯官方源文件读取成功，元数据和文档提交成功；CI 尚未取得本批代码构建结论；易语言 IDE 与真实 QQ API 权限联调未执行。
+
+
+## 2026-11-23 — 第二批高频管理 API 三语言类型化封装
+
+- 新增 C ABI 类型化函数：`qqb_list_guild_members`、`qqb_get_guild_member`、`qqb_list_guild_roles`、`qqb_create_guild_role`、`qqb_update_guild_role`、`qqb_delete_guild_role`、`qqb_mute_guild`、`qqb_mute_guild_member`。
+- 新增 C++ `qqbot::Client` 对应方法；每个方法均释放底层响应缓冲区，并将 JSON 结果复制到 std::string。
+- 更新易语言 DLL 导入声明，保持统一 `__stdcall` ABI；说明成员分页游标、1–400 limit、禁言秒/时间戳字符串和 `"0"` 解除禁言语义。
+- 更新 `sdk/official-endpoints.json` 的 sdk_wrapper 映射。当前 34 条已核验路由中，14 条具备三语言类型化入口（四种消息发送、六种频道管理、八种本批成员/身份组/禁言操作中部分接口的 wrapper；其余仍走通用 API）。
+- 安全约束：路径 ID 限定为字母/数字/下划线/连字符；limit 只允许 1–400；禁言时间字段仅接受十进制数字字符串；创建/修改身份组要求 JSON object。
+- 验证：GitHub Actions 将对 C11 Make、CMake 和 C++ 示例执行编译；尚未取得本次提交 CI 结果。未执行 Windows DLL 实际加载、易语言 IDE 编译或 QQ 实机权限联调。
