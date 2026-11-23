@@ -152,6 +152,21 @@ QQB_API int QQB_CALL qqb_list_group_join_requests(qqb_client *client, const char
 QQB_API int QQB_CALL qqb_approve_group_join_request(qqb_client *client, const char *group_openid,
     const char *member_openid, const char *body_json, char **response_json, long *http_status);
 
+
+/* Bot-level automatic group-join approval strategies (strategy_id is not a group id). */
+QQB_API int QQB_CALL qqb_list_join_approval_strategies(qqb_client *client, const char *cursor,
+    char **response_json, long *http_status);
+QQB_API int QQB_CALL qqb_create_join_approval_strategy(qqb_client *client, const char *body_json,
+    char **response_json, long *http_status);
+QQB_API int QQB_CALL qqb_update_join_approval_strategy(qqb_client *client, const char *strategy_id,
+    const char *body_json, char **response_json, long *http_status);
+QQB_API int QQB_CALL qqb_delete_join_approval_strategy(qqb_client *client, const char *strategy_id,
+    char **response_json, long *http_status);
+QQB_API int QQB_CALL qqb_execute_join_approval_strategy(qqb_client *client, const char *strategy_id,
+    char **response_json, long *http_status);
+QQB_API int QQB_CALL qqb_update_join_approval_whitelist(qqb_client *client, const char *strategy_id,
+    const char *body_json, char **response_json, long *http_status);
+
 QQB_API const char *QQB_CALL qqb_version(void);
 #ifdef __cplusplus
 }
