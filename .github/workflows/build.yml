@@ -1,0 +1,22 @@
+name: C11 build
+on:
+  push:
+    branches: ["main", "master"]
+  pull_request:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install native dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential pkg-config libmicrohttpd-dev libcurl4-openssl-dev libsqlite3-dev libcjson-dev libssl-dev
+      - name: Check dependencies
+        run: make check-deps
+      - name: Build with Make
+        run: make clean all
+      - name: Configure and build with CMake
+        run: |
+          cmake -S . -B build-cmake -DCMAKE_BUILD_TYPE=Release
+          cmake --build build-cmake --parallel
