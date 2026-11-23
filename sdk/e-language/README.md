@@ -169,3 +169,15 @@ qqb_send_group_text(client, group_openid, content, event_id, msg_id, msg_seq, re
 - cursor 为不透明分页游标，SDK 自动进行 URL query 编码；返回缓冲区用 qqb_free_string 释放。
 
 权限/限制交叉核验：黑名单查询与修改属于白名单接口，第三方维护 SDK 注释提示单次修改最多 20 个成员；入群申请列表和审批需要机器人为群管理员。以上细节目前来自第三方 fork 的 DTO/接口注释，官方原文仍待逐页核实，不应视为腾讯官方最终规范。
+
+
+## QQ 群自动入群审批策略（第三批类型化 DLL 接口）
+
+- qqb_list_join_approval_strategies(client, cursor, response_json*, http_status*)：GET /v2/groups/join_approval_strategy，SDK 固定 limit=50，cursor 自动 URL 编码。
+- qqb_create_join_approval_strategy(client, body_json, response_json*, http_status*)：POST 同一路由。
+- qqb_update_join_approval_strategy(client, strategy_id, body_json, response_json*, http_status*)：PATCH /v2/groups/join_approval_strategy/{strategy_id}。
+- qqb_delete_join_approval_strategy(client, strategy_id, response_json*, http_status*)：DELETE 同一策略资源。
+- qqb_execute_join_approval_strategy(client, strategy_id, response_json*, http_status*)：POST /execute，SDK 发送空 JSON object。
+- qqb_update_join_approval_whitelist(client, strategy_id, body_json, response_json*, http_status*)：POST /whitelist_users。
+
+策略属于机器人维度，列表/创建路由不带 group_openid；策略 ID 使用 strategy_id。请求 JSON 字段由调用方按平台文档传入。字段限制与权限仍须按腾讯官方自动生成页面复核。
