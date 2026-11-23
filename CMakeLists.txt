@@ -22,7 +22,9 @@ set_target_properties(qqbot_sdk PROPERTIES OUTPUT_NAME qqbot_sdk VERSION 0.1.0 S
 
 add_executable(qqbot src/main.c src/qq/webhook.c src/qq/events.c src/qq/event_queue.c src/qq/callback_security.c)
 target_include_directories(qqbot PRIVATE src)
-target_compile_definitions(qqbot PRIVATE _POSIX_C_SOURCE=200809L)
+if(NOT WIN32)
+  target_compile_definitions(qqbot PRIVATE _POSIX_C_SOURCE=200809L)
+endif()
 target_compile_options(qqbot PRIVATE -Wall -Wextra -Wpedantic)
 target_link_libraries(qqbot PRIVATE PkgConfig::MHD PkgConfig::CURL PkgConfig::SQLITE PkgConfig::CJSON PkgConfig::OPENSSL Threads::Threads)
 if(WIN32)
