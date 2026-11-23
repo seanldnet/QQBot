@@ -10,13 +10,16 @@
 4. 历史文档首页仍出现 `https://bots.qq.com/app/getAppAccessToken` 与 `api.sgroup.qq.com`，与新版 API v2 页面存在域名迁移并存信息。实现应将 token endpoint 和 API base 做配置项，不将其硬编码成不可替换常量；默认采用当前 API v2 页面给出的 `api.bot.qq.com`，并在联调时验证实际环境。
 5. 消息接口示例使用 `/v2/users/{openid}/messages`；官方消息文档提示主动推送策略已于 2025-04-21 调整，主动推送接口会返回错误，发送功能必须围绕有效事件的被动回复窗口实现，并向面板明确显示平台频控/窗口错误。
 6. WebSocket Gateway 采用 QQ Bot Gateway 信封与 opcode 协议；不得把其他平台的心跳间隔或鉴权参数直接写死。应先取得 Gateway URL，处理 HELLO、IDENTIFY、DISPATCH、HEARTBEAT ACK、RESUME / RECONNECT 等流程。
-7. Webhook 模式存在 `op=13` 回调验证流程，并对事件推送使用 Ed25519 签名头 `X-Signature-Ed25519` 与 `X-Signature-Timestamp`。挑战签名、签名消息拼接、seed 派生必须按官方 webhook 文档/官方示例逐字节实现；不得仅因需求提到 Ed25519 就自行猜测拼接规则。
+7. Webhook 模式存在 `op=13` 回调验证流程，并对事件推送使用 Ed25519 签名头 `X-Signature-Ed25519` 与 `X-Signature-Timestamp`。官方 `sign.md` 明确：将 Bot Secret 字符串重复拼接至至少 32 字节后截取前 32 字节作为 Ed25519 seed；op=13 对 `event_ts + plain_token` 签名并返回 `{plain_token, signature}`；普通事件验签消息为 `timestamp + 原始 HTTP body`，签名头为 hex 编码，验签通过后回 `op=12` ACK。
+8. 官方事件文档当前仍列出 WebSocket opcode 0/1/2/6/7/9/10/11，并描述 HELLO、IDENTIFY、心跳 ACK、RESUME；但同一官方文档明确写明 WebSocket 事件推送链路计划于 2024 年底前逐步下线、后续不再维护。因此项目保留用户要求的 WebSocket 兼容模式，但 Webhook 应作为首选生产链路，并需实机确认当前账号是否仍允许 WebSocket。
 
 ## 参考资料
 
 - 官方文档仓库：https://github.com/tencent-connect/bot-docs
 - 官方文档站：https://bot.q.qq.com/wiki/develop/api-v2/
 - API v2 消息发送文档：https://github.com/tencent-connect/bot-docs/blob/main/docs/develop/api-v2/server-inter/message/send-receive/send.md
+- 事件订阅与通知（含 opcode、Webhook、WebSocket）：https://github.com/tencent-connect/bot-docs/blob/main/docs/develop/api-v2/dev-prepare/interface-framework/event-emit.md
+- Ed25519 签名算法与示例：https://github.com/tencent-connect/bot-docs/blob/main/docs/develop/api-v2/dev-prepare/interface-framework/sign.md
 - 当前 API 根域名及令牌接口检索记录：官方 API v2 文档页面与文档站搜索结果（2026-11-23）。
 
 ## 尚需在编码前/联调时核验
