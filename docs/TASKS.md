@@ -253,3 +253,13 @@
 
 - [x] Windows MINGW64 libmicrohttpd 软件源缺包问题已定位，改用固定版本 1.0.10-1 历史包并补装 GnuTLS 依赖。
 - [ ] 验证历史包下载、依赖解析、Server 2012 API baseline 编译和成品打包。
+
+
+## Windows 一键运行包最新状态（2026-11-23）
+
+- [x] Windows MinGW64 宿主与 SDK DLL 编译通过。
+- [x] Windows CTest 3/3 通过；callback-security 独立 Windows job 通过。
+- [x] 固定版 libmicrohttpd 下载及 SHA-256 校验/安装通过。
+- [x] 修复 CA bundle staging：改为下载 curl 官方 cacert.pem 并检查非空。
+- [ ] 重新验证完整 runtime install、PE DLL 依赖闭包扫描及 ZIP 上传。
+- [ ] 在 Windows Server 2012/2012 R2、2016、2019、2022、2025/2026 实机矩阵验证启动、TLS、数据库和端口监听；未实测前不得宣称全版本兼容。
