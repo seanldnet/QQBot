@@ -17,6 +17,8 @@
 | POST | `/api/v1/auth/logout` | 退出管理会话并按策略停止机器人 |
 | GET | `/api/v1/status` | 获取运行状态与连接模式 |
 | GET | `/api/v1/logs` | 读取最近 100 条运行日志（首版已实现） |
+| GET | `/api/v1/events` | 管理员查看最近 100 条已验签事件收件箱记录 |
+| GET | `/api/v1/event-deliveries` | 管理员查看最近 200 条逐插件投递任务状态 |
 | GET | `/api/v1/logs/stream` | 实时日志流（协议待选型） |
 | GET | `/api/v1/plugins` | 管理员查询插件列表 |
 | POST | `/api/v1/plugins` | 管理员注册插件；注册返回一次性插件 Token（需 Authorization: Bearer 管理令牌） |
@@ -25,7 +27,7 @@
 | POST | `/api/v1/plugins/{id}/qq-api` | SDK 官方 API 代理：插件 ID + Token 鉴权，JSON `{method,path,body}`（首版已实现，未实测） |
 | POST | `/webhook/qq` | QQ 官方 Webhook 回调；op=13 challenge、op=0 Ed25519 验签与 op=12 ACK（首版已实现） |
 
-其中 `/api/v1/auth/login`、`/api/v1/status`、`/api/v1/logs` 和 `/webhook/qq` 已有首版实现；插件列表/注册/启停/删除和 `/api/v1/plugins/{id}/qq-api` 官方 API 代理已有首版实现；管理操作通过环境变量 `QQBOT_ADMIN_TOKEN` 做 Bearer 鉴权。插件事件回调分发、完整管理会话认证、插件消息抽象 API 和实时流尚未实现。SDK 当前通过该代理路由调用；尚未执行端到端测试。
+其中 `/api/v1/auth/login`、`/api/v1/status`、`/api/v1/logs` 和 `/webhook/qq` 已有首版实现；插件列表/注册/启停/删除和 `/api/v1/plugins/{id}/qq-api` 官方 API 代理已有首版实现；管理操作通过环境变量 `QQBOT_ADMIN_TOKEN` 做 Bearer 鉴权。插件 HTTP 回调发送 worker 尚未实现；当前已为每个启用且 callback_url 非空的插件创建独立 pending delivery 记录，并可通过管理员接口查看。完整管理会话认证、插件消息抽象 API 和实时流尚未实现。SDK 当前通过该代理路由调用；尚未执行端到端测试。
 
 ### 2.1 SDK 官方 API 代理请求
 
@@ -41,7 +43,7 @@
 
 ## 4. 插件安全
 
-- 当前插件注册 API 允许 callback_url 留空或使用 HTTPS；事件投递器上线前，必须完成 DNS 解析后私网/回环/链路本地/云元数据地址拒绝与 DNS rebinding 防护。当前尚无事件投递器。
+- 当前插件注册 API 允许 callback_url 留空或使用 HTTPS；事件投递器上线前，必须完成 DNS 解析后私网/回环/链路本地/云元数据地址拒绝与 DNS rebinding 防护。当前仅创建待投递记录，尚无出站事件投递 worker。
 - 禁止 localhost、回环、链路本地、私网、保留地址及云元数据地址；解析 DNS 后校验并防止 DNS rebinding。
 - 禁止重定向或逐跳重新校验；限制响应体大小。
 - 每插件并发数、队列长度、超时和重试次数均需有上限。
