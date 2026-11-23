@@ -158,3 +158,14 @@ qqb_send_group_text(client, group_openid, content, event_id, msg_id, msg_seq, re
 - qqb_batch_remove_group_members(client, group_openid, body_json, response_json, http_status)：POST /batch_remove_members；body 为完整 JSON object
 
 权限说明：群资料、机器人状态、成员查询等能力可能受平台白名单控制；禁言、移除成员等操作还受机器人群管理员身份及单次操作人数限制。字段与限制目前以第三方维护 Go SDK fork 作交叉核验线索，腾讯官方自动生成页面尚未逐项复核；不得将白名单状态视为已获授权。官方未明确列出的字段/错误码不作推断。
+
+
+## QQ 群黑名单与入群审批（第二批类型化 DLL 接口）
+
+- qqb_list_group_blacklist(client, group_openid, cursor, response_json*, http_status*)：GET /v2/groups/{group_openid}/member_blacklist，SDK 固定 limit=100。
+- qqb_update_group_blacklist(client, group_openid, body_json, response_json*, http_status*)：POST 同一路由；body 采用官方接口 JSON object（op=add/del、member_openids）。
+- qqb_list_group_join_requests(client, group_openid, cursor, response_json*, http_status*)：GET /v2/groups/{group_openid}/join_request_list，SDK 固定 limit=50。
+- qqb_approve_group_join_request(client, group_openid, member_openid, body_json, response_json*, http_status*)：POST /v2/groups/{group_openid}/approval_join_request/{member_openid}；body 包含 op=approve/decline，可选 join_request_id、reject_reason。
+- cursor 为不透明分页游标，SDK 自动进行 URL query 编码；返回缓冲区用 qqb_free_string 释放。
+
+权限/限制交叉核验：黑名单查询与修改属于白名单接口，第三方维护 SDK 注释提示单次修改最多 20 个成员；入群申请列表和审批需要机器人为群管理员。以上细节目前来自第三方 fork 的 DTO/接口注释，官方原文仍待逐页核实，不应视为腾讯官方最终规范。
