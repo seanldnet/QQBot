@@ -1,3 +1,12 @@
+## 2026-11-24 — .NET 自包含 Windows 包 CI 验证通过
+
+- GitHub Actions run `45232366620` 的 Linux build、Windows callback-security、Windows full-build 三个 job 全部成功。
+- Windows full-build 日志确认执行 `dotnet publish ... -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true`。
+- Artifact `QQBot-AntdUI-Windows-x64` 大小 76,969,194 bytes；下载后外层 artifact ZIP、内层发行 ZIP CRC 检查均通过。
+- 内层发行包中的根目录 `QQBot.exe` 为 165,276,961 bytes（约 157.6 MiB），.NET Runtime 已随单文件发布；无需目标电脑另装 .NET Runtime。`runtime/` 仍保存 C 宿主和原生 DLL。
+- 仍待干净 Windows 环境（无 .NET 安装）实机双击验收；CI 成功和 ZIP 校验不等于目标电脑实际启动验收。
+
+
 ## 2026-11-24 — Windows 桌面 EXE 自包含发布
 
 - 将 AntdUI 桌面项目切换为 .NET 8 self-contained single-file：`SelfContained=true`、`PublishSingleFile=true`、`IncludeNativeLibrariesForSelfExtract=true`。
