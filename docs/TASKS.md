@@ -181,3 +181,16 @@
 
 - [x] 增加群事件解析器 Make/CMake 单元测试执行步骤；run 45160609516 的 Make unit tests 与 CMake 构建步骤成功。
 - [x] 群事件 timestamp 增量及 C++ Event 示例换行修复后的最终 CI（run 45160886586）成功：C++ 示例、Make、Make tests、CMake/CTest 均通过。
+
+
+## 2026-11-23 — Webhook 事件入箱
+
+- [x] 扩展验签成功的 Webhook 处理函数，安全提取事件类型 t 与 d payload，保留旧函数兼容入口。
+- [x] 已验签群管理/群 @ 事件接入统一事件解析器。
+- [x] 新增 SQLite event_inbox 持久化队列、唯一键去重和初始化。
+- [x] 新增管理员 GET /api/v1/events，查看最近100条事件收件箱记录。
+- [x] 增加 SQLite 内存库队列测试，并加入 Make 与 CTest。
+- [ ] 实现每个启用插件的独立 delivery 记录、worker 线程、有界并发和重试退避。
+- [ ] callback_url 出站 SSRF 防护（DNS 解析/IP 分类/DNS pinning/禁止重定向/HTTPS only）完成前，不得启用实际 HTTP 投递。
+- [ ] Webhook 官方签名向量与 QQ 控制台回调实测。
+- [ ] 评估官方 Gateway WebSocket 当前状态；本阶段未实现 WebSocket 客户端。
