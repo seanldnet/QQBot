@@ -198,3 +198,17 @@
 
 - [x] 逐插件 pending delivery fanout 与管理员查询 API 的 Make/CMake/单元测试验证通过：run 45176688074 全部步骤成功。
 - [ ] 安全 callback HTTP worker、DNS/IP 防护与 DNS pinning 仍未实现；当前 pending delivery 不会自动发送。
+
+
+
+## 2026-11-23 — 插件 callback SSRF 防护第一阶段
+
+- [x] 新增 HTTPS-only、443-only、拒绝 userinfo/IP literal 的 URL 解析策略。
+- [x] 新增 IPv4/IPv6 公网地址分类；DNS 返回任意非公网地址时整体拒绝。
+- [x] DNS 解析结果保存为结构化地址列表，供后续 DNS pinning 使用。
+- [x] 增加确定性 IPv4/IPv6 地址分类和危险 URL 单元测试，并接入 Make/CMake/CTest。
+- [ ] 将校验接入插件 callback_url 创建/更新入口。
+- [ ] 实现 CURLOPT_RESOLVE DNS pinning、禁用代理和重定向、TLS 主机校验、连接/总超时及响应体上限。
+- [ ] 实现 delivery worker、租约 claim、指数退避、dead-letter 和单插件故障隔离。
+- [ ] 完成 Windows Winsock 适配和 Windows 构建验证。
+- [ ] 只有完整 SSRF 防护通过后才允许实际 HTTP callback。
