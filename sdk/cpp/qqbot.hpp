@@ -255,5 +255,30 @@ public:
         char*out=nullptr;int rc=qqb_approve_group_join_request(p_,group.c_str(),member.c_str(),body.c_str(),&out,&status);
         if(out){response.assign(out);qqb_free_string(out);}return rc;
     }
+
+    int list_join_approval_strategies(const std::string& cursor,std::string& response,long& status) const {
+        char*out=nullptr;int rc=qqb_list_join_approval_strategies(p_,cursor.empty()?nullptr:cursor.c_str(),&out,&status);
+        if(out){response.assign(out);qqb_free_string(out);}return rc;
+    }
+    int create_join_approval_strategy(const std::string& body,std::string& response,long& status) const {
+        char*out=nullptr;int rc=qqb_create_join_approval_strategy(p_,body.c_str(),&out,&status);
+        if(out){response.assign(out);qqb_free_string(out);}return rc;
+    }
+    int update_join_approval_strategy(const std::string& id,const std::string& body,std::string& response,long& status) const {
+        char*out=nullptr;int rc=qqb_update_join_approval_strategy(p_,id.c_str(),body.c_str(),&out,&status);
+        if(out){response.assign(out);qqb_free_string(out);}return rc;
+    }
+    int delete_join_approval_strategy(const std::string& id,std::string& response,long& status) const {
+        char*out=nullptr;int rc=qqb_delete_join_approval_strategy(p_,id.c_str(),&out,&status);
+        if(out){response.assign(out);qqb_free_string(out);}return rc;
+    }
+    int execute_join_approval_strategy(const std::string& id,std::string& response,long& status) const {
+        char*out=nullptr;int rc=qqb_execute_join_approval_strategy(p_,id.c_str(),&out,&status);
+        if(out){response.assign(out);qqb_free_string(out);}return rc;
+    }
+    int update_join_approval_whitelist(const std::string& id,const std::string& body,std::string& response,long& status) const {
+        char*out=nullptr;int rc=qqb_update_join_approval_whitelist(p_,id.c_str(),body.c_str(),&out,&status);
+        if(out){response.assign(out);qqb_free_string(out);}return rc;
+    }
 };
 }
