@@ -15,7 +15,7 @@
 |---|---|---|
 | POST | `/api/v1/auth/login` | 提交 AppID、AppSecret、连接模式并启动机器人 |
 | POST | `/api/v1/auth/logout` | 退出管理会话并按策略停止机器人 |
-| GET | `/api/v1/status` | 获取运行状态与连接模式 |
+| GET | `/api/v1/status` | 获取运行状态、接入方式和连接状态（首版已实现） |
 | GET | `/api/v1/logs` | 读取最近 100 条运行日志（首版已实现） |
 | GET | `/api/v1/events` | 管理员查看最近 100 条已验签事件收件箱记录 |
 | GET | `/api/v1/event-deliveries` | 管理员查看最近 200 条逐插件投递任务状态 |
@@ -27,7 +27,7 @@
 | POST | `/api/v1/plugins/{id}/qq-api` | SDK 官方 API 代理：插件 ID + Token 鉴权，JSON `{method,path,body}`（首版已实现，未实测） |
 | POST | `/webhook/qq` | QQ 官方 Webhook 回调；op=13 challenge、op=0 Ed25519 验签与 op=12 ACK（首版已实现） |
 
-其中 `/api/v1/auth/login`、`/api/v1/status`、`/api/v1/logs` 和 `/webhook/qq` 已有首版实现；插件列表/注册/启停/删除和 `/api/v1/plugins/{id}/qq-api` 官方 API 代理已有首版实现；管理操作通过环境变量 `QQBOT_ADMIN_TOKEN` 做 Bearer 鉴权。插件 HTTP 回调发送 worker 尚未实现；当前已为每个启用且 callback_url 非空的插件创建独立 pending delivery 记录，并可通过管理员接口查看。完整管理会话认证、插件消息抽象 API 和实时流尚未实现。SDK 当前通过该代理路由调用；尚未执行端到端测试。
+其中 `/api/v1/auth/login`、`/api/v1/status`、`/api/v1/logs` 和 `/webhook/qq` 已有首版实现；登录支持 `websocket`（WSS Gateway 初版，HELLO/IDENTIFY/心跳/断线重连）和 `webhook`（Ed25519 验签入口）。WSS 目前尚无 RESUME 会话恢复、完整错误码分类与 QQ 实机联调。消息日志首批覆盖 `GROUP_AT_MESSAGE_CREATE` 和 `C2C_MESSAGE_CREATE`，记录会话类型、群/用户标识、发送者标识、时间和文本；频道/私信及附件日志待补齐。插件列表/注册/启停/删除和 `/api/v1/plugins/{id}/qq-api` 官方 API 代理已有首版实现；管理操作通过环境变量 `QQBOT_ADMIN_TOKEN` 做 Bearer 鉴权。插件 HTTP 回调发送 worker 尚未实现；当前已为每个启用且 callback_url 非空的插件创建独立 pending delivery 记录，并可通过管理员接口查看。完整管理会话认证、插件消息抽象 API 和实时流尚未实现。SDK 当前通过该代理路由调用；尚未执行端到端测试。
 
 ### 2.1 SDK 官方 API 代理请求
 
@@ -52,3 +52,13 @@
 ## 5. QQ 官方协议
 
 QQ API 根域名、token 获取请求、Authorization 格式、Gateway、Webhook 验签与 ACK 必须根据官方文档核验后落地。用户原始描述存档于 `DEVELOPMENT.md`，不以未经核验的假设代替官方协议。
+
+
+## 6. 机器人接入与消息日志（2026-11-23）
+
+- 登录请求：`POST /api/v1/auth/login`，JSON 字段 `app_id`、`app_secret`、`mode`；mode 仅接受 `websocket` 或 `webhook`。
+- WebSocket 模式：宿主使用 access_token 请求 `GET /gateway`，连接响应中的 WSS URL；首版实现 HELLO、IDENTIFY、心跳、READY 状态识别及断线退避重连。
+- Webhook 模式：保留 `POST /webhook/qq` challenge 和 Ed25519 验签处理；需要公网 HTTPS 反向代理，并在 QQ 开放平台配置回调地址。
+- 状态查询：`GET /api/v1/status` 返回 authenticated、mode、connection_state 和 transport_ready。WSS 只有收到 READY 才进入 connected；Webhook 收到已验签事件后进入 webhook_active。
+- 消息日志：首批记录 `GROUP_AT_MESSAGE_CREATE` 与 `C2C_MESSAGE_CREATE`，同时写入 SQLite event inbox 与 logs 表；日志包含会话类型、会话标识、发送者标识、消息文本和时间。日志接口目前返回最近 100 条。
+- 限制：WSS 首版尚未实现 RESUME/session 持久化、所有 Gateway 关闭码策略和真实 QQ 平台联调；Webhook 仍要求公网 HTTPS 和控制台正确配置。当前事件解析未覆盖频道、频道私信、附件内容和全部群管理事件的可读字段。
