@@ -20,7 +20,7 @@ if(MINGW)
 endif()
 set_target_properties(qqbot_sdk PROPERTIES OUTPUT_NAME qqbot_sdk VERSION 0.1.0 SOVERSION 0)
 
-add_executable(qqbot src/main.c src/qq/webhook.c src/qq/events.c src/qq/event_queue.c src/qq/callback_security.c)
+add_executable(qqbot src/main.c src/qq/webhook.c src/qq/events.c src/qq/event_queue.c src/qq/callback_security.c src/qq/gateway.c)
 target_include_directories(qqbot PRIVATE src)
 if(NOT WIN32)
   target_compile_definitions(qqbot PRIVATE _POSIX_C_SOURCE=200809L)
