@@ -3,7 +3,6 @@
 #include <winhttp.h>
 #include <bcrypt.h>
 #include <commctrl.h>
-#include <cjson/cJSON.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -28,7 +27,7 @@ static HWND g_main, g_appid, g_secret, g_mode, g_login, g_status, g_logs;
 static HWND g_home, g_messages, g_settings;
 static HANDLE g_core_process;
 static char g_admin_token[65];
-static char g_root[MAX_PATH], g_core_path[MAX_PATH];
+static char g_root[MAX_PATH], g_core_path[MAX_PATH], g_runtime_dir[MAX_PATH];
 static BOOL g_logged_in;
 
 static void set_text(HWND h, const char *s) { SetWindowTextA(h, s ? s : ""); }
@@ -37,11 +36,10 @@ static void append_text(HWND h, const char *s) {
     SendMessageA(h, EM_REPLACESEL, FALSE, (LPARAM)(s?s:""));
 }
 static void make_paths(void) {
-    GetModuleFileNameA(NULL,g_core_path,sizeof(g_core_path));
-    char *p=strrchr(g_core_path,'\\'); if(p)*p=0;
-    snprintf(g_root,sizeof(g_root),"%s",g_core_path);
-    p=strrchr(g_root,'\\'); if(p)*p=0;
-    strncat(g_core_path,"\\qqbot-core.exe",sizeof(g_core_path)-strlen(g_core_path)-1);
+    GetModuleFileNameA(NULL,g_root,sizeof(g_root));
+    char *p=strrchr(g_root,'\\'); if(p)*p=0;
+    snprintf(g_runtime_dir,sizeof(g_runtime_dir),"%s\\runtime",g_root);
+    snprintf(g_core_path,sizeof(g_core_path),"%s\\qqbot-core.exe",g_runtime_dir);
 }
 static int start_core(void) {
     char raw[32], token[65], env[32768], exe[MAX_PATH+8], cwd[MAX_PATH];
@@ -62,16 +60,17 @@ static int start_core(void) {
     q+=sprintf(q,"QQBOT_ADMIN_TOKEN=%s",g_admin_token)+1;
     q+=sprintf(q,"QQBOT_BIND=127.0.0.1")+1;
     q+=sprintf(q,"QQBOT_PORT=8080")+1;
+    char path_env[8192];
+    const char *old_path=getenv("PATH");
+    snprintf(path_env,sizeof(path_env),"PATH=%s;%s",g_runtime_dir,old_path?old_path:"");
+    q+=sprintf(q,"%s",path_env)+1;
     char ca_path[MAX_PATH+32];
     snprintf(ca_path,sizeof(ca_path),"CURL_CA_BUNDLE=%s\\certs\\ca-bundle.crt",g_root);
     q+=sprintf(q,"%s",ca_path)+1; *q=0;
     snprintf(exe,sizeof(exe),"\"%s\"",g_core_path);
     snprintf(cwd,sizeof(cwd),"%s",g_root);
     STARTUPINFOA si; PROCESS_INFORMATION pi; ZeroMemory(&si,sizeof(si)); ZeroMemory(&pi,sizeof(pi)); si.cb=sizeof(si);
-    if(!CreateProcessA(NULL,exe,NULL,NULL,FALSE,CREATE_NO_WINDOW,(LPVOID)env,cwd,&si,&pi)) {
-        /* MinGW builds use an ANSI environment block. */
-        if(!CreateProcessA(NULL,exe,NULL,NULL,FALSE,CREATE_NO_WINDOW,env,cwd,&si,&pi))return -1;
-    }
+    if(!CreateProcessA(NULL,exe,NULL,NULL,FALSE,CREATE_NO_WINDOW,env,cwd,&si,&pi))return -1;
     CloseHandle(pi.hThread); g_core_process=pi.hProcess; return 0;
 }
 static int http_request(const char *method,const char *path,const char *body,char *out,DWORD cap) {
@@ -115,20 +114,7 @@ static void show_dashboard(void) {
 static void refresh_data(void) {
     char buf[32768],status[2048];
     if(http_request("GET","/api/v1/status",NULL,status,sizeof(status))==0)set_text(g_status,status);
-    if(http_request("GET","/api/v1/logs",NULL,buf,sizeof(buf))==0){
-        cJSON *arr=cJSON_Parse(buf); cJSON *item=NULL; char view[30000]="";
-        cJSON_ArrayForEach(item,arr){
-            cJSON *level=cJSON_GetObjectItemCaseSensitive(item,"level");
-            cJSON *message=cJSON_GetObjectItemCaseSensitive(item,"message");
-            cJSON *stamp=cJSON_GetObjectItemCaseSensitive(item,"created_at");
-            char line[2048]; snprintf(line,sizeof(line),"[%s] [%s] %s\r\n",
-                cJSON_IsString(stamp)?stamp->valuestring:"",cJSON_IsString(level)?level->valuestring:"INFO",
-                cJSON_IsString(message)?message->valuestring:"");
-            if(strlen(view)+strlen(line)+1<sizeof(view))strcat(view,line);
-        }
-        cJSON_Delete(arr); set_text(g_logs,view);
-    }
-}
+    if(http_request("GET","/api/v1/logs",NULL,buf,sizeof(buf))==0)set_text(g_logs,buf);}
 static void do_login(void) {
     char id[256],secret[512],eid[520],esec[1024],body[1800],response[4096];
     GetWindowTextA(g_appid,id,sizeof(id)); GetWindowTextA(g_secret,secret,sizeof(secret));
@@ -191,7 +177,7 @@ static LRESULT CALLBACK wndproc(HWND hwnd,UINT msg,WPARAM wp,LPARAM lp) {
 }
 int WINAPI WinMain(HINSTANCE h,HINSTANCE prev,LPSTR cmd,int show) {
     (void)prev;(void)cmd;g_instance=h;make_paths();
-    if(start_core()!=0){MessageBoxA(NULL,"无法启动 QQBot 核心程序。请确认 qqbot-core.exe 与 QQBot.exe 位于同一安装目录的 bin 文件夹。","QQBot",MB_ICONERROR);return 1;}
+    if(start_core()!=0){MessageBoxA(NULL,"无法启动 QQBot 核心程序。请确认 runtime\\qqbot-core.exe 与 QQBot.exe 位于同一安装包内。","QQBot",MB_ICONERROR);return 1;}
     Sleep(1600);
     WNDCLASSA wc;ZeroMemory(&wc,sizeof(wc));wc.lpfnWndProc=wndproc;wc.hInstance=h;wc.lpszClassName="QQBotDesktopWindow";
     wc.hCursor=LoadCursor(NULL,IDC_ARROW);wc.hbrBackground=(HBRUSH)(COLOR_WINDOW+1);
