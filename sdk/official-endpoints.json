@@ -1,0 +1,368 @@
+{
+  "source": "Tencent official tencent-connect/bot-docs API v2 pages",
+  "verified_at": "2026-11-23",
+  "scope_note": "This is an incremental, source-verified endpoint manifest, not yet the complete API v2 endpoint set. Permission requirements not explicitly stated on the referenced page are marked undocumented_here.",
+  "api_base": "https://api.sgroup.qq.com",
+  "endpoints": [
+    {
+      "id": "message.c2c.create",
+      "method": "POST",
+      "path": "/v2/users/{openid}/messages",
+      "source": "server-inter/message/send-receive/send.md",
+      "path_parameters": [
+        {
+          "name": "openid",
+          "type": "string",
+          "required": true,
+          "description": "QQ user openid"
+        }
+      ],
+      "body_fields": [
+        {
+          "name": "content",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "msg_type",
+          "type": "integer",
+          "required": true,
+          "description": "0 text, 2 markdown, 3 ark, 4 embed, 7 media"
+        },
+        {
+          "name": "markdown",
+          "type": "object",
+          "required": false
+        },
+        {
+          "name": "keyboard",
+          "type": "object",
+          "required": false
+        },
+        {
+          "name": "ark",
+          "type": "object",
+          "required": false
+        },
+        {
+          "name": "media",
+          "type": "object",
+          "required": false
+        },
+        {
+          "name": "message_reference",
+          "type": "object",
+          "required": false,
+          "availability": "not_supported_per_source"
+        },
+        {
+          "name": "event_id",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "msg_id",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "msg_seq",
+          "type": "integer",
+          "required": false,
+          "default": 1
+        }
+      ],
+      "permissions": "Bot must be authorized for C2C messaging; exact permission label not specified on this page.",
+      "reply_constraints": "Passive reply window 60 minutes; up to 5 replies per message. Proactive push discontinued since 2025-04-21.",
+      "errors": [
+        22009,
+        304082,
+        304083
+      ]
+    },
+    {
+      "id": "message.group.create",
+      "method": "POST",
+      "path": "/v2/groups/{group_openid}/messages",
+      "source": "server-inter/message/send-receive/send.md",
+      "path_parameters": [
+        {
+          "name": "group_openid",
+          "type": "string",
+          "required": true,
+          "description": "Group openid"
+        }
+      ],
+      "body_fields": [
+        {
+          "name": "content",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "msg_type",
+          "type": "integer",
+          "required": true,
+          "description": "0 text, 2 markdown, 3 ark, 4 embed, 7 media"
+        },
+        {
+          "name": "markdown",
+          "type": "object",
+          "required": false
+        },
+        {
+          "name": "keyboard",
+          "type": "object",
+          "required": false
+        },
+        {
+          "name": "media",
+          "type": "object",
+          "required": false
+        },
+        {
+          "name": "ark",
+          "type": "object",
+          "required": false
+        },
+        {
+          "name": "message_reference",
+          "type": "object",
+          "required": false,
+          "availability": "not_supported_per_source"
+        },
+        {
+          "name": "event_id",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "msg_id",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "msg_seq",
+          "type": "integer",
+          "required": false,
+          "default": 1
+        }
+      ],
+      "permissions": "Bot must be authorized for group messaging; exact permission label not specified on this page.",
+      "reply_constraints": "Passive reply window 5 minutes; up to 5 replies per message. Proactive push discontinued since 2025-04-21.",
+      "errors": [
+        22009,
+        304082,
+        304083
+      ]
+    },
+    {
+      "id": "message.channel.create",
+      "method": "POST",
+      "path": "/channels/{channel_id}/messages",
+      "source": "server-inter/message/send-receive/send.md",
+      "path_parameters": [
+        {
+          "name": "channel_id",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "body_fields": "See linked detailed channel message endpoint documentation; the send.md page delegates request schema.",
+      "permissions": "Channel messaging permission and online WebSocket condition are described in source; WebSocket support status must be checked against current platform policy.",
+      "reply_constraints": "Passive reply window 5 minutes; per-channel rate limit 5 messages/second. Proactive push discontinued since 2025-04-21.",
+      "errors": "See official OpenAPI error catalogue."
+    },
+    {
+      "id": "message.dms.create",
+      "method": "POST",
+      "path": "/dms/{guild_id}/messages",
+      "source": "server-inter/message/send-receive/send.md",
+      "path_parameters": [
+        {
+          "name": "guild_id",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "body_fields": "Same request fields as the detailed channel message endpoint, per source.",
+      "permissions": "DM messaging permission; exact permission label not specified on this page.",
+      "reply_constraints": "Passive reply window 5 minutes. Proactive push discontinued since 2025-04-21.",
+      "errors": "See official OpenAPI error catalogue."
+    },
+    {
+      "id": "guild.get",
+      "method": "GET",
+      "path": "/guilds/{guild_id}",
+      "source": "server-inter/channel/manage/guild/get_guild.md",
+      "path_parameters": [
+        {
+          "name": "guild_id",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "body_fields": [],
+      "permissions": "undocumented_here",
+      "response": "Guild object",
+      "errors": "See official OpenAPI error catalogue."
+    },
+    {
+      "id": "channel.list",
+      "method": "GET",
+      "path": "/guilds/{guild_id}/channels",
+      "source": "server-inter/channel/manage/channel/get_channels.md",
+      "path_parameters": [
+        {
+          "name": "guild_id",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "body_fields": [],
+      "permissions": "undocumented_here",
+      "response": "Array of Channel objects",
+      "errors": "See official OpenAPI error catalogue."
+    },
+    {
+      "id": "channel.get",
+      "method": "GET",
+      "path": "/channels/{channel_id}",
+      "source": "server-inter/channel/manage/channel/get_channel.md",
+      "path_parameters": [
+        {
+          "name": "channel_id",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "body_fields": [],
+      "permissions": "undocumented_here",
+      "response": "Channel object",
+      "errors": "See official OpenAPI error catalogue."
+    },
+    {
+      "id": "channel.create",
+      "method": "POST",
+      "path": "/guilds/{guild_id}/channels",
+      "source": "server-inter/channel/manage/channel/post_channels.md",
+      "path_parameters": [
+        {
+          "name": "guild_id",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "body_fields": [
+        {
+          "name": "name",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "type",
+          "type": "integer",
+          "required": true
+        },
+        {
+          "name": "sub_type",
+          "type": "integer",
+          "required": false
+        },
+        {
+          "name": "position",
+          "type": "integer",
+          "required": true
+        },
+        {
+          "name": "parent_id",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "private_type",
+          "type": "integer",
+          "required": false
+        },
+        {
+          "name": "private_user_ids",
+          "type": "string[]",
+          "required": false
+        },
+        {
+          "name": "speak_permission",
+          "type": "integer",
+          "required": false
+        },
+        {
+          "name": "application_id",
+          "type": "string",
+          "required": false
+        }
+      ],
+      "permissions": "Requires Manage Channels; bot must be configured as administrator.",
+      "response": "Channel object",
+      "errors": "See official OpenAPI error catalogue."
+    },
+    {
+      "id": "channel.update",
+      "method": "PATCH",
+      "path": "/channels/{channel_id}",
+      "source": "server-inter/channel/manage/channel/patch_channel.md",
+      "path_parameters": [
+        {
+          "name": "channel_id",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "body_fields": [
+        {
+          "name": "name",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "position",
+          "type": "integer",
+          "required": false
+        },
+        {
+          "name": "parent_id",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "private_type",
+          "type": "integer",
+          "required": false
+        },
+        {
+          "name": "speak_permission",
+          "type": "integer",
+          "required": false
+        }
+      ],
+      "permissions": "Requires Manage Channel; bot must be configured as administrator.",
+      "response": "Channel object",
+      "errors": "See official OpenAPI error catalogue."
+    },
+    {
+      "id": "channel.delete",
+      "method": "DELETE",
+      "path": "/channels/{channel_id}",
+      "source": "server-inter/channel/manage/channel/delete_channel.md",
+      "path_parameters": [
+        {
+          "name": "channel_id",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "body_fields": [],
+      "permissions": "Requires Manage Channel; bot must be configured as administrator.",
+      "response": "HTTP 200; irreversible operation.",
+      "errors": "See official OpenAPI error catalogue."
+    }
+  ]
+}
