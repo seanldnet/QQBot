@@ -36,6 +36,10 @@ QQB_API int QQB_CALL qqb_send_c2c_text(qqb_client *client, const char *user_open
                                       const char *content, const char *event_id,
                                       const char *msg_id, int msg_seq,
                                       char **response_json, long *http_status);
+QQB_API int QQB_CALL qqb_send_dms_text(qqb_client *client, const char *guild_id,
+                                       const char *content, const char *event_id,
+                                       const char *msg_id, int msg_seq,
+                                       char **response_json, long *http_status);
 QQB_API int QQB_CALL qqb_send_channel_text(qqb_client *client, const char *channel_id,
                                            const char *content, const char *event_id,
                                            const char *msg_id, int msg_seq,
