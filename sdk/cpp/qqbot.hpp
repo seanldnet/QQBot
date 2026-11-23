@@ -20,6 +20,30 @@ public:
           body.empty()?nullptr:body.c_str(),&out,&status);
         if(out){response.assign(out);qqb_free_string(out);} return rc;
     }
+    int get_guild(const std::string& id,std::string& response,long& status) const {
+        char*out=nullptr;int rc=qqb_get_guild(p_,id.c_str(),&out,&status);
+        if(out){response.assign(out);qqb_free_string(out);}return rc;
+    }
+    int list_channels(const std::string& guild_id,std::string& response,long& status) const {
+        char*out=nullptr;int rc=qqb_list_channels(p_,guild_id.c_str(),&out,&status);
+        if(out){response.assign(out);qqb_free_string(out);}return rc;
+    }
+    int get_channel(const std::string& id,std::string& response,long& status) const {
+        char*out=nullptr;int rc=qqb_get_channel(p_,id.c_str(),&out,&status);
+        if(out){response.assign(out);qqb_free_string(out);}return rc;
+    }
+    int create_channel(const std::string& guild_id,const std::string& body,std::string& response,long& status) const {
+        char*out=nullptr;int rc=qqb_create_channel(p_,guild_id.c_str(),body.c_str(),&out,&status);
+        if(out){response.assign(out);qqb_free_string(out);}return rc;
+    }
+    int update_channel(const std::string& id,const std::string& body,std::string& response,long& status) const {
+        char*out=nullptr;int rc=qqb_update_channel(p_,id.c_str(),body.c_str(),&out,&status);
+        if(out){response.assign(out);qqb_free_string(out);}return rc;
+    }
+    int delete_channel(const std::string& id,std::string& response,long& status) const {
+        char*out=nullptr;int rc=qqb_delete_channel(p_,id.c_str(),&out,&status);
+        if(out){response.assign(out);qqb_free_string(out);}return rc;
+    }
     int send_group_text(const std::string& id,const std::string& text,const std::string& event_id,
                         const std::string& msg_id,int seq,std::string& response,long& status) const {
         char*out=nullptr;int rc=qqb_send_group_text(p_,id.c_str(),text.c_str(),
