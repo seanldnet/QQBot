@@ -77,11 +77,11 @@ jobs:
         run: |
           cmake --install build-win
           mkdir -p stage/data stage/runtime
-          cp -r web stage/
           cp README.md DEPENDENCIES.md stage/
           mv stage/bin/QQBot.exe stage/QQBot.exe
           mv stage/bin/qqbot-core.exe stage/runtime/qqbot-core.exe
           mv stage/bin/libqqbot_sdk.dll stage/runtime/libqqbot_sdk.dll
+          rm -rf stage/bin stage/include stage/lib
           cat > stage/桌面版说明.txt <<'EOF'
           QQBot 桌面版
           双击根目录 QQBot.exe 启动原生 Windows 窗口。
