@@ -61,3 +61,25 @@
 - GET /channels/{channel_id}/schedules — 获取日程列表；since 单位为毫秒。 参数：channel_id；字段：since:uint64 (milliseconds; returns schedules ending after this timestamp; default current day)；权限：源页引用错误码总表，未列具体权限。
 - GET /channels/{channel_id}/schedules/{schedule_id} — 获取日程详情。 参数：channel_id, schedule_id；字段：无；权限：源页引用错误码总表，未列具体权限。
 - POST /channels/{channel_id}/schedules — 创建日程；单个管理员每天最多 10 次，单频道每天最多 100 次。 参数：channel_id；字段：schedule:Schedule (without id)；权限：需管理频道权限；机器人必须为管理员。错误码引用官方总表。
+
+
+## 第四批：频道成员、身份组与禁言的类型化 DLL 导入
+
+以下函数已加入 C ABI DLL，均为 `__stdcall`。ID 参数使用官方 ID 字符串；分页 limit 范围为 1–400。禁言时间参数是十进制字符串，传 `"0"` 可解除禁言。所有返回 JSON 指针都必须调用 `qqb_free_string` 释放。
+
+```text
+qqb_list_guild_members(client, guild_id, after, limit, response_json*, http_status*) -> 整数型
+qqb_get_guild_member(client, guild_id, user_id, response_json*, http_status*) -> 整数型
+qqb_list_guild_roles(client, guild_id, response_json*, http_status*) -> 整数型
+qqb_create_guild_role(client, guild_id, body_json, response_json*, http_status*) -> 整数型
+qqb_update_guild_role(client, guild_id, role_id, body_json, response_json*, http_status*) -> 整数型
+qqb_delete_guild_role(client, guild_id, role_id, response_json*, http_status*) -> 整数型
+qqb_mute_guild(client, guild_id, mute_end_timestamp, mute_seconds, response_json*, http_status*) -> 整数型
+qqb_mute_guild_member(client, guild_id, user_id, mute_end_timestamp, mute_seconds, response_json*, http_status*) -> 整数型
+```
+
+- `qqb_list_guild_members`：after 为空时默认使用 `0`；翻页时传上一页最后一个成员的 user id。官方提示分页可能重复，调用方需按 user id 去重。
+- 创建/修改身份组：body_json 传完整 JSON 对象，至少包含 name/color/hoist 中一个字段。
+- 禁言：mute_end_timestamp 与 mute_seconds 至少提供一个；若两者都提供，官方以绝对到期时间戳优先；两个字段的单位分别为秒级 Unix 时间戳与秒数，均以字符串传入。
+- 权限：身份组创建/修改/删除需对应权限，机器人需为频道管理员；全员/成员禁言要求机器人为频道管理员。最终权限由 QQ 平台校验。
+- 该映射说明 DLL 导出签名，不等同于已在易语言 IDE 编译验证；Windows DLL 与易语言 IDE 测试仍待执行。
