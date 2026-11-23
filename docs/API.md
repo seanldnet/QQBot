@@ -20,10 +20,11 @@
 | GET | `/api/v1/logs/stream` | 实时日志流（协议待选型） |
 | GET/POST | `/api/v1/plugins` | 查询/注册插件 |
 | PATCH/DELETE | `/api/v1/plugins/{id}` | 启停/删除插件 |
-| POST | `/api/v1/plugins/{id}/messages` | 插件发送消息 |
+| POST | `/api/v1/plugins/{id}/messages` | 插件发送宿主标准消息（待实现） |
+| POST | `/api/v1/plugins/{id}/qq-api` | SDK 官方 API 代理：插件 ID + Token 鉴权，JSON `{method,path,body}`（SDK 已按此契约编写，宿主路由待实现） |
 | POST | `/webhook/qq` | QQ 官方 Webhook 回调；op=13 challenge、op=0 Ed25519 验签与 op=12 ACK（首版已实现） |
 
-其中 `/api/v1/auth/login`、`/api/v1/status`、`/api/v1/logs` 和 `/webhook/qq` 已有首版实现；插件 CRUD、插件消息发送和实时流尚未实现。
+其中 `/api/v1/auth/login`、`/api/v1/status`、`/api/v1/logs` 和 `/webhook/qq` 已有首版实现；插件 CRUD、插件消息发送、`/api/v1/plugins/{id}/qq-api` 官方 API 代理和实时流尚未实现。SDK 当前通过该代理契约调用。
 
 ## 3. 插件事件 JSON 契约（初步）
 
