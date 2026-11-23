@@ -160,3 +160,10 @@
 - 文件：`scripts/package-windows.sh`。原因：Windows full-build 编译和 CTest 3/3 均成功，安装目录及 CA bundle 已就绪，但 PE 导入扫描将系统 DLL `wldap32.dll` 当作未解析的第三方运行库并中止。
 - 行为变化：将 `wldap32.dll` 加入 Windows 系统 DLL 白名单；仍对其他无法解析的非系统 DLL 立即失败，避免静默漏打包。
 - 验证：修复后 CI 尚待运行；ZIP 和 Artifact 尚未确认生成。
+
+
+## 2026-11-23 — 修复 Windows DLL 扫描器漏识别 ncrypt.dll
+
+- 文件：`scripts/package-windows.sh`。原因：Windows full-build 编译、CTest 3/3、运行目录安装和 CA bundle 下载均通过，但递归 PE 导入扫描发现 `libgnutls-30.dll` 依赖 `ncrypt.dll`，扫描器未将其识别为 Windows 系统组件。
+- 行为变化：将 `ncrypt.dll` 加入系统 DLL 白名单；该 DLL 由 Windows 提供，不复制进包；未知非系统 DLL 仍触发失败，保持完整性检查。
+- 验证：修复提交 `1fb5e24` 已提交；新 CI 尚未完成，ZIP/Artifact 尚未确认生成。Server 2012–2026 实机矩阵未执行。
