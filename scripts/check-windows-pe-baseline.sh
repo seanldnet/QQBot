@@ -15,7 +15,7 @@ while IFS= read -r -d '' file; do
   header="$(objdump -p "$file")"
   major="$(awk '/MajorSubsystemVersion/{print $2; exit}' <<<"$header")"
   minor="$(awk '/MinorSubsystemVersion/{print $2; exit}' <<<"$header")"
-  format="$(objdump -f "$file" | awk -F': ' '/file format/{print $2; exit}')"
+  format="$(objdump -f "$file" | awk '/file format/{print $NF; exit}')"
 
   if [[ -z "$major" || -z "$minor" || -z "$format" ]]; then
     echo "Unable to read PE metadata: $file" >&2
