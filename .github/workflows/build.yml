@@ -92,7 +92,7 @@ jobs:
           mkdir -p stage/certs
           curl -fL --retry 3 --retry-all-errors https://curl.se/ca/cacert.pem -o stage/certs/ca-bundle.crt
           test -s stage/certs/ca-bundle.crt
-cat > stage/运行环境说明.txt <<'EOF'
+          cat > stage/运行环境说明.txt <<'EOF'
           QQBot Windows x64 一键运行包
           目标 Windows API baseline：Windows 8.1 / Server 2012 (0x0602)
           已包含原生桌面程序、QQ 协议宿主、SDK DLL 和非系统运行时 DLL。
