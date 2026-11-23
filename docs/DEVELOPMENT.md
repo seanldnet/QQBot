@@ -242,3 +242,6 @@
 - 移除 `AI_ADDRCONFIG`，避免操作系统本地网卡配置影响 A/AAAA 查询结果；安全策略仍要求检查解析器返回的每个地址。
 - `CMakeLists.txt` 与 `Makefile`：Windows 构建链接 `ws2_32`。
 - 当前只是源代码级 Windows 适配；尚未在 MSVC/MinGW Windows runner 实际编译或运行，不能视为 Windows 验证通过。DNS pinning、callback URL 写入校验和 HTTP worker 仍未完成，出站请求继续禁用。
+
+
+- GitHub Actions 已增加 Windows-latest + MSYS2/MinGW64 的 callback security 独立编译与测试 job；该 job 只验证 resolver 模块，不代表整个宿主依赖栈已支持 Windows。首次运行结果待确认。
