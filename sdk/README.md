@@ -1,5 +1,7 @@
 # QQBot 多语言 SDK
 
+快速接入请先阅读 [SDK QUICKSTART](QUICKSTART.md)，Windows 易语言 DLL 构建见 [sdk/windows](windows/README.md)。
+
 - `include/qqbot_sdk.h`：稳定 C ABI 导出接口。
 - `src/qqbot_sdk.c`：libcurl 实现，插件 ID + Token 调用宿主代理。
 - `cpp/qqbot.hpp`：C++ RAII 封装。
