@@ -33,7 +33,7 @@
 
 ## SDK 对接状态
 
-C ABI 的 `qqb_api_request(method,path,body)` 已提供通用调用底座；C++ 与易语言经同一 C ABI 调用。因此上述路由可通过通用方法调用，但本批尚未为每个 endpoint 生成独立的类型化函数。下一批继续覆盖群管理、成员、角色、权限、公告、日程、论坛、音频及用户接口。
+本批已为 6 条频道管理路由提供独立类型化函数：`qqb_get_guild`、`qqb_list_channels`、`qqb_get_channel`、`qqb_create_channel`、`qqb_update_channel`、`qqb_delete_channel`，并同步提供 C++ `qqbot::Client` 方法和易语言 DLL 导入映射。四种消息发送路由已有文本发送便利函数。其他复杂消息类型仍可通过通用 `qqb_api_request(method,path,body)` 调用。下一批继续覆盖群管理、成员、角色、权限、公告、日程、论坛、音频及用户接口。
 
 ## 官方原文
 
