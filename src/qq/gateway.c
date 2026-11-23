@@ -98,7 +98,7 @@ static int send_json(CURL *ws, const char *json) {
     CURLcode rc = curl_ws_send(ws, json, length, &sent, 0, CURLWS_TEXT);
     while (rc == CURLE_AGAIN) {
         int fds = 0;
-        curl_easy_poll(ws, NULL, 0, 1000, &fds);
+        curl_easy_wait(ws, NULL, 0, 1000, &fds);
         rc = curl_ws_send(ws, json, length, &sent, 0, CURLWS_TEXT);
     }
     return rc == CURLE_OK && sent == length ? 0 : -1;
@@ -225,7 +225,7 @@ static void *gateway_thread(void *opaque) {
             CURLcode rc = curl_ws_recv(ws, frame, sizeof(frame), &received, &meta);
             if (rc == CURLE_AGAIN) {
                 int fds = 0;
-                curl_easy_poll(ws, NULL, 0, 250, &fds);
+                curl_easy_wait(ws, NULL, 0, 250, &fds);
             } else if (rc != CURLE_OK) {
                 state(g, "disconnected", "WSS 接收失败");
                 reconnect = 1;
