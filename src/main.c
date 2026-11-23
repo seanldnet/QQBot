@@ -130,7 +130,7 @@ static enum MHD_Result handler(void *cls, struct MHD_Connection *c, const char *
     }
     if (strcmp(method, "GET") == 0 && strcmp(url, "/api/v1/logs") == 0) {
         cJSON *array = cJSON_CreateArray(); sqlite3_stmt *st = NULL;
-        if (!array) return json_reply(c, 500, "{\\"error\\":\\"out_of_memory\\"}");
+        if (!array) return json_reply(c, 500, "{\"error\":\"out_of_memory\"}");
         pthread_mutex_lock(&g_app.lock);
         if (sqlite3_prepare_v2(g_app.db, "SELECT level,component,message,created_at FROM logs ORDER BY id DESC LIMIT 100", -1, &st, NULL) == SQLITE_OK) {
             while (sqlite3_step(st) == SQLITE_ROW) {
@@ -144,7 +144,7 @@ static enum MHD_Result handler(void *cls, struct MHD_Connection *c, const char *
         }
         sqlite3_finalize(st); pthread_mutex_unlock(&g_app.lock);
         char *encoded = cJSON_PrintUnformatted(array); cJSON_Delete(array);
-        if (!encoded) return json_reply(c, 500, "{\\"error\\":\\"json_encode_failed\\"}");
+        if (!encoded) return json_reply(c, 500, "{\"error\":\"json_encode_failed\"}");
         enum MHD_Result result = json_reply(c, 200, encoded); free(encoded); return result;
     }
     if (strcmp(method, "POST") == 0 && strcmp(url, "/api/v1/auth/login") == 0) {
