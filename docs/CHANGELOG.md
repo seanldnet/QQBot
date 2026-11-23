@@ -208,3 +208,9 @@
 
 - Makefile 的 shell 循环变量改回 `$$p`，避免被 Make 提前展开；保留 libcurl 7.86.0 最低版本检查。
 - 修复提交对应 CI run 45188880579 执行中。
+
+
+## 2026-11-23 — 完成 Makefile 依赖循环变量转义修复
+
+- 将依赖失败提示中的 shell 变量从 `$p` 改为 `$$p`，修复 Make 提前展开导致的空依赖名。
+- 修复提交 81a6624 的 CI 待验证；此前 Windows full-build、CTest、DLL 扫描、PE 审计和 ZIP 上传已成功。
