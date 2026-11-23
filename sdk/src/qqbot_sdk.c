@@ -332,4 +332,55 @@ int QQB_CALL qqb_update_channel_role_permissions(qqb_client*c,const char*channel
     return qqb_api_request(c,"PUT",path,body,out,status);
 }
 
+
+/* Group APIs: group_openid/member_openid are not guild_id/user_id. */
+static char *encode_query_value(const char *value) {
+    CURL *c; char *escaped, *copy;
+    if (!value) return NULL;
+    c = curl_easy_init(); if (!c) return NULL;
+    escaped = curl_easy_escape(c, value, 0);
+    copy = escaped ? dupstr(escaped) : NULL;
+    if (escaped) curl_free(escaped);
+    curl_easy_cleanup(c); return copy;
+}
+int QQB_CALL qqb_get_group_info(qqb_client*c,const char*g,char**out,long*status) {
+    return endpoint_call(c,"GET","/v2/groups/",g,"/info",NULL,out,status);
+}
+int QQB_CALL qqb_get_group_bot_state(qqb_client*c,const char*g,char**out,long*status) {
+    return endpoint_call(c,"GET","/v2/groups/",g,"/bot_state",NULL,out,status);
+}
+int QQB_CALL qqb_get_group_mute_state(qqb_client*c,const char*g,char**out,long*status) {
+    return endpoint_call(c,"GET","/v2/groups/",g,"/restrict_chat_setting",NULL,out,status);
+}
+int QQB_CALL qqb_set_group_member_mutes(qqb_client*c,const char*g,const char*body,char**out,long*status) {
+    if(!body || body[0]!='{') return -1;
+    return endpoint_call(c,"POST","/v2/groups/",g,"/restrict_chat_setting",body,out,status);
+}
+int QQB_CALL qqb_list_group_members(qqb_client*c,const char*g,const char*cursor,unsigned int limit,char**out,long*status) {
+    char *base=NULL,*encoded=NULL,*path=NULL; size_t n; int rc;
+    if(!valid_path_id(g) || limit<1 || limit>30) return -1;
+    base=path_id("/v2/groups/",g,"/members"); if(!base) return -3;
+    if(cursor && *cursor) { encoded=encode_query_value(cursor); if(!encoded) { free(base); return -3; } }
+    n=strlen(base)+(encoded?strlen(encoded):0)+64; path=(char*)malloc(n);
+    if(!path) { free(base); free(encoded); return -3; }
+    if(encoded) snprintf(path,n,"%s?cursor=%s&limit=%u",base,encoded,limit);
+    else snprintf(path,n,"%s?limit=%u",base,limit);
+    rc=qqb_api_request(c,"GET",path,NULL,out,status);
+    free(base); free(encoded); free(path); return rc;
+}
+int QQB_CALL qqb_get_group_member(qqb_client*c,const char*g,const char*m,char**out,long*status) {
+    char *base=NULL,*path=NULL; size_t n; int rc;
+    if(!valid_path_id(g)||!valid_path_id(m)) return -1;
+    base=path_id("/v2/groups/",g,"/members/"); if(!base) return -3;
+    n=strlen(base)+strlen(m)+1; path=(char*)malloc(n);
+    if(!path) { free(base); return -3; }
+    snprintf(path,n,"%s%s",base,m);
+    rc=qqb_api_request(c,"GET",path,NULL,out,status);
+    free(base); free(path); return rc;
+}
+int QQB_CALL qqb_batch_remove_group_members(qqb_client*c,const char*g,const char*body,char**out,long*status) {
+    if(!body || body[0]!='{') return -1;
+    return endpoint_call(c,"POST","/v2/groups/",g,"/batch_remove_members",body,out,status);
+}
+
 const char *QQB_CALL qqb_version(void){return "0.2.0";}
