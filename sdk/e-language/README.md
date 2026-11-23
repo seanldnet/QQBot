@@ -47,3 +47,17 @@
 - PUT /channels/{channel_id}/roles/{role_id}/permissions — 修改身份组权限；add 授权、remove 撤权；同一位同时置 1 时按删除处理；不支持修改“可管理子频道”权限。 参数：channel_id, role_id；字段：add:string (权限位图)；remove:string (权限位图)；权限：需具备管理子频道权限；机器人必须为管理员。错误码引用官方总表。
 - PATCH /guilds/{guild_id}/mute — 全员禁言（非管理员）或解除；成功 HTTP 204。 参数：guild_id；字段：mute_end_timestamp:string (绝对秒级时间戳)；mute_seconds:string (秒数；与前者同时传时前者优先；任一传 '0' 可解除)；权限：需频道管理员权限；机器人必须为管理员。错误码引用官方总表。
 - PATCH /guilds/{guild_id}/members/{user_id}/mute — 指定成员禁言或解除；成功 HTTP 204。 参数：guild_id, user_id；字段：mute_end_timestamp:string (绝对秒级时间戳)；mute_seconds:string (秒数；与前者同时传时前者优先；任一传 '0' 可解除)；权限：需频道管理员权限；机器人必须为管理员。错误码引用官方总表。
+
+
+## 第三批官方接口：公告、精华消息、日程
+
+全部通过 `qqb_api_request` 调用，method/path/body 遵循官方原文；`since` 为毫秒时间戳，删除公告/精华消息的 `all` 特殊值不可混用。
+
+- POST /guilds/{guild_id}/announces — 消息公告与推荐子频道公告互斥；推荐子频道最多 3 条且必须全员可见。 参数：guild_id；字段：message_id:string (optional)；channel_id:string (required when message_id is set)；announces_type:uint32 (0 member, 1 welcome; default 0)；recommend_channels:RecommendChannel[] (replaces the complete recommendation list)；权限：源页引用错误码总表，未列具体权限。
+- DELETE /guilds/{guild_id}/announces/{message_id} — 删除指定公告；message_id=all 删除全部推荐子频道公告。 参数：guild_id, message_id；字段：message_id='all' deletes all announcement items；权限：源页引用错误码总表，未列具体权限。
+- PUT /channels/{channel_id}/pins/{message_id} — 添加精华消息；单个子频道最多 20 条，消息必须可见。 参数：channel_id, message_id；字段：无；权限：源页引用错误码总表，未列具体权限。
+- DELETE /channels/{channel_id}/pins/{message_id} — 删除指定精华消息；message_id=all 删除全部精华消息。 参数：channel_id, message_id；字段：message_id='all' deletes all pins in the channel；权限：源页引用错误码总表，未列具体权限。
+- GET /channels/{channel_id}/pins — 获取子频道精华消息。 参数：channel_id；字段：无；权限：源页引用错误码总表，未列具体权限。
+- GET /channels/{channel_id}/schedules — 获取日程列表；since 单位为毫秒。 参数：channel_id；字段：since:uint64 (milliseconds; returns schedules ending after this timestamp; default current day)；权限：源页引用错误码总表，未列具体权限。
+- GET /channels/{channel_id}/schedules/{schedule_id} — 获取日程详情。 参数：channel_id, schedule_id；字段：无；权限：源页引用错误码总表，未列具体权限。
+- POST /channels/{channel_id}/schedules — 创建日程；单个管理员每天最多 10 次，单频道每天最多 100 次。 参数：channel_id；字段：schedule:Schedule (without id)；权限：需管理频道权限；机器人必须为管理员。错误码引用官方总表。
