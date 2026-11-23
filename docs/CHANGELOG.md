@@ -128,3 +128,11 @@
 - 新增 `scripts/package-windows.sh`，递归扫描 PE 导入 DLL，自动复制 MinGW runtime 依赖；缺失非系统 DLL 会立即失败，不生成不完整包。
 - 构建流程组装 `QQBot-Windows-x64-Server2012plus.zip`，包含宿主、SDK DLL、依赖 DLL、web UI、data 目录、启动脚本和构建时随机生成的管理员 API Token。
 - 此包当前为 CI 验证产物目标，不等同于正式 Release。Windows runner 和各 Server 版本实机验证未完成前，不宣称 2012–2026 全版本兼容。
+
+
+## 2026-11-23 — Windows 完整宿主移植与成品 ZIP CI（待验证）
+
+- `src/main.c`：增加 Windows Winsock、目录/文件访问、时间转换和线程等待的条件编译与初始化清理；POSIX 路径保持不变。
+- `CMakeLists.txt`：Windows 下不定义 POSIX feature macro，避免污染 Winsock/CRT 声明。
+- `.github/workflows/build.yml`：增加 Windows x64 完整依赖安装、宿主和 SDK 构建、CTest、运行目录安装、依赖 DLL 打包与 ZIP artifact 上传。
+- 该工作流目前是首轮完整 Windows 构建探测；DLL 依赖收敛、CA 证书部署、Server 2012—2026 逐版本实机验收尚未完成，不能据此宣称全版本兼容。
