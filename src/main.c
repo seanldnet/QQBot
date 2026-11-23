@@ -116,8 +116,15 @@ static enum MHD_Result handler(void *cls, struct MHD_Connection *c, const char *
         q->body = p; memcpy(q->body + q->size, upload, *upload_size); q->size += *upload_size; q->body[q->size] = 0; *upload_size = 0; return MHD_YES;
     }
     if (strcmp(method, "POST") == 0 && strcmp(url, "/webhook/qq") == 0) {
-        char secret[sizeof(g_app.app_secret)] = {0};
-        pthread_mutex_lock(&g_app.lock); snprintf(secret, sizeof(secret), "%s", g_app.app_secret); pthread_mutex_unlock(&g_app.lock);
+        char secret[sizeof(g_app.app_secret)] = {0}; char configured_app_id[sizeof(g_app.app_id)] = {0};
+        pthread_mutex_lock(&g_app.lock);
+        snprintf(secret, sizeof(secret), "%s", g_app.app_secret);
+        snprintf(configured_app_id, sizeof(configured_app_id), "%s", g_app.app_id);
+        pthread_mutex_unlock(&g_app.lock);
+        const char *header_app_id = MHD_lookup_connection_value(c, MHD_HEADER_KIND, "X-Bot-Appid");
+        if (header_app_id && strcmp(header_app_id, configured_app_id) != 0) {
+            OPENSSL_cleanse(secret, sizeof(secret)); return json_reply(c, 403, "{\"error\":\"app_id_mismatch\"}");
+        }
         const char *sig = MHD_lookup_connection_value(c, MHD_HEADER_KIND, "X-Signature-Ed25519");
         const char *ts = MHD_lookup_connection_value(c, MHD_HEADER_KIND, "X-Signature-Timestamp");
         char *response = NULL; unsigned int status = 400;
