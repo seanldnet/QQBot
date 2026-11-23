@@ -138,3 +138,8 @@ qqb_send_group_text(client, group_openid, content, event_id, msg_id, msg_seq, re
 ### 当前官方群管理开放边界（避免误报）
 
 腾讯官方 bot-docs 当前群管理 README 中，获取群资料、获取机器人入群列表、群成员列表和群成员增退事件等 REST/事件条目仍处于注释/暂不开放状态；不能将这些未开放项目当作可调用接口。现阶段可明确使用的群相关接口是群聊消息发送，以及 WebSocket 群消息/机器人入退群等已公开事件。群管理接口待官方正式开放后再登记。
+
+
+## 群聊完整消息体发送
+
+`qqb_send_group_message(client, group_openid, body_json, response_json*, http_status*)` 支持完整 JSON 消息体；C++ 对应 `Client::send_group_message`。群聊消息类型与回复限制见 `sdk/group-api-discovery.md`。
