@@ -9,10 +9,12 @@
 - [任务进度](docs/TASKS.md)
 - [HTTP / 插件 API](docs/API.md)
 - [数据库设计与迁移](docs/DATABASE.md)
+- [QQ 协议核验记录](docs/PROTOCOL-RESEARCH.md)
+- [依赖安装说明](DEPENDENCIES.md)
 
 ## 当前状态
 
-项目文档初始化阶段。仓库初始为空，尚未有可审查的既有程序代码。后续实现必须记录在变更日志，并同步维护任务状态。
+当前为首阶段开发版本：C11 HTTP 宿主、SQLite 日志、Access Token 获取、Webhook op=13 challenge 与 Ed25519 事件验签已写入；WebSocket、插件 API、消息收发和真实联调仍未完成。详见 docs/TASKS.md。
 
 ## 开发原则
 
