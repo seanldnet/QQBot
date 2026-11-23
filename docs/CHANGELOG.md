@@ -2,6 +2,17 @@
 
 所有代码或文档变更均按时间倒序记录。每条记录必须包含变更范围、原因、行为影响和验证结果。不得将未执行的测试描述为通过。
 
+
+## 2026-11-23 — C11 宿主首阶段骨架
+
+- 新增 `Makefile` 与 `CMakeLists.txt`：建立 C11 构建入口，检测 libmicrohttpd、libcurl、SQLite、cJSON、OpenSSL。
+- 新增 `src/main.c`：实现 HTTP 服务启动、SQLite WAL 与迁移元数据初始化、日志持久化、登录请求 JSON 校验、QQ Access Token 请求与内存缓存、状态查询、静态首页托管。
+- 新增 `web/index.html`：实现 Argon Dashboard 风格登录入口，收集 AppID / AppSecret 与连接模式。
+- 新增 `DEPENDENCIES.md` 与 `.gitignore`：记录依赖安装和本地敏感数据忽略规则。
+- 修复 `src/main.c`：纠正 HTTP 响应头函数调用错误；状态接口将“凭据认证成功”与“传输已连接”分开，避免把拿到 token 误报为机器人已上线。
+- 重要边界：当前 WebSocket / Webhook 传输、消息发送、插件 API、实时日志尚未实现；Webhook 选择会返回明确的 501，不会假装上线。登录成功只代表 access_token 获取成功。
+- 验证：GitHub 文件提交成功；本执行环境未提供仓库本地编译运行能力，因此 Make/CMake 编译与真实 QQ API 联调均标记为未验证。
+
 ## 2026-11-23 — QQ API v2 协议核验记录
 
 - 新增 `docs/PROTOCOL-RESEARCH.md`：记录当前 API v2 域名、Access Token、消息发送限制、Gateway 与 Webhook 已确认事项及待核验边界。
