@@ -1,5 +1,15 @@
 # 变更日志
 
+## 2026-11-23 — 官方 REST endpoint 首批逐项核验
+
+- 新增 `sdk/official-endpoints.json`：记录 10 条从腾讯官方原文直接核验的 REST endpoint，包括 method、path、路径参数、请求字段、权限说明、回复限制和已明确的错误码；对官方页面未写明的权限/错误码明确标注，不推断。
+- 新增 `sdk/official-endpoints.md`：提供便于开发者阅读的 endpoint 表、字段约束、消息频控/被动回复时效及官方原文链接。
+- 修改 `sdk/official-api-catalog.md`：同步增量核验进度，纠正代理状态描述，明确全量类型化 wrapper 尚未完成。
+- 修改 `docs/DEVELOPMENT.md`、`docs/TASKS.md`：记录首批 10 条接口和剩余接口范围。
+- 原因：81 页文档目录索引不等于 REST endpoint 清单；SDK 要逐项记录官方 method/path/参数/权限/错误码，不能把目录页面数量当成接口数量。
+- 验证：已读取并对照腾讯官方 bot-docs 的 7 份原始页面（发送消息文档包含四场景；另含频道详情、子频道列表/详情/创建/修改/删除）；清单 JSON 已按结构生成并提交。未执行 C/C++/易语言编译及 QQ 实机请求测试，未生成独立类型化 wrapper，仍标记为未完成。
+
+
 ## 2026-11-23 — 跨语言插件事件模型
 
 - 最后同步：完善 API.md 插件注册/启停/删除请求响应示例与管理令牌说明；更新易语言回调字段映射、C++ Event 结构、README SDK 导航及 TASKS 当前状态；修正 SDK 头文件对代理鉴权的描述，明确当前采用插件身份认证而非细粒度权限 scope。
