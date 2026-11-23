@@ -153,3 +153,10 @@
 - 文件：`.github/workflows/build.yml`。原因：Windows full-build 已编译成功且 CTest 3/3 通过，但 MSYS2 环境不存在 `/etc/ssl/certs/ca-bundle.crt`，导致运行目录组装失败。
 - 行为变化：改为从 `https://curl.se/ca/cacert.pem` 下载 CA bundle 至 `stage/certs/ca-bundle.crt`，并用 `test -s` 阻止空文件进入成品包；启动脚本继续引用包内路径。
 - 验证：此前 run 45181038608 的 Windows 宿主/SDK 编译、3 项 CTest、固定版 libmicrohttpd 安装均成功；本次 CA 路径修复尚待新 CI 运行。DLL 依赖收集、ZIP 和 Server 全版本实机验证未完成。
+
+
+## 2026-11-23 — 修复 Windows DLL 依赖扫描误报 wldap32.dll
+
+- 文件：`scripts/package-windows.sh`。原因：Windows full-build 编译和 CTest 3/3 均成功，安装目录及 CA bundle 已就绪，但 PE 导入扫描将系统 DLL `wldap32.dll` 当作未解析的第三方运行库并中止。
+- 行为变化：将 `wldap32.dll` 加入 Windows 系统 DLL 白名单；仍对其他无法解析的非系统 DLL 立即失败，避免静默漏打包。
+- 验证：修复后 CI 尚待运行；ZIP 和 Artifact 尚未确认生成。
