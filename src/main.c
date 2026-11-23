@@ -128,6 +128,25 @@ static enum MHD_Result handler(void *cls, struct MHD_Connection *c, const char *
     if (strcmp(method, "GET") == 0 && strcmp(url, "/api/v1/status") == 0) {
         char out[256]; snprintf(out, sizeof(out), "{\"ok\":true,\"authenticated\":%s,\"transport_ready\":%s,\"mode\":\"%s\",\"version\":\"0.1.0\"}", g_app.access_token[0] ? "true" : "false", strcmp(g_app.connection_mode, "webhook") == 0 ? "true" : "false", g_app.connection_mode[0] ? g_app.connection_mode : "none"); return json_reply(c, 200, out);
     }
+    if (strcmp(method, "GET") == 0 && strcmp(url, "/api/v1/logs") == 0) {
+        cJSON *array = cJSON_CreateArray(); sqlite3_stmt *st = NULL;
+        if (!array) return json_reply(c, 500, "{\\"error\\":\\"out_of_memory\\"}");
+        pthread_mutex_lock(&g_app.lock);
+        if (sqlite3_prepare_v2(g_app.db, "SELECT level,component,message,created_at FROM logs ORDER BY id DESC LIMIT 100", -1, &st, NULL) == SQLITE_OK) {
+            while (sqlite3_step(st) == SQLITE_ROW) {
+                cJSON *item = cJSON_CreateObject(); if (!item) break;
+                cJSON_AddStringToObject(item, "level", (const char *)sqlite3_column_text(st, 0));
+                cJSON_AddStringToObject(item, "component", (const char *)sqlite3_column_text(st, 1));
+                cJSON_AddStringToObject(item, "message", (const char *)sqlite3_column_text(st, 2));
+                cJSON_AddStringToObject(item, "created_at", (const char *)sqlite3_column_text(st, 3));
+                cJSON_AddItemToArray(array, item);
+            }
+        }
+        sqlite3_finalize(st); pthread_mutex_unlock(&g_app.lock);
+        char *encoded = cJSON_PrintUnformatted(array); cJSON_Delete(array);
+        if (!encoded) return json_reply(c, 500, "{\\"error\\":\\"json_encode_failed\\"}");
+        enum MHD_Result result = json_reply(c, 200, encoded); free(encoded); return result;
+    }
     if (strcmp(method, "POST") == 0 && strcmp(url, "/api/v1/auth/login") == 0) {
         cJSON *j = cJSON_Parse(q->body ? q->body : ""); cJSON *id = j ? cJSON_GetObjectItemCaseSensitive(j, "app_id") : NULL;
         cJSON *secret = j ? cJSON_GetObjectItemCaseSensitive(j, "app_secret") : NULL;
