@@ -1,7 +1,7 @@
 {
   "source": "Tencent official tencent-connect/bot-docs API v2 pages",
   "verified_at": "2026-11-23",
-  "scope_note": "增量核验清单；目前已逐页核对 26 条 endpoint 路由，尚非官方 API v2 全量 REST 路由。权限和错误码未在页面明确列出的，不作推断。",
+  "scope_note": "增量核验清单；目前已逐页核对 34 条 endpoint 路由，尚非官方 API v2 全量 REST 路由。权限和错误码未在页面明确列出的，不作推断。",
   "api_base": "https://api.sgroup.qq.com",
   "endpoints": [
     {
@@ -902,7 +902,226 @@
       "response": "HTTP 204",
       "errors": "详见官方 OpenAPI 错误码总表；对应页面未逐项列出错误码。",
       "sdk_access": "qqb_api_request / qqbot::Client::request / 易语言 qqb_api_request"
+    },
+    {
+      "id": "guild.announce.create",
+      "method": "POST",
+      "path": "/guilds/{guild_id}/announces",
+      "source": "server-inter/channel/content/announces/post_guild_announces.md",
+      "path_parameters": [
+        {
+          "name": "guild_id",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "query_parameters": [],
+      "body_fields": [
+        {
+          "name": "message_id",
+          "type": "string",
+          "required": false,
+          "description": "string (optional)"
+        },
+        {
+          "name": "channel_id",
+          "type": "string",
+          "required": true,
+          "description": "string (required when message_id is set)"
+        },
+        {
+          "name": "announces_type",
+          "type": "uint32",
+          "required": true,
+          "description": "uint32 (0 member, 1 welcome; default 0)"
+        },
+        {
+          "name": "recommend_channels",
+          "type": "RecommendChannel[]",
+          "required": true,
+          "description": "RecommendChannel[] (replaces the complete recommendation list)"
+        }
+      ],
+      "description": "消息公告与推荐子频道公告互斥；推荐子频道最多 3 条且必须全员可见。",
+      "permissions": "源页引用错误码总表，未列具体权限。",
+      "response": "Announces object",
+      "errors": "详见官方 OpenAPI 错误码总表；源页面未逐项列出错误码。",
+      "sdk_access": "qqb_api_request / qqbot::Client::request / 易语言 qqb_api_request"
+    },
+    {
+      "id": "guild.announce.delete",
+      "method": "DELETE",
+      "path": "/guilds/{guild_id}/announces/{message_id}",
+      "source": "server-inter/channel/content/announces/delete_guild_announces.md",
+      "path_parameters": [
+        {
+          "name": "guild_id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "message_id",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "query_parameters": [],
+      "body_fields": [],
+      "description": "删除指定公告；message_id=all 删除全部推荐子频道公告。",
+      "permissions": "源页引用错误码总表，未列具体权限。",
+      "response": "HTTP 204",
+      "errors": "详见官方 OpenAPI 错误码总表；源页面未逐项列出错误码。",
+      "sdk_access": "qqb_api_request / qqbot::Client::request / 易语言 qqb_api_request"
+    },
+    {
+      "id": "channel.pin.create",
+      "method": "PUT",
+      "path": "/channels/{channel_id}/pins/{message_id}",
+      "source": "server-inter/channel/content/pins/put_pins_message.md",
+      "path_parameters": [
+        {
+          "name": "channel_id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "message_id",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "query_parameters": [],
+      "body_fields": [],
+      "description": "添加精华消息；单个子频道最多 20 条，消息必须可见。",
+      "permissions": "源页引用错误码总表，未列具体权限。",
+      "response": "PinsMessage object",
+      "errors": "详见官方 OpenAPI 错误码总表；源页面未逐项列出错误码。",
+      "sdk_access": "qqb_api_request / qqbot::Client::request / 易语言 qqb_api_request"
+    },
+    {
+      "id": "channel.pin.delete",
+      "method": "DELETE",
+      "path": "/channels/{channel_id}/pins/{message_id}",
+      "source": "server-inter/channel/content/pins/delete_pins_message.md",
+      "path_parameters": [
+        {
+          "name": "channel_id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "message_id",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "query_parameters": [],
+      "body_fields": [],
+      "description": "删除指定精华消息；message_id=all 删除全部精华消息。",
+      "permissions": "源页引用错误码总表，未列具体权限。",
+      "response": "HTTP 204",
+      "errors": "详见官方 OpenAPI 错误码总表；源页面未逐项列出错误码。",
+      "sdk_access": "qqb_api_request / qqbot::Client::request / 易语言 qqb_api_request"
+    },
+    {
+      "id": "channel.pins.list",
+      "method": "GET",
+      "path": "/channels/{channel_id}/pins",
+      "source": "server-inter/channel/content/pins/get_pins_message.md",
+      "path_parameters": [
+        {
+          "name": "channel_id",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "query_parameters": [],
+      "body_fields": [],
+      "description": "获取子频道精华消息。",
+      "permissions": "源页引用错误码总表，未列具体权限。",
+      "response": "PinsMessage object",
+      "errors": "详见官方 OpenAPI 错误码总表；源页面未逐项列出错误码。",
+      "sdk_access": "qqb_api_request / qqbot::Client::request / 易语言 qqb_api_request"
+    },
+    {
+      "id": "channel.schedules.list",
+      "method": "GET",
+      "path": "/channels/{channel_id}/schedules",
+      "source": "server-inter/channel/content/schedule/get_schedules.md",
+      "path_parameters": [
+        {
+          "name": "channel_id",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "query_parameters": [
+        {
+          "name": "since",
+          "type": "uint64",
+          "required": false,
+          "description": "uint64 (milliseconds; returns schedules ending after this timestamp; default current day)"
+        }
+      ],
+      "body_fields": [],
+      "description": "获取日程列表；since 单位为毫秒。",
+      "permissions": "源页引用错误码总表，未列具体权限。",
+      "response": "Schedule[]",
+      "errors": "详见官方 OpenAPI 错误码总表；源页面未逐项列出错误码。",
+      "sdk_access": "qqb_api_request / qqbot::Client::request / 易语言 qqb_api_request"
+    },
+    {
+      "id": "channel.schedule.get",
+      "method": "GET",
+      "path": "/channels/{channel_id}/schedules/{schedule_id}",
+      "source": "server-inter/channel/content/schedule/get_schedule.md",
+      "path_parameters": [
+        {
+          "name": "channel_id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "schedule_id",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "query_parameters": [],
+      "body_fields": [],
+      "description": "获取日程详情。",
+      "permissions": "源页引用错误码总表，未列具体权限。",
+      "response": "Schedule object",
+      "errors": "详见官方 OpenAPI 错误码总表；源页面未逐项列出错误码。",
+      "sdk_access": "qqb_api_request / qqbot::Client::request / 易语言 qqb_api_request"
+    },
+    {
+      "id": "channel.schedule.create",
+      "method": "POST",
+      "path": "/channels/{channel_id}/schedules",
+      "source": "server-inter/channel/content/schedule/post_schedule.md",
+      "path_parameters": [
+        {
+          "name": "channel_id",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "query_parameters": [],
+      "body_fields": [
+        {
+          "name": "schedule",
+          "type": "Schedule",
+          "required": true,
+          "description": "Schedule (without id)"
+        }
+      ],
+      "description": "创建日程；单个管理员每天最多 10 次，单频道每天最多 100 次。",
+      "permissions": "需管理频道权限；机器人必须为管理员。错误码引用官方总表。",
+      "response": "Schedule object",
+      "errors": "详见官方 OpenAPI 错误码总表；源页面未逐项列出错误码。",
+      "sdk_access": "qqb_api_request / qqbot::Client::request / 易语言 qqb_api_request"
     }
   ],
-  "typed_wrapper_status": "6 of 26 verified endpoint routes have dedicated C ABI/C++/E-language typed wrappers; remaining routes are accessible through qqb_api_request / qqbot::Client::request."
+  "typed_wrapper_status": "6 of 34 verified endpoint routes have dedicated C ABI/C++/E-language typed wrappers; remaining routes are accessible through the generic request API."
 }
