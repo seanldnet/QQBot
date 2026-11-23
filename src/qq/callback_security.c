@@ -30,6 +30,7 @@ int qq_callback_ipv6_is_public(const char *address) {
     b=a.s6_addr;
     if ((b[0] & 0xe0u) != 0x20u) return 0; /* only 2000::/3 */
     if (b[0]==0x20u && b[1]==0x01u && (b[2]&0xfeu)==0x00u) return 0;
+    if (b[0]==0x20u && b[1]==0x01u && b[2]==0x0du && b[3]==0xb8u) return 0;
     if (b[0]==0x20u && b[1]==0x02u) return 0; /* 6to4 */
     if (b[0]==0x3fu && b[1]==0xffu) return 0; /* documentation */
     return 1;
