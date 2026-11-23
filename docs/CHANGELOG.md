@@ -101,5 +101,6 @@
 - 新增 `src/qq/callback_security.h/.c`：严格解析 HTTPS callback URL，限定 TCP 443，拒绝 URL userinfo 和 IP literal；通过 `getaddrinfo` 检查全部 DNS A/AAAA 答案，任一答案落入非公网地址范围即拒绝。
 - IPv4 地址分类拒绝私网、环回、链路本地、共享地址、文档、组播和保留网段；IPv6 仅接受全球单播 2000::/3，并拒绝特殊用途、6to4、文档地址。
 - 新增 `tests/test_callback_security.c`，覆盖公网/私网/环回/链路本地/文档/IPv4-mapped IPv6 和 URL 协议、userinfo、IP literal、端口策略；接入 Make 与 CMake/CTest。
+- 新增 `qq_callback_target_resolve_entry`，将已校验的 DNS A/AAAA 地址格式化为 libcurl `CURLOPT_RESOLVE` 所需的 pinning entry，并增加格式化测试；尚未接入实际 HTTP 请求。
 - 当前仅为安全校验原语，未接入 callback_url 写入口，未实现 DNS pinning 和 HTTP worker；不允许出站投递。当前解析依赖 POSIX 网络 API，Windows 适配待做。
 - CI 将由本批代码提交触发；本地构建未执行。
