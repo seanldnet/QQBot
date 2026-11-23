@@ -56,3 +56,25 @@
 - 当前可见的官方群管理概述（其中仍保留旧版注释）：https://github.com/tencent-connect/bot-docs/blob/main/docs/develop/api-v2/server-inter/group/manage/README.md
 - 交叉核对的维护中 Go SDK 接口目录：https://pkg.go.dev/github.com/by-yitong/botgo/openapi
 - 交叉核对的群接口 DTO 与约束：https://github.com/by-yitong/botgo/blob/main/dto/group.go
+
+
+## 第一批 SDK 封装交叉核验补充（2026-11-23）
+
+已新增 7 个类型化入口（C ABI / C++14 / 易语言 DLL）：
+- 群资料 GET /info：字段结构参考第三方 fork 的 GroupInfo（group_openid、group_name、group_finger_memo、group_class_text、group_tags、group_member_num 等）。
+- 机器人群状态 GET /bot_state：字段结构参考 GroupBotState（member_openid、joined_at、allow_proactive_msg、recv_msg_setting、member_role）。
+- 群禁言 GET /restrict_chat_setting；POST 同一路由 body 为完整 JSON object。第三方 DTO 显示成员禁言项使用 op=add/update/del、member_openid、mute_expire_at；单次最多 10 人、机器人需群管理员。
+- 群成员 GET /members：cursor 分页，SDK 对 limit 限制 1–30；GET /members/{member_openid} 查询单成员。
+- 批量移出 POST /batch_remove_members：body 由调用方按接口 JSON 结构提供；第三方 DTO 显示单次最多 20 人，可选同时加入黑名单。
+
+**重要来源边界：**以上详细 DTO 字段、QPM、分页限制和白名单提示来自维护中第三方 fork（https://github.com/by-yitong/botgo），不是腾讯官方文档，只作为实现线索。群管理 README 官方源文件仍是旧版内容，自动生成接口页未逐条成功读取，因此这些接口继续保持“已发现、官方原文待复核”，不计入已核验 42 条。
+
+## 官方群管理事件字段核验
+
+腾讯官方 bot-docs 的 server-inter/group/manage/event.md 明确列出以下四种 WebSocket 事件，均使用 intents 位 1<<25，权限要求标注“暂无”：
+- GROUP_ADD_ROBOT：机器人加入群聊；字段 timestamp、group_openid、op_member_openid。
+- GROUP_DEL_ROBOT：机器人退出群聊；字段 timestamp、group_openid、op_member_openid。
+- GROUP_MSG_REJECT：群管理员关闭机器人主动消息；字段 timestamp、group_openid、op_member_openid。
+- GROUP_MSG_RECEIVE：群管理员开启机器人主动消息；字段 timestamp、group_openid、op_member_openid。
+
+该官方事件页标注推送方式为 WebSocket。群消息事件 GROUP_AT_MESSAGE_CREATE 位于单独消息事件文档，不与上述四个群管理事件混为一组。
