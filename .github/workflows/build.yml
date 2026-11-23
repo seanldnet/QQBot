@@ -76,39 +76,37 @@ jobs:
       - name: Install and assemble runtime layout
         run: |
           cmake --install build-win
-          mkdir -p stage/data
+          mkdir -p stage/data stage/runtime
           cp -r web stage/
           cp README.md DEPENDENCIES.md stage/
+          mv stage/bin/QQBot.exe stage/QQBot.exe
+          mv stage/bin/qqbot-core.exe stage/runtime/qqbot-core.exe
+          mv stage/bin/libqqbot_sdk.dll stage/runtime/libqqbot_sdk.dll
           cat > stage/桌面版说明.txt <<'EOF'
           QQBot 桌面版
-          双击 bin\QQBot.exe 启动原生 Windows 窗口。
+          双击根目录 QQBot.exe 启动原生 Windows 窗口。
           输入 QQ 官方机器人 AppID / AppSecret，选择 WSS 或 Webhook 后登录。
-          登录后在消息日志页查看本机收到的事件与运行日志。
+          登录后在主界面查看连接状态与消息日志。
           Webhook 模式仍需公网 HTTPS 回调地址并在 QQ 开放平台完成配置。
           EOF
           mkdir -p stage/certs
           curl -fL --retry 3 --retry-all-errors https://curl.se/ca/cacert.pem -o stage/certs/ca-bundle.crt
           test -s stage/certs/ca-bundle.crt
-          cat > stage/启动QQBot.bat <<'EOF'
-          @echo off
-          cd /d "%~dp0"
-          if not exist data mkdir data
-          start "" "%~dp0bin\QQBot.exe"
-          EOF
-          cat > stage/运行环境说明.txt <<'EOF'
+cat > stage/运行环境说明.txt <<'EOF'
           QQBot Windows x64 一键运行包
           目标 Windows API baseline：Windows 8.1 / Server 2012 (0x0602)
           已包含原生桌面程序、QQ 协议宿主、SDK DLL 和非系统运行时 DLL。
-          双击 bin\QQBot.exe 或“启动QQBot.bat”，无需浏览器。
+          只需双击根目录 QQBot.exe，无需 BAT 或浏览器。
           登录窗口内输入 AppID/AppSecret 并选择 WSS 或 Webhook。
+          后台核心与全部第三方 DLL 放在 runtime 文件夹。
           数据库位于 data\qqbot.db。
           本包仍须在各目标 Windows Server 版本实机验收后才能宣称全版本兼容。
           EOF
       - name: Bundle and verify all non-system DLL dependencies
         run: |
-          bash scripts/package-windows.sh stage/bin stage/bin/qqbot-core.exe stage/bin/QQBot.exe stage/bin/libqqbot_sdk.dll
+          bash scripts/package-windows.sh stage/runtime stage/QQBot.exe stage/runtime/qqbot-core.exe stage/runtime/libqqbot_sdk.dll
       - name: Audit PE subsystem baseline
-        run: bash scripts/check-windows-pe-baseline.sh stage/bin 6 2
+        run: bash scripts/check-windows-pe-baseline.sh stage 6 2
       - name: Create ready-to-run ZIP
         run: zip -qr QQBot-Windows-x64-Server2012plus.zip stage
       - name: Upload Windows ready-to-run package
