@@ -151,7 +151,12 @@
 本次确认此前 SDK 开发偏重频道管理接口，现将群聊设为下一阶段优先级。核对腾讯官方 bot-docs 当前 main 分支：
 - 群聊发送为 `POST /v2/groups/{group_openid}/messages`，支持 msg_type 0/2/3/4/7 与 Markdown、Ark、Embed、Media、Keyboard 等对象；被动回复窗口 5 分钟、每条消息最多 5 次；主动推送自 2025-04-21 起停止提供。
 - `GROUP_AT_MESSAGE_CREATE` 为群 @机器人消息事件；`GROUP_ADD_ROBOT`、`GROUP_DEL_ROBOT`、`GROUP_MSG_REJECT`、`GROUP_MSG_RECEIVE` 为群管理状态事件，均通过 WebSocket 推送。
-- 官方群管理 README 中群资料、机器人入群列表、群成员列表等 REST 章节仍为注释/暂不开放，不能虚构为可用 API；群全量消息事件在消息事件页也标为私域/暂不开放。
+- 官方群管理 README 仍保留旧版注释；但进一步交叉核对发现近期新增的 17 条群管理 REST 路由（资料、bot_state、成员、禁言、黑名单、入群审批和自动审批策略）。已单独记入 `sdk/group-api-discovery.md`，标记为待逐页核验官方自动生成页面，暂不计入已核验接口。群全量消息事件在消息事件页仍标为私域/暂不开放。
 - 新增 `qqb_send_group_message` 完整 JSON C ABI，C++ `Client::send_group_message` 和易语言导入说明；群消息发送已有类型化快捷函数。
 - 官方索引新增群消息事件文档；endpoint manifest 标注群消息路由的完整 wrapper 和开放边界。
 - 后续开发优先群聊消息与事件闭环，频道管理类新增功能暂停。
+
+
+### QQ 群管理接口专项发现
+
+已新增 `sdk/group-api-discovery.md`，记录 17 条新发现的群管理路由和核验状态。此前“群管理接口暂不开放”的结论基于旧版 README，现已纠正；群管理 API 是下一阶段第一优先级。群消息完整 JSON 发送 wrapper 已新增，详见 SDK。
