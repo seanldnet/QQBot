@@ -25,3 +25,25 @@
 # qqb_update_channel(client, channel_id, body_json, response_json*, http_status*) -> 整数型
 # qqb_delete_channel(client, channel_id, response_json*, http_status*) -> 整数型
 # 创建/修改的 body_json 传入完整 JSON 对象；返回 JSON 缓冲区仍使用 qqb_free_string 释放。
+
+
+## 第二批官方接口（通用调用）
+
+下列路由均通过 `qqb_api_request(client, method, path, body_json, response_json*, http_status*)` 调用；路径参数需先进行 URL 编码，GET 查询参数拼接在 path 后。所有返回 JSON 指针用 `qqb_free_string` 释放。无需为每条路由重新导入 DLL 函数。
+
+- GET /guilds/{guild_id}/members — 频道成员列表；分页结果可能重复，调用方按 user.id 去重。 参数：guild_id；字段：after:string (默认 0；下一页使用上一页最后一个 user id)；limit:uint32 (1-400，默认 1)；权限：页面未明确具体权限；错误码引用官方错误码总表。
+- GET /guilds/{guild_id}/roles/{role_id}/members — 指定身份组成员列表；返回 data 与 next。 参数：guild_id, role_id；字段：start_index:string (默认 0；下一页使用 next)；limit:uint32 (1-400，默认 1)；权限：页面未明确具体权限；错误码引用官方错误码总表。
+- GET /guilds/{guild_id}/members/{user_id} — 获取频道成员详情。 参数：guild_id, user_id；字段：无；权限：页面未明确具体权限；错误码引用官方错误码总表。
+- DELETE /guilds/{guild_id}/members/{user_id} — 踢出成员；成功 HTTP 204；不能移除管理员；可同步加入黑名单及撤回消息。 参数：guild_id, user_id；字段：add_blacklist:boolean；delete_history_msg_days:int (0,3,7,15,30,-1；-1 表示撤回全部消息)；权限：调用方需有踢人权限；机器人必须为管理员。错误码引用官方总表。
+- GET /guilds/{guild_id}/roles — 获取频道身份组列表。 参数：guild_id；字段：无；权限：页面未明确具体权限；错误码引用官方错误码总表。
+- POST /guilds/{guild_id}/roles — 创建身份组；请求字段至少传一个。 参数：guild_id；字段：name:string (可选)；color:uint32 (可选，ARGB 十进制)；hoist:int32 (可选，0/1)；权限：需创建身份组权限；机器人必须为管理员。错误码引用官方总表。
+- PATCH /guilds/{guild_id}/roles/{role_id} — 修改身份组；至少传一个字段，未传字段保持不变。 参数：guild_id, role_id；字段：name:string (可选)；color:uint32 (可选，ARGB 十进制)；hoist:int32 (可选，0/1)；权限：需修改身份组权限；机器人必须为管理员。错误码引用官方总表。
+- DELETE /guilds/{guild_id}/roles/{role_id} — 删除频道身份组。 参数：guild_id, role_id；字段：无；权限：需删除身份组权限；机器人必须为管理员。错误码引用官方总表。
+- PUT /guilds/{guild_id}/members/{user_id}/roles/{role_id} — 将用户加入身份组。 参数：guild_id, user_id, role_id；字段：channel:Channel object (身份组为 5-子频道管理员时必需，至少含 id)；权限：需增加身份组成员权限；机器人必须为管理员。错误码引用官方总表。
+- DELETE /guilds/{guild_id}/members/{user_id}/roles/{role_id} — 将用户移出身份组。 参数：guild_id, user_id, role_id；字段：channel:Channel object (身份组为 5-子频道管理员时用于指定子频道)；权限：需删除身份组成员权限；机器人必须为管理员。错误码引用官方总表。
+- GET /channels/{channel_id}/members/{user_id}/permissions — 获取子频道指定用户权限。 参数：channel_id, user_id；字段：无；权限：需具备管理子频道权限；机器人必须为管理员。错误码引用官方总表。
+- PUT /channels/{channel_id}/members/{user_id}/permissions — 修改用户权限；add 授权、remove 撤权；同一位同时置 1 时按删除处理；不支持修改“可管理子频道”权限。 参数：channel_id, user_id；字段：add:string (权限位图)；remove:string (权限位图)；权限：需具备管理子频道权限；机器人必须为管理员。错误码引用官方总表。
+- GET /channels/{channel_id}/roles/{role_id}/permissions — 获取子频道身份组权限。 参数：channel_id, role_id；字段：无；权限：需具备管理子频道权限；机器人必须为管理员。错误码引用官方总表。
+- PUT /channels/{channel_id}/roles/{role_id}/permissions — 修改身份组权限；add 授权、remove 撤权；同一位同时置 1 时按删除处理；不支持修改“可管理子频道”权限。 参数：channel_id, role_id；字段：add:string (权限位图)；remove:string (权限位图)；权限：需具备管理子频道权限；机器人必须为管理员。错误码引用官方总表。
+- PATCH /guilds/{guild_id}/mute — 全员禁言（非管理员）或解除；成功 HTTP 204。 参数：guild_id；字段：mute_end_timestamp:string (绝对秒级时间戳)；mute_seconds:string (秒数；与前者同时传时前者优先；任一传 '0' 可解除)；权限：需频道管理员权限；机器人必须为管理员。错误码引用官方总表。
+- PATCH /guilds/{guild_id}/members/{user_id}/mute — 指定成员禁言或解除；成功 HTTP 204。 参数：guild_id, user_id；字段：mute_end_timestamp:string (绝对秒级时间戳)；mute_seconds:string (秒数；与前者同时传时前者优先；任一传 '0' 可解除)；权限：需频道管理员权限；机器人必须为管理员。错误码引用官方总表。
