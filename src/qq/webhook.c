@@ -66,23 +66,63 @@ static int verify_event(const char *secret, const char *body, size_t body_len, c
     EVP_MD_CTX *ctx = EVP_MD_CTX_new(); int ok = ctx && EVP_DigestVerifyInit(ctx, NULL, NULL, NULL, key) == 1 && EVP_DigestVerify(ctx, sig, sizeof(sig), msg, ts_len + body_len) == 1;
     EVP_MD_CTX_free(ctx); EVP_PKEY_free(key); OPENSSL_cleanse(sig, sizeof(sig)); OPENSSL_cleanse(msg, ts_len + body_len); free(msg); return ok;
 }
-int qq_webhook_process(const char *secret, const char *body, size_t body_len, const char *sig, const char *timestamp, char **response, unsigned int *status) {
+int qq_webhook_process_ex(const char *secret, const char *body, size_t body_len,
+                          const char *sig, const char *timestamp,
+                          char **response, unsigned int *status,
+                          char **event_type, char **event_data_json) {
+    cJSON *root = NULL, *op = NULL, *data = NULL, *type = NULL;
     if (!secret || !secret[0] || !body || !response || !status) return -1;
     *response = NULL; *status = 400;
-    cJSON *root = cJSON_ParseWithLength(body, body_len); if (!root) return -1;
-    cJSON *op = cJSON_GetObjectItemCaseSensitive(root, "op"); cJSON *data = cJSON_GetObjectItemCaseSensitive(root, "d");
+    if (event_type) *event_type = NULL;
+    if (event_data_json) *event_data_json = NULL;
+    root = cJSON_ParseWithLength(body, body_len);
+    if (!root) return -1;
+    op = cJSON_GetObjectItemCaseSensitive(root, "op");
+    data = cJSON_GetObjectItemCaseSensitive(root, "d");
     if (!cJSON_IsNumber(op)) { cJSON_Delete(root); return -1; }
     if (op->valueint == 13) {
         cJSON *plain = data ? cJSON_GetObjectItemCaseSensitive(data, "plain_token") : NULL;
         cJSON *ts = data ? cJSON_GetObjectItemCaseSensitive(data, "event_ts") : NULL;
-        int rc = cJSON_IsString(plain) && cJSON_IsString(ts) ? sign_challenge(secret, ts->valuestring, plain->valuestring, response) : -1;
-        *status = rc == 0 ? 200 : 400; cJSON_Delete(root); return rc;
+        int rc = cJSON_IsString(plain) && cJSON_IsString(ts)
+            ? sign_challenge(secret, ts->valuestring, plain->valuestring, response) : -1;
+        *status = rc == 0 ? 200 : 400;
+        cJSON_Delete(root);
+        return rc;
     }
     if (op->valueint == 0) {
         int valid = sig && timestamp && verify_event(secret, body, body_len, sig, timestamp);
+        if (!valid) {
+            cJSON_Delete(root);
+            *status = 401;
+            *response = strdup("{\\"error\\":\\"invalid_signature\\"}");
+            return *response ? 0 : -1;
+        }
+        type = cJSON_GetObjectItemCaseSensitive(root, "t");
+        if (event_type && event_data_json && cJSON_IsString(type) && type->valuestring &&
+            cJSON_IsObject(data)) {
+            *event_type = strdup(type->valuestring);
+            *event_data_json = cJSON_PrintUnformatted(data);
+            if (!*event_type || !*event_data_json) {
+                free(*event_type); free(*event_data_json);
+                *event_type = NULL; *event_data_json = NULL;
+                cJSON_Delete(root);
+                return -1;
+            }
+        }
         cJSON_Delete(root);
-        if (!valid) { *status = 401; *response = strdup("{\"error\":\"invalid_signature\"}"); return *response ? 0 : -1; }
-        *status = 200; *response = strdup("{\"op\":12}"); return *response ? 0 : -1;
+        *status = 200;
+        *response = strdup("{\\"op\\":12}");
+        return *response ? 0 : -1;
     }
-    cJSON_Delete(root); *status = 200; *response = strdup("{\"op\":12}"); return *response ? 0 : -1;
+    cJSON_Delete(root);
+    *status = 200;
+    *response = strdup("{\\"op\\":12}");
+    return *response ? 0 : -1;
+}
+
+int qq_webhook_process(const char *secret, const char *body, size_t body_len,
+                       const char *sig, const char *timestamp,
+                       char **response, unsigned int *status) {
+    return qq_webhook_process_ex(secret, body, body_len, sig, timestamp,
+                                 response, status, NULL, NULL);
 }
