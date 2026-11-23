@@ -190,7 +190,7 @@
 - [x] 新增 SQLite event_inbox 持久化队列、唯一键去重和初始化。
 - [x] 新增管理员 GET /api/v1/events，查看最近100条事件收件箱记录。
 - [x] 增加 SQLite 内存库队列测试，并加入 Make 与 CTest。
-- [ ] 实现每个启用插件的独立 delivery 记录、worker 线程、有界并发和重试退避。
+- [x] 实现每个启用插件的独立 delivery 记录、callback_url 快照、唯一约束和幂等 fanout。\n- [x] 新增管理员 GET /api/v1/event-deliveries 查询最近 200 条投递任务。\n- [ ] 实现安全 HTTP delivery worker、有界并发、单插件故障隔离和重试退避。
 - [ ] callback_url 出站 SSRF 防护（DNS 解析/IP 分类/DNS pinning/禁止重定向/HTTPS only）完成前，不得启用实际 HTTP 投递。
 - [ ] Webhook 官方签名向量与 QQ 控制台回调实测。
 - [ ] 评估官方 Gateway WebSocket 当前状态；本阶段未实现 WebSocket 客户端。
