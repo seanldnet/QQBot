@@ -18,6 +18,7 @@
 - [机器可读 API 目录](sdk/official-api-index.json)
 - [C ABI SDK 头文件](sdk/include/qqbot_sdk.h)
 - [C++ SDK](sdk/cpp/qqbot.hpp)
+- [插件统一事件模型](sdk/event-schema.md)
 - [易语言 DLL 接入说明](sdk/e-language/README.md)
 
 ## 当前状态
