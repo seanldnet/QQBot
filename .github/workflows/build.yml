@@ -86,7 +86,6 @@ jobs:
           登录后在消息日志页查看本机收到的事件与运行日志。
           Webhook 模式仍需公网 HTTPS 回调地址并在 QQ 开放平台完成配置。
           EOF
-          openssl rand -hex 32 > stage/admin-token.txt
           mkdir -p stage/certs
           curl -fL --retry 3 --retry-all-errors https://curl.se/ca/cacert.pem -o stage/certs/ca-bundle.crt
           test -s stage/certs/ca-bundle.crt
@@ -94,19 +93,14 @@ jobs:
           @echo off
           cd /d "%~dp0"
           if not exist data mkdir data
-          set /p QQBOT_ADMIN_TOKEN=<admin-token.txt
-          set QQBOT_BIND=127.0.0.1
-          set QQBOT_PORT=8080
-          set CURL_CA_BUNDLE=%~dp0certs\ca-bundle.crt
-          bin\qqbot.exe
-          pause
+          start "" "%~dp0bin\QQBot.exe"
           EOF
           cat > stage/运行环境说明.txt <<'EOF'
           QQBot Windows x64 一键运行包
           目标 Windows API baseline：Windows 8.1 / Server 2012 (0x0602)
-          已包含宿主、SDK DLL、非系统运行时 DLL、Web UI 和初始化管理员 API Token。
-          双击“启动QQBot.bat”启动，默认监听 127.0.0.1:8080。
-          管理员 API Token 保存在 admin-token.txt，请妥善保管。
+          已包含原生桌面程序、QQ 协议宿主、SDK DLL 和非系统运行时 DLL。
+          双击 bin\QQBot.exe 或“启动QQBot.bat”，无需浏览器。
+          登录窗口内输入 AppID/AppSecret 并选择 WSS 或 Webhook。
           数据库位于 data\qqbot.db。
           本包仍须在各目标 Windows Server 版本实机验收后才能宣称全版本兼容。
           EOF
