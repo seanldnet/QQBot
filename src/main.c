@@ -12,6 +12,7 @@
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
+#include "qq/webhook.h"
 
 #define DEFAULT_PORT 8080
 #define MAX_BODY (1024U * 1024U)
@@ -28,6 +29,7 @@ typedef struct {
     time_t token_expires;
     char api_base[256];
     char token_url[512];
+    char connection_mode[16];
 } app_t;
 
 typedef struct { char *body; size_t size; } request_t;
@@ -111,6 +113,18 @@ static enum MHD_Result handler(void *cls, struct MHD_Connection *c, const char *
         char *p = realloc(q->body, q->size + *upload_size + 1); if (!p) return MHD_NO;
         q->body = p; memcpy(q->body + q->size, upload, *upload_size); q->size += *upload_size; q->body[q->size] = 0; *upload_size = 0; return MHD_YES;
     }
+    if (strcmp(method, "POST") == 0 && strcmp(url, "/webhook/qq") == 0) {
+        char secret[sizeof(g_app.app_secret)] = {0};
+        pthread_mutex_lock(&g_app.lock); snprintf(secret, sizeof(secret), "%s", g_app.app_secret); pthread_mutex_unlock(&g_app.lock);
+        const char *sig = MHD_lookup_connection_value(c, MHD_HEADER_KIND, "X-Signature-Ed25519");
+        const char *ts = MHD_lookup_connection_value(c, MHD_HEADER_KIND, "X-Signature-Timestamp");
+        char *response = NULL; unsigned int status = 400;
+        int rc = qq_webhook_process(secret, q->body ? q->body : "", q->size, sig, ts, &response, &status);
+        OPENSSL_cleanse(secret, sizeof(secret));
+        if (rc != 0 || !response) { free(response); return json_reply(c, 400, "{\\"error\\":\\"invalid_webhook_payload\\"}"); }
+        if (status == 200) log_line("INFO", "QQ Webhook payload accepted; signature/challenge processed");
+        enum MHD_Result result = json_reply(c, status, response); free(response); return result;
+    }
     if (strcmp(method, "GET") == 0 && strcmp(url, "/api/v1/status") == 0) {
         char out[256]; snprintf(out, sizeof(out), "{\"ok\":true,\"authenticated\":%s,\"transport_connected\":false,\"mode\":\"websocket\",\"version\":\"0.1.0\"}", g_app.access_token[0] ? "true" : "false"); return json_reply(c, 200, out);
     }
@@ -120,7 +134,7 @@ static enum MHD_Result handler(void *cls, struct MHD_Connection *c, const char *
         cJSON *mode = j ? cJSON_GetObjectItemCaseSensitive(j, "mode") : NULL;
         if (!cJSON_IsString(id) || !cJSON_IsString(secret) || !id->valuestring[0] || !secret->valuestring[0] || strlen(id->valuestring) >= sizeof(g_app.app_id) || strlen(secret->valuestring) >= sizeof(g_app.app_secret)) { cJSON_Delete(j); return json_reply(c, 400, "{\"error\":\"invalid_credentials\"}"); }
         if (mode && cJSON_IsString(mode) && strcmp(mode->valuestring, "webhook") == 0) { cJSON_Delete(j); return json_reply(c, 501, "{\"error\":\"webhook_transport_not_implemented_yet\"}"); }
-        pthread_mutex_lock(&g_app.lock); snprintf(g_app.app_id, sizeof(g_app.app_id), "%s", id->valuestring); OPENSSL_cleanse(g_app.app_secret, sizeof(g_app.app_secret)); snprintf(g_app.app_secret, sizeof(g_app.app_secret), "%s", secret->valuestring); pthread_mutex_unlock(&g_app.lock); cJSON_Delete(j);
+        pthread_mutex_lock(&g_app.lock); snprintf(g_app.app_id, sizeof(g_app.app_id), "%s", id->valuestring); OPENSSL_cleanse(g_app.app_secret, sizeof(g_app.app_secret)); snprintf(g_app.app_secret, sizeof(g_app.app_secret), "%s", secret->valuestring);  snprintf(g_app.connection_mode, sizeof(g_app.connection_mode), "%s", selected_mode); pthread_mutex_unlock(&g_app.lock); cJSON_Delete(j);
         if (ensure_token() != 0) { OPENSSL_cleanse(g_app.app_secret, sizeof(g_app.app_secret)); g_app.app_id[0] = 0; log_line("ERROR", "QQ login failed: access_token request failed"); return json_reply(c, 502, "{\"error\":\"qq_auth_failed\"}"); }
         log_line("INFO", "QQ credentials accepted; token acquired"); return json_reply(c, 200, "{\"ok\":true,\"message\":\"access_token acquired; transport startup is being implemented\"}");
     }
