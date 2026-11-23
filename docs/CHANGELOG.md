@@ -5,7 +5,7 @@
 - C 宿主认证失败响应保留 HTTP 状态、QQ 错误码及 message；桌面端优先展示 message，避免只显示 `qq_auth_failed`。
 - 根据 QQ 官方文档区分 Token 获取与正式环境 WSS/OpenAPI 白名单：未启用白名单无需添加 IP；启用后必须添加运行环境公网出口 IP；`127.0.0.1` 仅为本机管理 API 地址。
 - 将 .NET 8 桌面程序由自包含单文件改为 framework-dependent single-file，减少 EXE/ZIP 体积；目标机需要预装 .NET 8 Windows Desktop Runtime x64。AntdUI 包版本仍固定 2.4.20。
-- 验证状态：以上为代码与文档变更，等待 Windows CI 验证构建、发布和 ZIP 大小；尚未进行 Windows 桌面实机与 QQ 官方账号联调。
+- 验证状态：GitHub Actions run 45219978391 全部 3 个 job 成功；AntdUI C# framework-dependent single-file 发布、C 后端构建、CTest、DLL 依赖扫描、PE 审计通过。Artifact `QQBot-AntdUI-Windows-x64` 为 11,631,014 bytes（约 11.1 MiB），内层 ZIP CRC 检查通过；根目录 `QQBot.exe` 约 3.6 MiB。仍未进行 Windows 桌面实机截图/交互和 QQ 官方账号联调。
 
 
 ## 2026-11-23 — QQ 群聊 API 专项纠偏
