@@ -120,3 +120,11 @@
 - 修改 `.github/workflows/build.yml`：新增 Windows-latest + MSYS2/MinGW64 job，安装 MinGW GCC、pkgconf、libcurl，独立编译并运行 callback security 测试程序，链接 Winsock2。
 - 该 job 验证 Windows resolver 源码和测试的编译/执行，不代表整个 QQBot 宿主、MSVC 或易语言 DLL 已完成 Windows 支持。
 - GitHub Actions run 45179209231 已触发，当前排队；结果待确认。
+
+
+## 2026-11-23 — Windows Server 成品包构建流水线
+
+- 新增 Windows Server 2012 API baseline 的 MinGW64 x64 构建 job，配置 `_WIN32_WINNT=0x0602` / `WINVER=0x0602`，编译宿主与 SDK 并执行 Windows CTest。
+- 新增 `scripts/package-windows.sh`，递归扫描 PE 导入 DLL，自动复制 MinGW runtime 依赖；缺失非系统 DLL 会立即失败，不生成不完整包。
+- 构建流程组装 `QQBot-Windows-x64-Server2012plus.zip`，包含宿主、SDK DLL、依赖 DLL、web UI、data 目录、启动脚本和构建时随机生成的管理员 API Token。
+- 此包当前为 CI 验证产物目标，不等同于正式 Release。Windows runner 和各 Server 版本实机验证未完成前，不宣称 2012–2026 全版本兼容。
