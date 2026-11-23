@@ -20,6 +20,24 @@ public:
           body.empty()?nullptr:body.c_str(),&out,&status);
         if(out){response.assign(out);qqb_free_string(out);} return rc;
     }
+    int send_group_text(const std::string& id,const std::string& text,const std::string& event_id,
+                        const std::string& msg_id,int seq,std::string& response,long& status) const {
+        char*out=nullptr;int rc=qqb_send_group_text(p_,id.c_str(),text.c_str(),
+          event_id.empty()?nullptr:event_id.c_str(),msg_id.empty()?nullptr:msg_id.c_str(),seq,&out,&status);
+        if(out){response.assign(out);qqb_free_string(out);}return rc;
+    }
+    int send_c2c_text(const std::string& id,const std::string& text,const std::string& event_id,
+                      const std::string& msg_id,int seq,std::string& response,long& status) const {
+        char*out=nullptr;int rc=qqb_send_c2c_text(p_,id.c_str(),text.c_str(),
+          event_id.empty()?nullptr:event_id.c_str(),msg_id.empty()?nullptr:msg_id.c_str(),seq,&out,&status);
+        if(out){response.assign(out);qqb_free_string(out);}return rc;
+    }
+    int send_channel_text(const std::string& id,const std::string& text,const std::string& event_id,
+                          const std::string& msg_id,int seq,std::string& response,long& status) const {
+        char*out=nullptr;int rc=qqb_send_channel_text(p_,id.c_str(),text.c_str(),
+          event_id.empty()?nullptr:event_id.c_str(),msg_id.empty()?nullptr:msg_id.c_str(),seq,&out,&status);
+        if(out){response.assign(out);qqb_free_string(out);}return rc;
+    }
     int send_group_text(const std::string& id,const std::string& text,std::string& response,long& status) const {
         char*out=nullptr;int rc=qqb_send_group_text(p_,id.c_str(),text.c_str(),nullptr,nullptr,1,&out,&status);
         if(out){response.assign(out);qqb_free_string(out);}return rc;
