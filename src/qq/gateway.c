@@ -231,7 +231,7 @@ static void *gateway_thread(void *opaque) {
             state(g, "error", "WSS 握手失败");
             goto retry;
         }
-        state(g, "connected", "WSS 握手完成，等待 HELLO");
+        state(g, "authenticating", "WSS 握手完成，等待 HELLO 和 READY 鉴权事件");
         while (!g->stopping && !reconnect) {
             char frame[65536];
             size_t received = 0;
