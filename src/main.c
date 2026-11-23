@@ -1,0 +1,152 @@
+#include <microhttpd.h>
+#include <curl/curl.h>
+#include <cjson/cJSON.h>
+#include <sqlite3.h>
+#include <openssl/crypto.h>
+#include <pthread.h>
+#include <signal.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
+#include <unistd.h>
+
+#define DEFAULT_PORT 8080
+#define MAX_BODY (1024U * 1024U)
+#define API_BASE_DEFAULT "https://api.bot.qq.com"
+#define TOKEN_PATH "/app/getAppAccessToken"
+
+typedef struct { char *data; size_t len; } buffer_t;
+typedef struct {
+    sqlite3 *db;
+    pthread_mutex_t lock;
+    char app_id[128];
+    char app_secret[256];
+    char access_token[4096];
+    time_t token_expires;
+    char api_base[256];
+    char token_url[512];
+} app_t;
+
+typedef struct { char *body; size_t size; } request_t;
+static volatile sig_atomic_t g_stop = 0;
+static app_t g_app;
+
+static void on_signal(int sig) { (void)sig; g_stop = 1; }
+static size_t curl_write(char *ptr, size_t size, size_t nmemb, void *userdata) {
+    buffer_t *b = (buffer_t *)userdata; size_t n = size * nmemb;
+    char *p = realloc(b->data, b->len + n + 1); if (!p) return 0;
+    b->data = p; memcpy(b->data + b->len, ptr, n); b->len += n; b->data[b->len] = 0; return n;
+}
+static void log_line(const char *level, const char *message) {
+    time_t now = time(NULL); struct tm tmv; localtime_r(&now, &tmv);
+    char ts[32]; strftime(ts, sizeof(ts), "%Y-%m-%d %H:%M:%S", &tmv);
+    fprintf(stdout, "[%s] [%s] %s\n", ts, level, message); fflush(stdout);
+    if (g_app.db) {
+        pthread_mutex_lock(&g_app.lock); sqlite3_stmt *st = NULL;
+        if (sqlite3_prepare_v2(g_app.db, "INSERT INTO logs(level,component,message,created_at) VALUES(?1,'host',?2,datetime('now'))", -1, &st, NULL) == SQLITE_OK) {
+            sqlite3_bind_text(st, 1, level, -1, SQLITE_TRANSIENT); sqlite3_bind_text(st, 2, message, -1, SQLITE_TRANSIENT); sqlite3_step(st);
+        }
+        sqlite3_finalize(st); pthread_mutex_unlock(&g_app.lock);
+    }
+}
+static int db_init(void) {
+    if (sqlite3_open("data/qqbot.db", &g_app.db) != SQLITE_OK) return -1;
+    sqlite3_busy_timeout(g_app.db, 5000);
+    const char *sql = "PRAGMA foreign_keys=ON; PRAGMA journal_mode=WAL;"
+      "CREATE TABLE IF NOT EXISTS schema_migrations(version INTEGER PRIMARY KEY, applied_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP);"
+      "CREATE TABLE IF NOT EXISTS logs(id INTEGER PRIMARY KEY AUTOINCREMENT,level TEXT NOT NULL,component TEXT NOT NULL,message TEXT NOT NULL,created_at TEXT NOT NULL);"
+      "CREATE TABLE IF NOT EXISTS plugins(id TEXT PRIMARY KEY,name TEXT NOT NULL,callback_url TEXT NOT NULL,token_hash TEXT NOT NULL,enabled INTEGER NOT NULL DEFAULT 1,created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP);"
+      "INSERT OR IGNORE INTO schema_migrations(version) VALUES(1);";
+    char *err = NULL; int rc = sqlite3_exec(g_app.db, sql, NULL, NULL, &err);
+    if (rc != SQLITE_OK) { fprintf(stderr, "SQLite init: %s\n", err ? err : "unknown"); sqlite3_free(err); return -1; }
+    return 0;
+}
+static int fetch_access_token(const char *app_id, const char *secret, char *out, size_t outcap, long *expires) {
+    cJSON *root = cJSON_CreateObject(); if (!root) return -1;
+    cJSON_AddStringToObject(root, "appId", app_id); cJSON_AddStringToObject(root, "clientSecret", secret);
+    char *payload = cJSON_PrintUnformatted(root); cJSON_Delete(root); if (!payload) return -1;
+    buffer_t response = {0}; CURL *curl = curl_easy_init(); if (!curl) { free(payload); return -1; }
+    struct curl_slist *headers = NULL; headers = curl_slist_append(headers, "Content-Type: application/json");
+    curl_easy_setopt(curl, CURLOPT_URL, g_app.token_url); curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, payload); curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, curl_write);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response); curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 10L);
+    curl_easy_setopt(curl, CURLOPT_TIMEOUT, 20L); curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 0L);
+    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 1L); curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 2L);
+    CURLcode cr = curl_easy_perform(curl); long status = 0; curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &status);
+    curl_slist_free_all(headers); curl_easy_cleanup(curl); free(payload);
+    if (cr != CURLE_OK || status < 200 || status >= 300 || !response.data) { free(response.data); return -1; }
+    cJSON *json = cJSON_Parse(response.data); free(response.data); if (!json) return -1;
+    cJSON *token = cJSON_GetObjectItemCaseSensitive(json, "access_token");
+    cJSON *ttl = cJSON_GetObjectItemCaseSensitive(json, "expires_in");
+    int ok = cJSON_IsString(token) && token->valuestring && strlen(token->valuestring) < outcap;
+    if (ok) { snprintf(out, outcap, "%s", token->valuestring); *expires = cJSON_IsNumber(ttl) ? (long)ttl->valuedouble : 7200L; }
+    cJSON_Delete(json); return ok ? 0 : -1;
+}
+static int ensure_token(void) {
+    pthread_mutex_lock(&g_app.lock);
+    if (g_app.access_token[0] && time(NULL) < g_app.token_expires - 120) { pthread_mutex_unlock(&g_app.lock); return 0; }
+    char token[sizeof(g_app.access_token)] = {0}; long ttl = 7200;
+    int rc = fetch_access_token(g_app.app_id, g_app.app_secret, token, sizeof(token), &ttl);
+    if (rc == 0) { OPENSSL_cleanse(g_app.access_token, sizeof(g_app.access_token)); snprintf(g_app.access_token, sizeof(g_app.access_token), "%s", token); g_app.token_expires = time(NULL) + ttl; }
+    OPENSSL_cleanse(token, sizeof(token)); pthread_mutex_unlock(&g_app.lock);
+    if (rc == 0) log_line("INFO", "QQ access_token acquired (value redacted)");
+    return rc;
+}
+static enum MHD_Result reply(struct MHD_Connection *c, unsigned int status, const char *body, const char *type) {
+    struct MHD_Response *r = MHD_create_response_from_buffer(strlen(body), (void *)body, MHD_RESPMEM_MUST_COPY);
+    if (!r) return MHD_NO; MHD_addанд
+    MHD_add_response_header(r, "Content-Type", type); MHD_add_response_header(r, "Cache-Control", "no-store");
+    enum MHD_Result ret = MHD_queue_response(c, status, r); MHD_destroy_response(r); return ret;
+}
+static enum MHD_Result json_reply(struct MHD_Connection *c, unsigned int status, const char *body) { return reply(c, status, body, "application/json; charset=utf-8"); }
+static enum MHD_Result handler(void *cls, struct MHD_Connection *c, const char *url, const char *method, const char *version, const char *upload, size_t *upload_size, void **con_cls) {
+    (void)cls; (void)version;
+    if (!*con_cls) { request_t *q = calloc(1, sizeof(*q)); if (!q) return MHD_NO; *con_cls = q; return MHD_YES; }
+    request_t *q = (request_t *)*con_cls;
+    if (strcmp(method, "POST") == 0 && *upload_size) {
+        if (q->size + *upload_size > MAX_BODY) { *upload_size = 0; return json_reply(c, 413, "{\"error\":\"request_too_large\"}"); }
+        char *p = realloc(q->body, q->size + *upload_size + 1); if (!p) return MHD_NO;
+        q->body = p; memcpy(q->body + q->size, upload, *upload_size); q->size += *upload_size; q->body[q->size] = 0; *upload_size = 0; return MHD_YES;
+    }
+    if (strcmp(method, "GET") == 0 && strcmp(url, "/api/v1/status") == 0) {
+        char out[256]; snprintf(out, sizeof(out), "{\"ok\":true,\"connected\":%s,\"mode\":\"websocket\",\"version\":\"0.1.0\"}", g_app.access_token[0] ? "true" : "false"); return json_reply(c, 200, out);
+    }
+    if (strcmp(method, "POST") == 0 && strcmp(url, "/api/v1/auth/login") == 0) {
+        cJSON *j = cJSON_Parse(q->body ? q->body : ""); cJSON *id = j ? cJSON_GetObjectItemCaseSensitive(j, "app_id") : NULL;
+        cJSON *secret = j ? cJSON_GetObjectItemCaseSensitive(j, "app_secret") : NULL;
+        cJSON *mode = j ? cJSON_GetObjectItemCaseSensitive(j, "mode") : NULL;
+        if (!cJSON_IsString(id) || !cJSON_IsString(secret) || !id->valuestring[0] || !secret->valuestring[0] || strlen(id->valuestring) >= sizeof(g_app.app_id) || strlen(secret->valuestring) >= sizeof(g_app.app_secret)) { cJSON_Delete(j); return json_reply(c, 400, "{\"error\":\"invalid_credentials\"}"); }
+        if (mode && cJSON_IsString(mode) && strcmp(mode->valuestring, "webhook") == 0) { cJSON_Delete(j); return json_reply(c, 501, "{\"error\":\"webhook_transport_not_implemented_yet\"}"); }
+        pthread_mutex_lock(&g_app.lock); snprintf(g_app.app_id, sizeof(g_app.app_id), "%s", id->valuestring); OPENSSL_cleanse(g_app.app_secret, sizeof(g_app.app_secret)); snprintf(g_app.app_secret, sizeof(g_app.app_secret), "%s", secret->valuestring); pthread_mutex_unlock(&g_app.lock); cJSON_Delete(j);
+        if (ensure_token() != 0) { OPENSSL_cleanse(g_app.app_secret, sizeof(g_app.app_secret)); g_app.app_id[0] = 0; log_line("ERROR", "QQ login failed: access_token request failed"); return json_reply(c, 502, "{\"error\":\"qq_auth_failed\"}"); }
+        log_line("INFO", "QQ credentials accepted; token acquired"); return json_reply(c, 200, "{\"ok\":true,\"message\":\"access_token acquired; transport startup is being implemented\"}");
+    }
+    if (strcmp(method, "GET") == 0 && strcmp(url, "/") == 0) {
+        FILE *f = fopen("web/index.html", "rb"); if (!f) return reply(c, 404, "web/index.html not found", "text/plain");
+        fseek(f, 0, SEEK_END); long n = ftell(f); rewind(f); if (n < 0 || n > 2*1024*1024) { fclose(f); return reply(c, 500, "invalid UI asset", "text/plain"); }
+        char *data = malloc((size_t)n + 1); if (!data) { fclose(f); return MHD_NO; } size_t got = fread(data, 1, (size_t)n, f); fclose(f); data[got] = 0;
+        struct MHD_Response *r = MHD_create_response_from_buffer(got, data, MHD_RESPMEM_MUST_FREE); if (!r) { free(data); return MHD_NO; }
+        MHD_add_response_header(r, "Content-Type", "text/html; charset=utf-8"); enum MHD_Result ret = MHD_queue_response(c, 200, r); MHD_destroy_response(r); return ret;
+    }
+    return json_reply(c, 404, "{\"error\":\"not_found\"}");
+}
+static void request_completed(void *cls, struct MHD_Connection *c, void **con_cls, enum MHD_RequestTerminationCode toe) {
+    (void)cls; (void)c; (void)toe; request_t *q = (request_t *)*con_cls; if (q) { free(q->body); free(q); *con_cls = NULL; }
+}
+int main(void) {
+    memset(&g_app, 0, sizeof(g_app)); pthread_mutex_init(&g_app.lock, NULL);
+    snprintf(g_app.api_base, sizeof(g_app.api_base), "%s", getenv("QQBOT_API_BASE") ? getenv("QQBOT_API_BASE") : API_BASE_DEFAULT);
+    snprintf(g_app.token_url, sizeof(g_app.token_url), "%s%s", getenv("QQBOT_TOKEN_BASE") ? getenv("QQBOT_TOKEN_BASE") : g_app.api_base, TOKEN_PATH);
+    if (curl_global_init(CURL_GLOBAL_DEFAULT) != CURLE_OK) return 1;
+    if (mkdir("data", 0700) != 0 && access("data", F_OK) != 0) { perror("mkdir data"); return 1; }
+    if (db_init() != 0) return 1;
+    unsigned int port = getenv("QQBOT_PORT") ? (unsigned int)atoi(getenv("QQBOT_PORT")) : DEFAULT_PORT;
+    struct MHD_Daemon *daemon = MHD_start_daemon(MHD_USE_INTERNAL_POLLING_THREAD, (uint16_t)port, NULL, NULL, &handler, NULL, MHD_OPTION_NOTIFY_COMPLETED, request_completed, NULL, MHD_OPTION_END);
+    if (!daemon) { log_line("ERROR", "failed to start HTTP server"); return 1; }
+    signal(SIGINT, on_signal); signal(SIGTERM, on_signal);
+    char msg[128]; snprintf(msg, sizeof(msg), "QQBot host listening on http://0.0.0.0:%u", port); log_line("INFO", msg);
+    while (!g_stop) sleep(1);
+    MHD_stop_daemon(daemon); OPENSSL_cleanse(g_app.app_secret, sizeof(g_app.app_secret)); OPENSSL_cleanse(g_app.access_token, sizeof(g_app.access_token));
+    sqlite3_close(g_app.db); curl_global_cleanup(); pthread_mutex_destroy(&g_app.lock); log_line("INFO", "host stopped"); return 0;
+}
