@@ -218,3 +218,13 @@
 - 新增 `GET /api/v1/events` 管理员认证查询接口，最多返回最近100条入箱记录；不暴露插件 Token。
 - 新增 `qq_event_queue_init/enqueue` 数据层函数及 SQLite 内存库单元测试。
 - 重要边界：这是 Webhook 验签后的群事件持久化，不是 Gateway WebSocket transport；当前不执行插件 callback_url 投递、不自动确认消费、不重试 HTTP 回调。入箱记录状态保持 pending，后续需增加 delivery worker、逐插件投递状态、重试退避和 callback SSRF 防护。
+
+
+## 2026-11-23 — 逐插件事件投递任务扇出
+
+- 扩展 `src/qq/event_queue.c/.h`：新增 `event_deliveries` 表，为每条已入箱事件创建每插件独立投递任务；只针对创建任务时启用且 callback_url 非空的插件。
+- 投递记录快照保存 callback_url，唯一约束 `(event_id, plugin_id)` 防止重复投递任务；记录 state、attempts、last_error、next_attempt_at、时间戳，不保存插件 Token。
+- Webhook 入箱后执行 fanout；即使事件此前已入箱（重复请求），也会再次尝试补齐缺失的 delivery rows，以覆盖入箱/扇出之间进程异常的恢复场景。
+- 新增管理员 `GET /api/v1/event-deliveries`，最多返回最近 200 条投递任务状态。
+- 测试覆盖启用插件扇出、空 callback/停用插件过滤、重复扇出幂等性。
+- 安全边界：目前仅建立 durable pending delivery queue，未启动 HTTP callback worker；不向 callback_url 发起任何网络请求。DNS 解析与 IP 分类、DNS pinning、禁止重定向、HTTPS-only 复核完成前不得启用实际投递。
