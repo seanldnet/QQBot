@@ -250,3 +250,6 @@
 
 - [x] 对 MSYS2 当前无法索引的 libmicrohttpd 包使用固定归档 + SHA-256 校验安装，避免不明来源依赖。
 - [ ] 确认固定归档安装和完整 Windows 编译链通过。
+
+- [x] Windows MINGW64 libmicrohttpd 软件源缺包问题已定位，改用固定版本 1.0.10-1 历史包并补装 GnuTLS 依赖。
+- [ ] 验证历史包下载、依赖解析、Server 2012 API baseline 编译和成品打包。
