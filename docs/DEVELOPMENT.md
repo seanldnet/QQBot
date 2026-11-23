@@ -290,3 +290,11 @@
 - 最新 Windows full-build 再次通过宿主/SDK 编译、CTest 3/3、运行目录安装和 CA bundle 下载；PE 依赖扫描发现 `libgnutls-30.dll` 导入 `ncrypt.dll`，此前白名单未识别该 Windows CNG 系统组件。
 - `scripts/package-windows.sh` 将 `ncrypt.dll` 加入 Windows OS DLL 白名单；该 DLL 由 Windows 系统提供，不应从 MinGW 目录复制。未知非系统 DLL 仍保持 fail-closed。
 - 本次修复提交 `1fb5e24`；需要新 CI 继续验证依赖闭包、ZIP 与 Artifact。Windows Server 2012–2026 实机矩阵尚未完成，不能据此宣称全版本兼容。
+
+
+## 2026-11-23 — Windows PE 子系统基线静态审计
+
+- 新增 `scripts/check-windows-pe-baseline.sh`：遍历成品 `stage/bin` 中的 EXE/DLL，要求为 x64 PE，并读取 PE SubsystemVersion；高于 6.2 或元数据无法读取时使打包失败。
+- Windows full-build 在 ZIP 生成前执行该检查，避免高于 Windows 8.1 / Server 2012 子系统标记的二进制进入成品包。
+- 当前已对上一版 ZIP 做离线检查：宿主及绝大多数依赖 DLL 标记 5.2，`libmicrohttpd-12.dll` 标记 6.0；均未超过 6.2。
+- 严格边界：PE SubsystemVersion 只是可执行文件元数据，不代表导入的 Windows API 均存在于 Server 2012，也不验证 TLS、证书链、运行时加载和服务启动。Server 2012–2026 逐版本实机验收仍未完成。
