@@ -16,14 +16,14 @@
 | POST | `/api/v1/auth/login` | 提交 AppID、AppSecret、连接模式并启动机器人 |
 | POST | `/api/v1/auth/logout` | 退出管理会话并按策略停止机器人 |
 | GET | `/api/v1/status` | 获取运行状态与连接模式 |
-| GET | `/api/v1/logs` | 分页读取运行日志 |
+| GET | `/api/v1/logs` | 读取最近 100 条运行日志（首版已实现） |
 | GET | `/api/v1/logs/stream` | 实时日志流（协议待选型） |
 | GET/POST | `/api/v1/plugins` | 查询/注册插件 |
 | PATCH/DELETE | `/api/v1/plugins/{id}` | 启停/删除插件 |
 | POST | `/api/v1/plugins/{id}/messages` | 插件发送消息 |
-| POST | `/webhook/qq` | QQ 官方 Webhook 回调（具体路径可配置） |
+| POST | `/webhook/qq` | QQ 官方 Webhook 回调；op=13 challenge、op=0 Ed25519 验签与 op=12 ACK（首版已实现） |
 
-以上是拟定接口，不代表当前已经可调用。
+其中 `/api/v1/auth/login`、`/api/v1/status`、`/api/v1/logs` 和 `/webhook/qq` 已有首版实现；插件 CRUD、插件消息发送和实时流尚未实现。
 
 ## 3. 插件事件 JSON 契约（初步）
 
