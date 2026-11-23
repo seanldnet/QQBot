@@ -1,7 +1,7 @@
 {
   "source": "Tencent official tencent-connect/bot-docs API v2 pages",
   "verified_at": "2026-11-23",
-  "scope_note": "增量核验清单；已逐页核对 25 条 endpoint 路由，尚非官方 API v2 全量 REST 路由。未在页面明确给出的权限或错误码均不推断。",
+  "scope_note": "增量核验清单；目前已逐页核对 26 条 endpoint 路由，尚非官方 API v2 全量 REST 路由。权限和错误码未在页面明确列出的，不作推断。",
   "api_base": "https://api.sgroup.qq.com",
   "endpoints": [
     {
@@ -904,5 +904,5 @@
       "sdk_access": "qqb_api_request / qqbot::Client::request / 易语言 qqb_api_request"
     }
   ],
-  "typed_wrapper_status": "6 of 10 verified endpoint routes have dedicated C ABI, C++ and E-language import wrappers; four message routes retain existing typed text-send helpers."
+  "typed_wrapper_status": "6 of 26 verified endpoint routes have dedicated C ABI/C++/E-language typed wrappers; remaining routes are accessible through qqb_api_request / qqbot::Client::request."
 }
