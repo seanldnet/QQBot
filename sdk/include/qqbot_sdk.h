@@ -44,6 +44,21 @@ QQB_API int QQB_CALL qqb_send_channel_text(qqb_client *client, const char *chann
                                            const char *content, const char *event_id,
                                            const char *msg_id, int msg_seq,
                                            char **response_json, long *http_status);
+/* Typed wrappers for the verified guild/channel management endpoints.
+ * body_json is required for create/update; pass a complete JSON object.
+ */
+QQB_API int QQB_CALL qqb_get_guild(qqb_client *client, const char *guild_id,
+                                    char **response_json, long *http_status);
+QQB_API int QQB_CALL qqb_list_channels(qqb_client *client, const char *guild_id,
+                                        char **response_json, long *http_status);
+QQB_API int QQB_CALL qqb_get_channel(qqb_client *client, const char *channel_id,
+                                      char **response_json, long *http_status);
+QQB_API int QQB_CALL qqb_create_channel(qqb_client *client, const char *guild_id,
+                                         const char *body_json, char **response_json, long *http_status);
+QQB_API int QQB_CALL qqb_update_channel(qqb_client *client, const char *channel_id,
+                                         const char *body_json, char **response_json, long *http_status);
+QQB_API int QQB_CALL qqb_delete_channel(qqb_client *client, const char *channel_id,
+                                         char **response_json, long *http_status);
 QQB_API const char *QQB_CALL qqb_version(void);
 #ifdef __cplusplus
 }
