@@ -3,6 +3,18 @@
 所有代码或文档变更均按时间倒序记录。每条记录必须包含变更范围、原因、行为影响和验证结果。不得将未执行的测试描述为通过。
 
 
+
+## 2026-11-23 — Webhook 接入与运行日志首版
+
+- 新增 `src/qq/webhook.h` / `src/qq/webhook.c`：实现 QQ op=13 challenge 签名生成，以及 op=0 事件的 Ed25519 验签；seed 按官方规则由 Bot Secret 重复并截取 32 字节，事件签名消息按 `timestamp + raw_body` 拼接。
+- 新增 `tests/README.md`：记录官方签名测试向量与篡改/缺失签名负向测试要求。
+- 修改 `src/main.c`：挂载 `/webhook/qq`，验签成功返回 `{"op":12}`，验证回调 AppID（如平台提供该头），增加 `/api/v1/logs` 最近 100 条日志接口；登录仅开放 Webhook 模式，WebSocket 明确返回未实现，不伪装连接成功。
+- 修改 Makefile / CMake：将 Webhook 模块纳入构建。
+- 修改 `web/index.html`：默认选择 Webhook，登录后轮询并显示运行日志。
+- 安全修复：管理 HTTP 服务默认绑定 `127.0.0.1`，可通过 `QQBOT_BIND` 显式指定 IPv4 监听地址；签名 hex 解析改为严格字符校验。
+- 协议依据：官方 `event-emit.md` 与 `sign.md`。官方文档同时标注 WebSocket 事件链路计划逐步下线，Webhook 作为当前实现优先级。
+- 验证：文件提交成功；未运行本地编译，未执行官方固定向量的 C 端测试，也未用真实 QQ 回调联调。以上均仍待验证。
+
 ## 2026-11-23 — C11 宿主首阶段骨架
 
 - 新增 `Makefile` 与 `CMakeLists.txt`：建立 C11 构建入口，检测 libmicrohttpd、libcurl、SQLite、cJSON、OpenSSL。
