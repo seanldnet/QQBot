@@ -326,10 +326,6 @@ void qq_gateway_stop(qq_gateway_t *g) {
 
 int qq_gateway_available(void) {
     const curl_version_info_data *v = curl_version_info(CURLVERSION_NOW);
-#ifdef CURL_VERSION_WEBSOCKETS
-    return v && (v->features & CURL_VERSION_WEBSOCKETS) != 0;
-#else
-    (void)v;
-    return 0;
-#endif
+    /* libcurl WebSocket support was added in 7.86.0. */
+    return v && v->version_num >= 0x075600U;
 }
