@@ -383,4 +383,44 @@ int QQB_CALL qqb_batch_remove_group_members(qqb_client*c,const char*g,const char
     return endpoint_call(c,"POST","/v2/groups/",g,"/batch_remove_members",body,out,status);
 }
 
+
+int QQB_CALL qqb_list_group_blacklist(qqb_client*c,const char*g,const char*cursor,char**out,long*status) {
+    char *base=NULL,*encoded=NULL,*path=NULL; size_t n; int rc;
+    if(!valid_path_id(g)) return -1;
+    base=path_id("/v2/groups/",g,"/member_blacklist"); if(!base) return -3;
+    if(cursor && *cursor) { encoded=encode_query_value(cursor); if(!encoded) { free(base); return -3; } }
+    n=strlen(base)+(encoded?strlen(encoded):0)+40; path=(char*)malloc(n);
+    if(!path) { free(base); free(encoded); return -3; }
+    if(encoded) snprintf(path,n,"%s?limit=100&cursor=%s",base,encoded);
+    else snprintf(path,n,"%s?limit=100",base);
+    rc=qqb_api_request(c,"GET",path,NULL,out,status);
+    free(base); free(encoded); free(path); return rc;
+}
+int QQB_CALL qqb_update_group_blacklist(qqb_client*c,const char*g,const char*body,char**out,long*status) {
+    if(!body || body[0]!='{') return -1;
+    return endpoint_call(c,"POST","/v2/groups/",g,"/member_blacklist",body,out,status);
+}
+int QQB_CALL qqb_list_group_join_requests(qqb_client*c,const char*g,const char*cursor,char**out,long*status) {
+    char *base=NULL,*encoded=NULL,*path=NULL; size_t n; int rc;
+    if(!valid_path_id(g)) return -1;
+    base=path_id("/v2/groups/",g,"/join_request_list"); if(!base) return -3;
+    if(cursor && *cursor) { encoded=encode_query_value(cursor); if(!encoded) { free(base); return -3; } }
+    n=strlen(base)+(encoded?strlen(encoded):0)+40; path=(char*)malloc(n);
+    if(!path) { free(base); free(encoded); return -3; }
+    if(encoded) snprintf(path,n,"%s?limit=50&cursor=%s",base,encoded);
+    else snprintf(path,n,"%s?limit=50",base);
+    rc=qqb_api_request(c,"GET",path,NULL,out,status);
+    free(base); free(encoded); free(path); return rc;
+}
+int QQB_CALL qqb_approve_group_join_request(qqb_client*c,const char*g,const char*m,const char*body,char**out,long*status) {
+    char *base=NULL,*path=NULL; size_t n; int rc;
+    if(!valid_path_id(g)||!valid_path_id(m)||!body||body[0]!='{') return -1;
+    base=path_id("/v2/groups/",g,"/approval_join_request/"); if(!base) return -3;
+    n=strlen(base)+strlen(m)+1; path=(char*)malloc(n);
+    if(!path) { free(base); return -3; }
+    snprintf(path,n,"%s%s",base,m);
+    rc=qqb_api_request(c,"POST",path,body,out,status);
+    free(base); free(path); return rc;
+}
+
 const char *QQB_CALL qqb_version(void){return "0.2.0";}
