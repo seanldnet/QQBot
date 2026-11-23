@@ -99,6 +99,9 @@ int QQB_CALL qqb_send_group_text(qqb_client*c,const char*id,const char*content,c
 int QQB_CALL qqb_send_c2c_text(qqb_client*c,const char*id,const char*content,const char*event_id,const char*msg_id,int seq,char**out,long*status){
     char*p=path_id("/v2/users/",id,"/messages");if(!p)return -1;int r=send_text(c,p,content,event_id,msg_id,seq,out,status);free(p);return r;
 }
+int QQB_CALL qqb_send_dms_text(qqb_client*c,const char*id,const char*content,const char*event_id,const char*msg_id,int seq,char**out,long*status){
+    char*p=path_id("/dms/",id,"/messages");if(!p)return -1;int r=send_text(c,p,content,event_id,msg_id,seq,out,status);free(p);return r;
+}
 int QQB_CALL qqb_send_channel_text(qqb_client*c,const char*id,const char*content,const char*event_id,const char*msg_id,int seq,char**out,long*status){
     char*p=path_id("/channels/",id,"/messages");if(!p)return -1;int r=send_text(c,p,content,event_id,msg_id,seq,out,status);free(p);return r;
 }
