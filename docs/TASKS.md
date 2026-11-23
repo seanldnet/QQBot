@@ -223,3 +223,14 @@
 
 - [x] 增加 GitHub Actions Windows-latest + MSYS2/MinGW64 callback security 编译/测试 job。
 - [ ] 确认首次 Windows runner 结果并按日志修复兼容问题；该 job 当前仅覆盖 callback security 模块。
+
+
+## Windows 成品交付
+
+- [x] 增加 Windows Server 2012 API baseline 的 x64 MinGW64 构建/测试/打包 job。
+- [x] 增加 PE 导入依赖递归收集脚本，遇到缺失非系统 DLL 时让打包失败。
+- [x] 成品包自动生成独立随机管理员 API Token，并提供 start.bat 一键启动入口。
+- [ ] 首次 Windows CI 构建与 CTest 全部通过。
+- [ ] 在 Windows Server 2012、2012 R2、2016、2019、2022、2025/2026 实机或虚拟机逐版本启动验证。
+- [ ] 验证 SDK DLL 的 C ABI / stdcall 导出、插件加载和易语言调用；补齐 x86 发行包。
+- [ ] 发布正式 Release ZIP，并提供稳定下载地址；未完成上述验证前不宣称全版本兼容。
