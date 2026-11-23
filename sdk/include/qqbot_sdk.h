@@ -141,6 +141,17 @@ QQB_API int QQB_CALL qqb_list_group_members(qqb_client *client, const char *grou
 QQB_API int QQB_CALL qqb_get_group_member(qqb_client *client, const char *group_openid, const char *member_openid, char **response_json, long *http_status);
 QQB_API int QQB_CALL qqb_batch_remove_group_members(qqb_client *client, const char *group_openid, const char *body_json, char **response_json, long *http_status);
 
+
+/* QQ group blacklist and join-request operations. Cursor is opaque and URL-encoded. */
+QQB_API int QQB_CALL qqb_list_group_blacklist(qqb_client *client, const char *group_openid,
+    const char *cursor, char **response_json, long *http_status);
+QQB_API int QQB_CALL qqb_update_group_blacklist(qqb_client *client, const char *group_openid,
+    const char *body_json, char **response_json, long *http_status);
+QQB_API int QQB_CALL qqb_list_group_join_requests(qqb_client *client, const char *group_openid,
+    const char *cursor, char **response_json, long *http_status);
+QQB_API int QQB_CALL qqb_approve_group_join_request(qqb_client *client, const char *group_openid,
+    const char *member_openid, const char *body_json, char **response_json, long *http_status);
+
 QQB_API const char *QQB_CALL qqb_version(void);
 #ifdef __cplusplus
 }
