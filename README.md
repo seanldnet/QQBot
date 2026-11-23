@@ -11,10 +11,16 @@
 - [数据库设计与迁移](docs/DATABASE.md)
 - [QQ 协议核验记录](docs/PROTOCOL-RESEARCH.md)
 - [依赖安装说明](DEPENDENCIES.md)
+- [多语言 SDK 总览](sdk/README.md)
+- [官方 API v2 全量目录（81 页）](sdk/official-api-catalog.md)
+- [机器可读 API 目录](sdk/official-api-index.json)
+- [C ABI SDK 头文件](sdk/include/qqbot_sdk.h)
+- [C++ SDK](sdk/cpp/qqbot.hpp)
+- [易语言 DLL 接入说明](sdk/e-language/README.md)
 
 ## 当前状态
 
-当前为首阶段开发版本：C11 HTTP 宿主、SQLite 日志、Access Token 获取、Webhook op=13 challenge 与 Ed25519 事件验签已写入；WebSocket、插件 API、消息收发和真实联调仍未完成。详见 docs/TASKS.md。
+当前为首阶段开发版本：C11 HTTP 宿主、SQLite 日志、Access Token 获取、Webhook op=13 challenge 与 Ed25519 事件验签已写入；已新增 C ABI SDK、C++ 封装、易语言 DLL 接口映射和官方 API v2 目录索引。宿主插件代理、完整插件管理、WebSocket、真实消息收发和实机联调仍未完成。详见 docs/TASKS.md。
 
 ## 开发原则
 
