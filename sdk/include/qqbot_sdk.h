@@ -28,6 +28,11 @@ QQB_API int QQB_CALL qqb_api_request(qqb_client *client, const char *method, con
                                      const char *body_json, char **response_json, long *http_status);
 QQB_API void QQB_CALL qqb_free_string(char *value);
 /* Convenience wrappers; reply fields are optional. */
+/* Full QQ group message payload: msg_type 0/2/3/4/7, markdown/ark/media/keyboard.
+ * For passive replies, supply event_id or msg_id as required by the official API.
+ */
+QQB_API int QQB_CALL qqb_send_group_message(qqb_client *client, const char *group_openid,
+    const char *body_json, char **response_json, long *http_status);
 QQB_API int QQB_CALL qqb_send_group_text(qqb_client *client, const char *group_openid,
                                         const char *content, const char *event_id,
                                         const char *msg_id, int msg_seq,
