@@ -81,7 +81,8 @@ jobs:
           cp README.md DEPENDENCIES.md stage/
           openssl rand -hex 32 > stage/admin-token.txt
           mkdir -p stage/certs
-          cp /etc/ssl/certs/ca-bundle.crt stage/certs/ca-bundle.crt
+          curl -fL --retry 3 --retry-all-errors https://curl.se/ca/cacert.pem -o stage/certs/ca-bundle.crt
+          test -s stage/certs/ca-bundle.crt
           cat > stage/启动QQBot.bat <<'EOF'
           @echo off
           cd /d "%~dp0"
