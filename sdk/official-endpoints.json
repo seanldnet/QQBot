@@ -157,7 +157,7 @@
       ],
       "sdk_wrapper": "qqb_send_group_message / qqbot::Client::send_group_message; qqb_send_group_text convenience wrapper / 易语言 qqb_send_group_message + qqb_send_group_text",
       "sdk_access": "typed C ABI / C++ / 易语言 DLL wrapper",
-      "notes": "群聊被动回复窗口5分钟，每条入站消息最多5次；主动推送自2025-04-21起停止提供。群管理 README 中资料查询、机器人入群列表、成员列表等仍标为暂不开放/注释，不应伪造 REST 管理能力。"
+      "notes": "群聊被动回复窗口5分钟，每条入站消息最多5次；主动推送自2025-04-21起停止提供。旧版群管理 README 中资料查询、成员列表等仍保留注释；但近期发现新的群管理 REST 路由，详见 sdk/group-api-discovery.md。它们尚未逐页复核腾讯官方自动生成页面，不能提前计入 verified endpoint。"
     },
     {
       "id": "message.channel.create",
