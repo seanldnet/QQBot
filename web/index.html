@@ -1,13 +1,16 @@
 <!doctype html>
 <html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>QQBot Host</title><style>
 :root{font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#344767;background:#f8f9fe}*{box-sizing:border-box}body{margin:0;min-height:100vh;background:linear-gradient(145deg,#172b4d,#5e72e4);display:grid;place-items:center;padding:24px}.panel{width:min(100%,900px);background:#fff;border-radius:18px;padding:34px;box-shadow:0 24px 60px #101d3b55}.brand{font-size:13px;font-weight:800;letter-spacing:.14em;color:#5e72e4}.title{font-size:25px;margin:12px 0 6px}.sub{color:#8898aa;font-size:14px;margin:0 0 28px}.field{display:block;margin:17px 0 6px;font-size:13px;font-weight:650}.input,select{width:100%;padding:13px 14px;border:1px solid #dce1eb;border-radius:9px;font-size:14px;background:#fff;color:#344767;outline:none}.input:focus,select:focus{border-color:#5e72e4;box-shadow:0 0 0 3px #5e72e422}.btn{width:100%;border:0;border-radius:9px;padding:14px;margin-top:24px;background:linear-gradient(90deg,#5e72e4,#825ee4);color:white;font-weight:700;font-size:14px;cursor:pointer}.btn:disabled{opacity:.6;cursor:wait}.hint{font-size:12px;color:#8898aa;line-height:1.6;margin-top:18px}.status{margin-top:18px;padding:12px;border-radius:8px;background:#f4f6fa;font-size:13px;white-space:pre-wrap}.status.ok{color:#16845b;background:#e9f8f1}.status.err{color:#c03950;background:#fff0f1}</style></head>
-<body><main class="panel"><div class="brand">QQBOT HOST / C11</div><h1 class="title">机器人控制台</h1><p class="sub">连接 QQ 官方机器人，管理运行状态与插件</p><form id="login"><label class="field" for="app_id">AppID</label><input class="input" id="app_id" autocomplete="username" required maxlength="127" placeholder="输入机器人 AppID"><label class="field" for="app_secret">AppSecret</label><input class="input" id="app_secret" type="password" autocomplete="current-password" required maxlength="255" placeholder="输入 AppSecret"><label class="field" for="mode">连接方式</label><select id="mode"><option value="websocket" selected>WebSocket（WSS 长连接）</option><option value="webhook">Webhook（公网 HTTPS 回调）</option></select><button class="btn" id="submit" type="submit">验证凭据并登录</button></form><section id="dashboard" hidden><h2 style="font-size:16px;margin:24px 0 10px">机器人连接状态</h2><div id="runtime" class="status">等待状态…</div><h2 style="font-size:16px;margin:24px 0 10px">消息与运行日志</h2><div id="logs" class="status" style="max-height:420px;overflow:auto;white-space:pre-wrap"></div></section><div class="status" id="status">选择 WSS 可由宿主主动连接 QQ Gateway；选择 Webhook 则需在 QQ 开放平台配置公网 HTTPS 回调地址 /webhook/qq。凭据仅保存在进程内存中。</div><p class="hint">安全提示：请勿在公共设备输入 AppSecret。生产环境应通过 HTTPS 反向代理访问控制台。</p></main><script>
+<body><main class="panel"><div class="brand">QQBOT HOST / C11</div><h1 class="title">机器人控制台</h1><p class="sub">连接 QQ 官方机器人，管理运行状态与插件</p><form id="login"><label class="field" for="admin_token">管理员令牌</label><input class="input" id="admin_token" type="password" autocomplete="off" required minlength="24" placeholder="从 admin-token.txt 读取，或填写 QQBOT_ADMIN_TOKEN"><label class="field" for="app_id">AppID</label><input class="input" id="app_id" autocomplete="username" required maxlength="127" placeholder="输入机器人 AppID"><label class="field" for="app_secret">AppSecret</label><input class="input" id="app_secret" type="password" autocomplete="current-password" required maxlength="255" placeholder="输入 AppSecret"><label class="field" for="mode">连接方式</label><select id="mode"><option value="websocket" selected>WebSocket（WSS 长连接）</option><option value="webhook">Webhook（公网 HTTPS 回调）</option></select><button class="btn" id="submit" type="submit">验证凭据并登录</button></form><section id="dashboard" hidden><h2 style="font-size:16px;margin:24px 0 10px">机器人连接状态</h2><div id="runtime" class="status">等待状态…</div><h2 style="font-size:16px;margin:24px 0 10px">消息与运行日志</h2><div id="logs" class="status" style="max-height:420px;overflow:auto;white-space:pre-wrap"></div></section><div class="status" id="status">选择 WSS 可由宿主主动连接 QQ Gateway；选择 Webhook 则需在 QQ 开放平台配置公网 HTTPS 回调地址 /webhook/qq。凭据仅保存在进程内存中。</div><p class="hint">安全提示：请勿在公共设备输入 AppSecret。生产环境应通过 HTTPS 反向代理访问控制台。</p></main><script>
 const form = document.querySelector('#login');
 const statusBox = document.querySelector('#status');
 const button = document.querySelector('#submit');
+let adminToken = '';
+function adminHeaders() { return {'Authorization': 'Bearer ' + adminToken}; }
 async function loadLogs() {
   try {
-    const response = await fetch('/api/v1/logs');
+    const response = await fetch('/api/v1/logs', {headers: adminHeaders()});
+    if (!response.ok) throw new Error(response.status === 401 ? '管理员令牌无效' : 'HTTP ' + response.status);
     const rows = await response.json();
     document.querySelector('#logs').textContent = rows.slice().reverse()
       .map(x => '[' + x.created_at + '] [' + x.level + '] [' + x.component + '] ' + x.message)
@@ -18,7 +21,8 @@ async function loadLogs() {
 }
 async function loadStatus() {
   try {
-    const response = await fetch('/api/v1/status');
+    const response = await fetch('/api/v1/status', {headers: adminHeaders()});
+    if (!response.ok) throw new Error(response.status === 401 ? '管理员令牌无效' : 'HTTP ' + response.status);
     const data = await response.json();
     document.querySelector('#runtime').textContent =
       '凭据认证：' + (data.authenticated ? '已获取 access_token' : '未登录') + '\n' +
@@ -38,6 +42,8 @@ setInterval(() => {
 form.addEventListener('submit', async event => {
   event.preventDefault();
   button.disabled = true;
+  adminToken = document.querySelector('#admin_token').value.trim();
+  if (adminToken.length < 24) { statusBox.className = 'status err'; statusBox.textContent = '管理员令牌至少需要 24 个字符'; button.disabled = false; return; }
   statusBox.className = 'status';
   statusBox.textContent = '正在向 QQ 平台申请 access_token…';
   try {
