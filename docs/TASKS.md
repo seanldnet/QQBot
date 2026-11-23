@@ -364,4 +364,19 @@
 - [ ] 等待本次 Windows GUI 编译、链接、PE 审计和 ZIP CI 验证。
 - [ ] 在真实 Windows 桌面环境验证登录窗口、WSS READY、Webhook 回调、窗口关闭时核心进程退出。
 - [ ] 完成首页、账号、消息、应用、设置等完整导航和 UI 视觉打磨；当前为桌面 GUI 第一阶段，不是最终 UI。
-- [ ] 实机确认 WSS 和 Webhook 官方平台连接及真实消息接收。
+- [ ] 实机确认 WSS 和 Webhook 官方平台连接及真实消息接收。## Windows 桌面端 AntdUI 重构（2026-11-23）
+
+- [x] 新增独立 .NET 8 WinForms 桌面项目，固定引用官方 AntdUI NuGet 组件包 2.4.20。
+- [x] 登录窗口和主界面改用 AntdUI.Window、Panel、Input、Select、Button、Label 等组件；不再将 Win32 控件作为业务 UI。
+- [x] 桌面程序采用 Unicode/.NET 字符串，移除旧 ANSI Win32 中文控件路径。
+- [x] Windows 包装布局调整为根目录唯一 QQBot.exe，runtime/ 存放 C 核心及 DLL，data/、certs/ 独立存放。
+- [x] 新增 docs/DESKTOP-UI.md，明确 AntdUI-only 业务 UI 约束、发布目录和验收标准。
+- [x] 首轮 Windows CI 已编译 C 核心并通过 CTest 3/3；AntdUI 桌面发布阶段发现 AntdUI.Message.error 参数签名错误，已按 Target + 文本形式修正。
+- [ ] 重新运行 Windows CI，确认 AntdUI NuGet restore、C# 编译、单文件发布、依赖扫描、PE 审计和 ZIP 生成全部成功。
+- [ ] 在 Windows 10/11 实机验收中文显示、DPI、登录表单、导航、日志、核心进程生命周期及关闭行为。
+- [ ] 真实 QQ AppID/AppSecret 联调 WSS READY、Webhook challenge 和消息接收。
+
+> 当前状态：AntdUI 重构代码已进入仓库，但第一轮 CI 桌面编译失败；修复提交后的 CI 尚待确认。禁止将旧 Win32 GUI ZIP 作为 AntdUI 版本交付。
+
+
+
