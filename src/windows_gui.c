@@ -3,6 +3,7 @@
 #include <winhttp.h>
 #include <bcrypt.h>
 #include <commctrl.h>
+#include <cjson/cJSON.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -111,7 +112,19 @@ static void show_dashboard(void) {
 static void refresh_data(void) {
     char buf[32768],status[2048];
     if(http_request("GET","/api/v1/status",NULL,status,sizeof(status))==0)set_text(g_status,status);
-    if(http_request("GET","/api/v1/logs",NULL,buf,sizeof(buf))==0)set_text(g_logs,buf);
+    if(http_request("GET","/api/v1/logs",NULL,buf,sizeof(buf))==0){
+        cJSON *arr=cJSON_Parse(buf); cJSON *item=NULL; char view[30000]="";
+        cJSON_ArrayForEach(item,arr){
+            cJSON *level=cJSON_GetObjectItemCaseSensitive(item,"level");
+            cJSON *message=cJSON_GetObjectItemCaseSensitive(item,"message");
+            cJSON *stamp=cJSON_GetObjectItemCaseSensitive(item,"created_at");
+            char line[2048]; snprintf(line,sizeof(line),"[%s] [%s] %s\\r\\n",
+                cJSON_IsString(stamp)?stamp->valuestring:"",cJSON_IsString(level)?level->valuestring:"INFO",
+                cJSON_IsString(message)?message->valuestring:"");
+            if(strlen(view)+strlen(line)+1<sizeof(view))strcat(view,line);
+        }
+        cJSON_Delete(arr); set_text(g_logs,view);
+    }
 }
 static void do_login(void) {
     char id[256],secret[512],eid[520],esec[1024],body[1800],response[4096];
