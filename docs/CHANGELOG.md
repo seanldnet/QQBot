@@ -86,3 +86,10 @@
 - 扩展 `tests/test_event_queue.c`：覆盖两条启用插件任务、停用插件与空 callback 排除、重复 fanout 不产生重复行。
 - 更新 `docs/API.md`、`docs/DATABASE.md`、`docs/DEVELOPMENT.md`、`docs/TASKS.md`。
 - 安全边界：当前只建立持久化 pending delivery 记录，尚未向插件发 HTTP 请求；真实 worker 必须等 DNS/IP 拒绝、DNS pinning、HTTPS-only、禁止重定向和响应/超时限制完成后才能启用。
+
+
+## 2026-11-23 — 逐插件投递队列 CI 结果
+
+- 中间提交曾因事件投递 API 错误 JSON 字符串转义和 event_queue.c 缺少标准 NULL 定义导致 Make 编译失败；已分别修正。失败的中间 run 未作为通过依据。
+- 最终修复提交 `3e4320fb6ad939e5cd6e9ef5d529d77185fa0974` 对应 GitHub Actions run `45176688074` 已成功：C++ SDK 示例、Make 构建、Make 单元测试、CMake 构建和 CTest 均通过。
+- 当前验证仅覆盖事件持久化与逐插件 pending 任务扇出；尚未启用 callback HTTP worker，也未做 DNS/IP SSRF 防护和真实 QQ Webhook 回调实测。
