@@ -101,6 +101,28 @@ QQB_API int QQB_CALL qqb_audio_mic_up(qqb_client *client, const char *channel_id
 QQB_API int QQB_CALL qqb_audio_mic_down(qqb_client *client, const char *channel_id,
     char **response_json, long *http_status);
 
+/* Typed role assignment, member removal and per-channel permission wrappers.
+ * JSON bodies are complete objects; pass NULL only for bodyless operations.
+ */
+QQB_API int QQB_CALL qqb_list_guild_role_members(qqb_client *client, const char *guild_id,
+    const char *role_id, const char *start_index, unsigned int limit,
+    char **response_json, long *http_status);
+QQB_API int QQB_CALL qqb_kick_guild_member(qqb_client *client, const char *guild_id,
+    const char *user_id, const char *body_json, char **response_json, long *http_status);
+QQB_API int QQB_CALL qqb_add_guild_member_role(qqb_client *client, const char *guild_id,
+    const char *user_id, const char *role_id, const char *body_json,
+    char **response_json, long *http_status);
+QQB_API int QQB_CALL qqb_remove_guild_member_role(qqb_client *client, const char *guild_id,
+    const char *user_id, const char *role_id, const char *body_json,
+    char **response_json, long *http_status);
+QQB_API int QQB_CALL qqb_get_channel_member_permissions(qqb_client *client, const char *channel_id,
+    const char *user_id, char **response_json, long *http_status);
+QQB_API int QQB_CALL qqb_update_channel_member_permissions(qqb_client *client, const char *channel_id,
+    const char *user_id, const char *body_json, char **response_json, long *http_status);
+QQB_API int QQB_CALL qqb_get_channel_role_permissions(qqb_client *client, const char *channel_id,
+    const char *role_id, char **response_json, long *http_status);
+QQB_API int QQB_CALL qqb_update_channel_role_permissions(qqb_client *client, const char *channel_id,
+    const char *role_id, const char *body_json, char **response_json, long *http_status);
 QQB_API const char *QQB_CALL qqb_version(void);
 #ifdef __cplusplus
 }
