@@ -47,3 +47,51 @@ jobs:
           gcc -std=c11 -D_WIN32 -Wall -Wextra -Wpedantic -Isrc tests/test_callback_security.c src/qq/callback_security.c -o test_callback_security.exe $(pkg-config --cflags --libs libcurl) -lws2_32
       - name: Run Windows callback security test
         run: ./test_callback_security.exe
+
+  windows-server-package:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up MinGW64 build environment
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: true
+          install: >-
+            mingw-w64-x86_64-gcc
+            mingw-w64-x86_64-cmake
+            mingw-w64-x86_64-ninja
+            mingw-w64-x86_64-pkgconf
+            mingw-w64-x86_64-libmicrohttpd
+            mingw-w64-x86_64-curl
+            mingw-w64-x86_64-sqlite3
+            mingw-w64-x86_64-cjson
+            mingw-w64-x86_64-openssl
+      - name: Configure for Windows Server 2012 API baseline
+        run: |
+          cmake -S . -B build-win -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_FLAGS="-D_WIN32_WINNT=0x0602 -DWINVER=0x0602" -DCMAKE_EXE_LINKER_FLAGS="-static -static-libgcc"
+      - name: Build Windows host and SDK
+        run: cmake --build build-win --parallel
+      - name: Run Windows tests
+        run: ctest --test-dir build-win --output-on-failure
+      - name: Assemble runtime package
+        run: |
+          mkdir -p package/QQBot
+          cp build-win/qqbot.exe package/QQBot/
+          cp build-win/libqqbot_sdk.dll package/QQBot/ 2>/dev/null || true
+          cp -r web package/QQBot/
+          mkdir -p package/QQBot/data
+          printf "QQBot Windows runtime package\nTarget API baseline: Windows 8.1 / Server 2012 (0x0602)\n" > package/QQBot/README-Windows.txt
+          printf "@echo off\r\ncd /d %%~dp0\r\nif not exist data mkdir data\r\nset QQBOT_BIND=127.0.0.1\r\nset QQBOT_PORT=8080\r\nqqbot.exe\r\npause\r\n" > package/QQBot/start.bat
+          printf "@echo off\r\ncd /d %%~dp0\r\nqqbot.exe\r\n" > package/QQBot/start-console.bat
+          cd package && 7z a -tzip ../QQBot-Windows-x64-Server2012plus.zip QQBot
+      - name: Upload Windows ready-to-run package
+        uses: actions/upload-artifact@v4
+        with:
+          name: QQBot-Windows-x64-Server2012plus
+          path: QQBot-Windows-x64-Server2012plus.zip
+          if-no-files-found: error
+          retention-days: 30
