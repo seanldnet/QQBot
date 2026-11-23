@@ -296,3 +296,20 @@
 - [x] 定位 PE 审计误报原因：objdump 格式字段提取包含前导空格。
 - [x] 改为读取 `objdump -f` 输出的末字段，修正 x64 格式识别。
 - [ ] 等待修复后的完整 Windows build、PE 审计和 ZIP artifact CI 通过。
+
+
+## 2026-11-23 — 用户优先测试范围：机器人接入与消息日志
+
+- [x] 管理后台提供 WebSocket（WSS）/Webhook 接入模式选择。
+- [x] 登录接口统一校验 AppID、AppSecret 并获取 access_token；兼容 expires_in 数字/字符串格式。
+- [x] WSS Gateway 初版：动态获取 /gateway URL、TLS WSS 握手、HELLO/IDENTIFY、心跳、READY 状态和断线退避重连。
+- [x] Webhook 初版：保留 op=13 challenge、op=0 Ed25519 验签和 ACK；仅在收到已验签事件后标记 webhook_active。
+- [x] 群 @ 消息与 C2C 单聊消息归一化，写入持久化事件收件箱和日志。
+- [x] 管理页面展示接入方式、登录状态、连接状态和近实时消息/运行日志。
+- [x] 增加 C2C 消息归一化单元测试。
+- [ ] 完成最新 Linux/Windows CI 构建与 CTest；当前提交对应 run 45187828807 执行中。
+- [ ] WSS RESUME/session 持久化、Gateway 关闭码分类、心跳 ACK 超时与长时间断线恢复。
+- [ ] Webhook 公网 HTTPS 反向代理/QQ 控制台真实回调验证。
+- [ ] QQ 官方机器人实机测试：WSS 登录、群消息、C2C 单聊、Webhook challenge 与事件。
+- [ ] 消息日志补齐频道、频道私信、附件/图片元信息、昵称映射和日志筛选/分页。
+- [ ] 取得 CI 通过结果后重新生成 Windows x64 一键运行包，交由用户实测；实测前不标记接入功能已验收。
