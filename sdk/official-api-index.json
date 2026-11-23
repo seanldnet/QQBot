@@ -1,5 +1,5 @@
 {
-  "source_repository": "tencent-connect/bot-docs",
+  "source_repository": "https://github.com/tencent-connect/bot-docs",
   "source_file": "docs/develop/api-v2/config.js",
   "captured_at": "2026-11-23",
   "document_count": 81,
