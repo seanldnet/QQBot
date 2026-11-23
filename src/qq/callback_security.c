@@ -1,3 +1,4 @@
+#define _POSIX_C_SOURCE 200112L
 #include "callback_security.h"
 #include <curl/curl.h>
 #include <arpa/inet.h>
