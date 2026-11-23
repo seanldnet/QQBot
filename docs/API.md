@@ -62,3 +62,6 @@ QQ API 根域名、token 获取请求、Authorization 格式、Gateway、Webhook
 - 状态查询：`GET /api/v1/status` 返回 authenticated、mode、connection_state 和 transport_ready。WSS 只有收到 READY 才进入 connected；Webhook 收到已验签事件后进入 webhook_active。
 - 消息日志：首批记录 `GROUP_AT_MESSAGE_CREATE` 与 `C2C_MESSAGE_CREATE`，同时写入 SQLite event inbox 与 logs 表；日志包含会话类型、会话标识、发送者标识、消息文本和时间。日志接口目前返回最近 100 条。
 - 限制：WSS 首版尚未实现 RESUME/session 持久化、所有 Gateway 关闭码策略和真实 QQ 平台联调；Webhook 仍要求公网 HTTPS 和控制台正确配置。当前事件解析未覆盖频道、频道私信、附件内容和全部群管理事件的可读字段。
+
+
+WSS 构建要求：libcurl 7.86.0 或更高版本（WebSocket API 首次在该版本提供）；Make 与 CMake 已增加最低版本约束。运行时会按 libcurl 版本判断 WSS 能力。
