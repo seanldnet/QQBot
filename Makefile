@@ -47,7 +47,7 @@ test: $(TEST_EVENT) $(TEST_QUEUE) $(TEST_CALLBACK)
 
 check-deps:
 	@for p in libmicrohttpd libcurl sqlite3 libcjson openssl; do \
-	  pkg-config --exists $p || { echo "Missing dependency: $p"; exit 1; }; \
+	  pkg-config --exists $$p || { echo "Missing dependency: $$p"; exit 1; }; \
 	done
 	@pkg-config --atleast-version=7.86.0 libcurl || { echo "libcurl >= 7.86.0 required for WSS transport"; exit 1; }
 
