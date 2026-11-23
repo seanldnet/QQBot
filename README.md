@@ -23,7 +23,7 @@
 
 ## 当前状态
 
-当前包含 C11 QQ 机器人协议核心、SQLite 日志、Access Token 获取、WSS Gateway 首版、Webhook challenge/Ed25519 验签和 C/C++ SDK。Windows 正在转向原生桌面 EXE：新增 Win32 GUI 登录入口，桌面程序启动本机核心进程并通过本机 API 展示状态与日志。WSS RESUME、完整插件投递、真实 QQ 官方平台实机联调仍待完成。详见 docs/TASKS.md。
+当前包含 C11 QQ 机器人协议核心、SQLite 日志、Access Token 获取、WSS Gateway 首版、Webhook challenge/Ed25519 验签和 C/C++ SDK。Windows 桌面端采用 C# WinForms + AntdUI；最终用户界面不再使用手写 Win32 控件。AntdUI 桌面构建和实机验收状态详见 docs/DESKTOP-UI.md 与 docs/TASKS.md。WSS RESUME、完整插件投递、真实 QQ 官方平台实机联调仍待完成。
 
 ## 开发原则
 
@@ -41,14 +41,14 @@
 
 ## Windows 成品交付
 
-目标提供可直接解压运行的 Windows x64 ZIP，包含宿主、SDK DLL、运行时依赖、启动脚本和默认资源。Windows Server 2012/2012 R2 至 2026 的逐版本实机兼容验收尚在进行；CI 成功不等于所有版本已验证。
+目标提供可直接解压运行的 Windows x64 ZIP，根目录只有一个桌面主程序 QQBot.exe；协议核心、SDK DLL 和第三方运行时依赖放入 runtime/，数据库和证书分别放入 data/ 与 certs/。Windows Server 2012/2012 R2 至 2026 的逐版本实机兼容验收尚在进行；CI 成功不等于所有版本已验证。
 
 Windows 成品包还会携带 CA 根证书 bundle，并由启动脚本设置 `CURL_CA_BUNDLE`，避免依赖构建机上的证书路径。
 
 
 ## Windows 原生桌面程序
 
-Windows 构建目标为 `bin/QQBot.exe`（原生桌面窗口）和 `bin/qqbot-core.exe`（后台协议核心）。双击 QQBot.exe 后输入 AppID/AppSecret，选择 WSS 或 Webhook 登录；无需浏览器。Web UI 保留作开发诊断用途，不是最终桌面入口。桌面 GUI 首阶段的 CI 与 Windows 实机验收状态以 docs/TASKS.md 为准。
+Windows 构建桌面入口为 C# WinForms + AntdUI 发布的根目录 QQBot.exe；后台协议核心为 runtime/qqbot-core.exe。双击 QQBot.exe 后输入 AppID/AppSecret，选择 WSS 或 Webhook 登录；无需浏览器或 BAT。Web UI 保留作开发诊断用途，不是最终桌面入口。业务 UI 必须使用 AntdUI 官方控件；禁止另写 Win32/WPF/WebView 控件界面。
 
 
 ## Windows 桌面客户端（AntdUI）
