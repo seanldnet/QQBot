@@ -121,7 +121,7 @@ static void refresh_data(void) {
             cJSON *level=cJSON_GetObjectItemCaseSensitive(item,"level");
             cJSON *message=cJSON_GetObjectItemCaseSensitive(item,"message");
             cJSON *stamp=cJSON_GetObjectItemCaseSensitive(item,"created_at");
-            char line[2048]; snprintf(line,sizeof(line),"[%s] [%s] %s\\r\\n",
+            char line[2048]; snprintf(line,sizeof(line),"[%s] [%s] %s\r\n",
                 cJSON_IsString(stamp)?stamp->valuestring:"",cJSON_IsString(level)?level->valuestring:"INFO",
                 cJSON_IsString(message)?message->valuestring:"");
             if(strlen(view)+strlen(line)+1<sizeof(view))strcat(view,line);
