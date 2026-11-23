@@ -1,3 +1,12 @@
+## 2026-11-24 — Windows 桌面 EXE 自包含发布
+
+- 将 AntdUI 桌面项目切换为 .NET 8 self-contained single-file：`SelfContained=true`、`PublishSingleFile=true`、`IncludeNativeLibrariesForSelfExtract=true`。
+- Windows CI 使用 `win-x64 --self-contained true` 发布，.NET Runtime、AntdUI 和业务程序集随根目录 `QQBot.exe` 一起交付；目标机不再要求预装 .NET / .NET Desktop Runtime。
+- 协议核心 `runtime/qqbot-core.exe`、SDK DLL 及其原生依赖继续单独放在 `runtime/`，桌面主程序仍为唯一用户启动入口。
+- 代价：EXE 和 ZIP 会明显变大，这是消除目标机 .NET 安装前置条件的必要体积开销。
+- 验证状态：等待本次 Windows CI 产物与干净 Windows 环境启动验证；尚未宣称已完成实机验收。
+
+
 ## 2026-11-24 — AntdUI 首页与账号管理流程调整
 
 - 桌面程序启动后直接进入主界面；机器人 AppID/AppSecret 与 WSS/Webhook 选择移入侧边栏“账号管理”页，不再单独弹出登录窗口。
