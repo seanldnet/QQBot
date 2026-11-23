@@ -6,6 +6,16 @@
 #include <stdint.h>
 struct qqb_client { char *host; char *plugin_id; char *plugin_token; };
 struct buffer { char *p; size_t n; };
+static int safe_header_value(const char *s) { return s && !strchr(s,'\r') && !strchr(s,'\n'); }
+static char *json_quote(const char *s) {
+    size_t n=strlen(s),cap=n*6+3; char *o=(char*)malloc(cap); if(!o)return NULL;
+    size_t k=0;o[k++]='"';
+    for(size_t i=0;i<n;i++){unsigned char ch=(unsigned char)s[i];
+        if(ch=='"'||ch=='\\'){o[k++]='\\';o[k++]=(char)ch;}
+        else if(ch<0x20){static const char h[]="0123456789abcdef";o[k++]='\\';o[k++]='u';o[k++]='0';o[k++]='0';o[k++]=h[ch>>4];o[k++]=h[ch&15];}
+        else o[k++]=(char)ch;
+    }o[k++]='"';o[k]=0;return o;
+}
 static char *dupstr(const char *s) { size_t n; char *p; if(!s) return NULL; n=strlen(s); p=(char*)malloc(n+1); if(p) memcpy(p,s,n+1); return p; }
 static size_t receive_data(char *ptr,size_t size,size_t nmemb,void *userdata) {
     struct buffer *b=(struct buffer*)userdata; size_t n=size*nmemb;
@@ -14,7 +24,8 @@ static size_t receive_data(char *ptr,size_t size,size_t nmemb,void *userdata) {
     b->p=p; memcpy(b->p+b->n,ptr,n); b->n+=n; b->p[b->n]=0; return n;
 }
 qqb_client *QQB_CALL qqb_create(const char *host_url,const char *plugin_id,const char *plugin_token) {
-    if(!host_url||!plugin_id||!plugin_token||!*host_url||!*plugin_id||!*plugin_token) return NULL;
+    if(!host_url||!plugin_id||!plugin_token||!*host_url||!*plugin_id||!*plugin_token||!safe_header_value(plugin_id)||!safe_header_value(plugin_token)) return NULL;
+    if(strncmp(host_url,"https://",8)!=0 && strncmp(host_url,"http://127.0.0.1",16)!=0 && strncmp(host_url,"http://localhost",16)!=0) return NULL;
     if(curl_global_init(CURL_GLOBAL_DEFAULT)!=CURLE_OK) return NULL;
     qqb_client *c=(qqb_client*)calloc(1,sizeof(*c)); if(!c) return NULL;
     c->host=dupstr(host_url); c->plugin_id=dupstr(plugin_id); c->plugin_token=dupstr(plugin_token);
@@ -29,19 +40,20 @@ void QQB_CALL qqb_destroy(qqb_client *c) {
 }
 void QQB_CALL qqb_free_string(char *p) { free(p); }
 int QQB_CALL qqb_api_request(qqb_client *c,const char *method,const char *path,const char *body,char **response,long *status) {
-    CURL *curl=NULL; CURLcode rc; struct curl_slist *headers=NULL; struct buffer b={0}; char *url=NULL,*escaped=NULL,*payload=NULL; long code=0; int ret=-1;
+    CURL *curl=NULL; CURLcode rc; struct curl_slist *headers=NULL; struct buffer b={0}; char *url=NULL,*escaped=NULL,*payload=NULL,*qm=NULL,*qp=NULL; long code=0; int ret=-1;
     if(response) *response=NULL; if(status) *status=0;
     if(!c||!method||!path||path[0]!='/'||!response||!status) return -1;
-    if(strstr(path,"..")||strstr(path,"://")) return -2;
+    if((strcmp(method,"GET")&&strcmp(method,"POST")&&strcmp(method,"PUT")&&strcmp(method,"PATCH")&&strcmp(method,"DELETE"))||strstr(path,"..")||strstr(path,"://")) return -2;
     curl=curl_easy_init(); if(!curl) return -3;
     escaped=curl_easy_escape(c,c->plugin_id,0); if(!escaped) goto done;
     size_t un=strlen(c->host)+strlen(escaped)+32; url=(char*)malloc(un);
     if(!url) goto done;
     snprintf(url,un,"%s/api/v1/plugins/%s/qq-api",c->host,escaped);
     /* The host proxy receives the exact upstream method/path/body as a JSON envelope. */
-    size_t pn=strlen(method)+strlen(path)+(body?strlen(body):4)+64; payload=(char*)malloc(pn);
+    qm=json_quote(method); qp=json_quote(path); if(!qm||!qp) goto done;
+    size_t pn=strlen(qm)+strlen(qp)+(body?strlen(body):4)+64; payload=(char*)malloc(pn);
     if(!payload) goto done;
-    snprintf(payload,pn,"{\"method\":\"%s\",\"path\":\"%s\",\"body\":%s}",method,path,body?body:"null");
+    snprintf(payload,pn,"{\"method\":%s,\"path\":%s,\"body\":%s}",qm,qp,body?body:"null");
     headers=curl_slist_append(headers,"Content-Type: application/json");
     char *h1=NULL,*h2=NULL; size_t hn=strlen(c->plugin_id)+32; h1=(char*)malloc(hn);
     hn=strlen(c->plugin_token)+32; h2=(char*)malloc(hn);
@@ -59,7 +71,7 @@ int QQB_CALL qqb_api_request(qqb_client *c,const char *method,const char *path,c
     curl_easy_getinfo(curl,CURLINFO_RESPONSE_CODE,&code); *status=code;
     *response=b.p?b.p:dupstr(""); b.p=NULL; ret=0;
 done:
-    free(b.p); free(url); free(payload); if(escaped) curl_free(escaped);
+    free(b.p); free(url); free(payload); free(qm); free(qp); if(escaped) curl_free(escaped);
     curl_slist_free_all(headers); curl_easy_cleanup(curl); return ret;
 }
 static int send_text(qqb_client*c,const char*path,const char*content,const char*event_id,const char*msg_id,int seq,char**out,long*status) {
