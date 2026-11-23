@@ -29,16 +29,20 @@ int qq_event_normalize(const char *event_type, const char *data_json,
     if (!event_type || !event_type[0] || !data_json || !normalized_json) return -1;
     *normalized_json = NULL;
     is_management = is_group_management(event_type);
-    is_message = strcmp(event_type, "GROUP_AT_MESSAGE_CREATE") == 0;
+    is_message = strcmp(event_type, "GROUP_AT_MESSAGE_CREATE") == 0 ||
+                 strcmp(event_type, "C2C_MESSAGE_CREATE") == 0;
     if (!is_management && !is_message) return -2;
-
     data = cJSON_Parse(data_json);
     if (!cJSON_IsObject(data)) goto invalid;
 
-    field = cJSON_GetObjectItemCaseSensitive(data, "group_openid");
-    if (!cJSON_IsString(field) || !field->valuestring || !field->valuestring[0]) goto invalid;
-    chat_type = "group";
-    chat_id = field->valuestring;
+    if (strncmp(event_type, "GROUP_", 6) == 0) {
+        field = cJSON_GetObjectItemCaseSensitive(data, "group_openid");
+        if (!cJSON_IsString(field) || !field->valuestring || !field->valuestring[0]) goto invalid;
+        chat_type = "group";
+        chat_id = field->valuestring;
+    } else if (strcmp(event_type, "C2C_MESSAGE_CREATE") == 0) {
+        chat_type = "c2c";
+    }
 
     if (is_management) {
         field = cJSON_GetObjectItemCaseSensitive(data, "op_member_openid");
@@ -50,7 +54,10 @@ int qq_event_normalize(const char *event_type, const char *data_json,
         timestamp = timestamp_buf;
     } else {
         author = cJSON_GetObjectItemCaseSensitive(data, "author");
-        field = author ? cJSON_GetObjectItemCaseSensitive(author, "member_openid") : NULL;
+        if (strcmp(event_type, "GROUP_AT_MESSAGE_CREATE") == 0)
+            field = author ? cJSON_GetObjectItemCaseSensitive(author, "member_openid") : NULL;
+        else
+            field = author ? cJSON_GetObjectItemCaseSensitive(author, "user_openid") : NULL;
         if (!cJSON_IsString(field) || !field->valuestring || !field->valuestring[0]) goto invalid;
         user_id = field->valuestring;
         field = cJSON_GetObjectItemCaseSensitive(data, "content");
@@ -61,6 +68,7 @@ int qq_event_normalize(const char *event_type, const char *data_json,
         field = cJSON_GetObjectItemCaseSensitive(data, "id");
         if (!cJSON_IsString(field) || !field->valuestring || !field->valuestring[0]) goto invalid;
         msg_id = field->valuestring;
+        if (strcmp(event_type, "C2C_MESSAGE_CREATE") == 0) chat_id = user_id;
     }
 
     root = cJSON_CreateObject();
