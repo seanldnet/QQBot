@@ -51,7 +51,8 @@
 ## 2026-11-23 — QQ 群事件模型与归一化解析器
 
 - 新增 `src/qq/events.h`、`src/qq/events.c`：内部函数 `qq_event_normalize` 将 Gateway 事件类型与内层 JSON payload 转为统一插件事件 JSON；支持四种群管理事件和 `GROUP_AT_MESSAGE_CREATE`，拒绝未知事件/缺少必要字段，完整保留 `raw_event`。
-- 新增 `tests/test_event_parser.c`：覆盖群机器人加入事件、群 @ 消息、msg_id 映射、raw_event 保留、未知事件拒绝和必需字段校验。
+- 新增 `tests/test_event_parser.c`：覆盖群机器人加入事件、群 @ 消息、msg_id/timestamp 映射、raw_event 保留、未知事件拒绝和必需字段校验。
+- 归一化 timestamp：群管理事件整数秒转为十进制字符串，群 @ 消息 RFC3339 字符串原样保留；C++ Event 增加 timestamp 与 has_msg_seq，避免把不存在的 msg_seq 默认伪造为 1。
 - 修改 `CMakeLists.txt`、`Makefile`：宿主编译纳入 events.c；增加 Make `test` 与 CTest `qq_group_event_parser`。
 - 新增 `sdk/group-events.md`；更新 `sdk/event-schema.md`、`sdk/e-language/event-fields.md`，同步 C/C++/易语言插件事件字段契约。
 - 官方核验：腾讯 bot-docs 群管理事件页确认四种事件均为 Intent `1<<25`；消息事件页确认 `GROUP_AT_MESSAGE_CREATE` 同为 `1<<25`，群作者字段为 `author.member_openid`，消息 ID 为 `id`，timestamp 为 RFC3339。全量群消息事件仍标注私域/暂不开放。
