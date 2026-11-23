@@ -100,7 +100,7 @@ int qq_callback_target_resolve_entry(const qq_callback_target *target, char *out
         if (target->address_is_ipv6[i]) out[used++] = '[';
         memcpy(out + used, ip, len); used += len;
         if (target->address_is_ipv6[i]) out[used++] = ']';
-        out[used] = '\\0';
+        out[used] = '\0';
     }
     return 0;
 }
