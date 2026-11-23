@@ -221,3 +221,12 @@
 - GitHub Actions run `45189464000` 全部成功：Linux Make/CMake/单元测试、Windows callback-security、Windows 完整宿主/SDK 构建、CTest、DLL 依赖扫描、PE 子系统审计和 ZIP 上传。
 - 生成 Windows x64 测试 ZIP，内层压缩包 47 个文件，CRC 校验通过；包含 WSS/Webhook 选择、连接状态、群 @ 与 C2C 日志界面。
 - 真实 QQ 官方机器人凭据登录与消息实测尚未执行，当前交付定位为用户联调测试包。
+
+
+## 2026-11-23 — WSS 心跳与管理日志安全加固
+
+- `src/qq/gateway.c`：心跳调度改为单调毫秒时钟；发送 HEARTBEAT 后等待 HEARTBEAT_ACK，超过一个心跳周期未确认即主动重连。
+- `src/main.c`：`GET /api/v1/status` 与 `GET /api/v1/logs` 增加管理员 Bearer 令牌校验，避免匿名读取机器人状态和消息日志。
+- `web/index.html`：增加管理员令牌输入，状态与日志轮询携带 Bearer 头；令牌不写入 localStorage。
+- 更新 `docs/API.md` 和 `docs/TASKS.md` 记录接口要求与待验收项。
+- 验证边界：代码提交后由 CI 自动编译/测试；当前尚未取得本次改动的 CI 结果，也未进行真实 QQ WSS/Webhook 实机联调。
