@@ -423,4 +423,40 @@ int QQB_CALL qqb_approve_group_join_request(qqb_client*c,const char*g,const char
     free(base); free(path); return rc;
 }
 
+
+int QQB_CALL qqb_list_join_approval_strategies(qqb_client*c,const char*cursor,char**out,long*status) {
+    char *encoded=NULL,*path=NULL; size_t n; int rc;
+    if(cursor && *cursor) { encoded=encode_query_value(cursor); if(!encoded) return -3; }
+    n=(encoded?strlen(encoded):0)+96; path=(char*)malloc(n);
+    if(!path) { free(encoded); return -3; }
+    if(encoded) snprintf(path,n,"/v2/groups/join_approval_strategy?limit=50&cursor=%s",encoded);
+    else snprintf(path,n,"/v2/groups/join_approval_strategy?limit=50");
+    rc=qqb_api_request(c,"GET",path,NULL,out,status);
+    free(encoded); free(path); return rc;
+}
+int QQB_CALL qqb_create_join_approval_strategy(qqb_client*c,const char*body,char**out,long*status) {
+    if(!body || body[0]!='{') return -1;
+    return qqb_api_request(c,"POST","/v2/groups/join_approval_strategy",body,out,status);
+}
+int QQB_CALL qqb_update_join_approval_strategy(qqb_client*c,const char*id,const char*body,char**out,long*status) {
+    if(!valid_path_id(id)||!body||body[0]!='{') return -1;
+    char *path=path_id("/v2/groups/join_approval_strategy/",id,"");
+    if(!path) return -3;
+    int rc=qqb_api_request(c,"PATCH",path,body,out,status); free(path); return rc;
+}
+int QQB_CALL qqb_delete_join_approval_strategy(qqb_client*c,const char*id,char**out,long*status) {
+    if(!valid_path_id(id)) return -1;
+    char *path=path_id("/v2/groups/join_approval_strategy/",id,"");
+    if(!path) return -3;
+    int rc=qqb_api_request(c,"DELETE",path,NULL,out,status); free(path); return rc;
+}
+int QQB_CALL qqb_execute_join_approval_strategy(qqb_client*c,const char*id,char**out,long*status) {
+    if(!valid_path_id(id)) return -1;
+    return endpoint_call(c,"POST","/v2/groups/join_approval_strategy/",id,"/execute","{}",out,status);
+}
+int QQB_CALL qqb_update_join_approval_whitelist(qqb_client*c,const char*id,const char*body,char**out,long*status) {
+    if(!body||body[0]!='{') return -1;
+    return endpoint_call(c,"POST","/v2/groups/join_approval_strategy/",id,"/whitelist_users",body,out,status);
+}
+
 const char *QQB_CALL qqb_version(void){return "0.2.0";}
