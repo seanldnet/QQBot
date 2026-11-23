@@ -81,5 +81,9 @@
 ## 8. 当前基线
 
 - 仓库地址：https://github.com/seanldnet/QQBot
-- 初始仓库为空；本次首先建立文档基线。
-- 代码实现尚未开始；编译与运行测试尚未执行。
+- 已有 C11 宿主首阶段：HTTP 服务、SQLite 日志、Access Token 获取、Webhook Ed25519 challenge / event 验签、日志查询。
+- 已有插件注册/列表/启停/删除与插件 Token 鉴权、官方 API 代理首版；管理操作使用 QQBOT_ADMIN_TOKEN。
+- 已有统一 C ABI SDK、C++14 封装、易语言 Windows DLL ABI 映射、Windows MinGW 构建脚本，以及官方 API v2 目录 81 页索引。
+- 官方当前 API 根地址与 Token URL 已按官方文档修正；用户原始需求中的 api.bot.qq.com 仍保留为历史原文。
+- 插件事件并发分发、完整前端、WebSocket 兼容、类型化全量 endpoint wrapper、真实消息闭环仍待开发。
+- 当前上述新代码尚未取得 CI、本地编译、Windows 易语言 IDE 或 QQ 实机联调结果；不可标记为已验证完成。
