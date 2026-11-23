@@ -24,6 +24,7 @@
 - chat_id：群场景使用 group_openid，单聊使用 user_openid，频道场景使用 channel_id。
 - user_id：对应场景中的用户 openid；不存在时为 null。
 - content：从官方消息事件中提取的文本内容；媒体/富文本仍完整保留于 raw_event。
+- timestamp：标准化为文本；群管理事件的整数 Unix 秒时间戳转为十进制文本，群 @ 消息的 RFC3339 时间戳原样保留。
 - event_id、msg_id、msg_seq：被动回复所需上下文；只有官方事件明确提供时才填充，缺失时为 null。
 - raw_event：官方原始 JSON 对象，供插件访问未标准化字段。
 
