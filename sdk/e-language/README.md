@@ -16,3 +16,12 @@
 #
 # 注意：本文件是易语言 DLL 命令声明映射说明，不是可直接双击编译的 .e 源文件。
 # 正式易语言模块源码/示例在 SDK 后续阶段补齐并使用易语言 IDE 实测。
+
+# 已核验频道管理接口的类型化导入
+# qqb_get_guild(client, guild_id, response_json*, http_status*) -> 整数型
+# qqb_list_channels(client, guild_id, response_json*, http_status*) -> 整数型
+# qqb_get_channel(client, channel_id, response_json*, http_status*) -> 整数型
+# qqb_create_channel(client, guild_id, body_json, response_json*, http_status*) -> 整数型
+# qqb_update_channel(client, channel_id, body_json, response_json*, http_status*) -> 整数型
+# qqb_delete_channel(client, channel_id, response_json*, http_status*) -> 整数型
+# 创建/修改的 body_json 传入完整 JSON 对象；返回 JSON 缓冲区仍使用 qqb_free_string 释放。
