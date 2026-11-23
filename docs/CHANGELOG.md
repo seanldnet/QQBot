@@ -140,3 +140,9 @@
 - Windows 成品包增加 CA 根证书 bundle 自动发现与打包；启动 BAT 配置 `CURL_CA_BUNDLE`，降低目标系统缺少构建机 CA 路径导致 TLS 校验失败的风险。缺少 CA bundle 时构建直接失败。
 
 - Windows 成品构建修复 MSYS2 MINGW64 包数据库未索引 libmicrohttpd 的问题：改为下载固定版本归档、校验 SHA-256 后由 pacman 安装，避免未校验的二进制依赖。
+
+
+## 2026-11-23 — Windows Server 2012 构建依赖修正
+
+- CI 实测发现 MSYS2 当前 MINGW64 索引不再提供 `mingw-w64-x86_64-libmicrohttpd`（pacman target not found）；已调整 Windows 构建流程，安装当前 MINGW64 GnuTLS 后固定下载并安装 1.0.10-1 历史 MINGW64 libmicrohttpd 包，避免转用要求较新 UCRT 的工具链。
+- 修正后的完整 Windows 构建与 ZIP 生成仍待 CI 验证，不能视为已通过。
