@@ -194,3 +194,7 @@
 - [ ] callback_url 出站 SSRF 防护（DNS 解析/IP 分类/DNS pinning/禁止重定向/HTTPS only）完成前，不得启用实际 HTTP 投递。
 - [ ] Webhook 官方签名向量与 QQ 控制台回调实测。
 - [ ] 评估官方 Gateway WebSocket 当前状态；本阶段未实现 WebSocket 客户端。
+
+
+- [x] 逐插件 pending delivery fanout 与管理员查询 API 的 Make/CMake/单元测试验证通过：run 45176688074 全部步骤成功。
+- [ ] 安全 callback HTTP worker、DNS/IP 防护与 DNS pinning 仍未实现；当前 pending delivery 不会自动发送。
