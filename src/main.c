@@ -487,7 +487,8 @@ static enum MHD_Result handler(void *cls, struct MHD_Connection *c, const char *
             strlen(secret->valuestring) >= sizeof(g_app.app_secret)) {
             cJSON_Delete(j); return json_reply(c, 400, "{\\"error\\":\\"invalid_credentials\\"}");
         }
-        const char *selected_mode = cJSON_IsString(mode) ? mode->valuestring : "webhook";
+        char selected_mode[16];
+        snprintf(selected_mode, sizeof(selected_mode), "%s", cJSON_IsString(mode) ? mode->valuestring : "webhook");
         if (strcmp(selected_mode, "webhook") != 0 && strcmp(selected_mode, "websocket") != 0) {
             cJSON_Delete(j); return json_reply(c, 400, "{\\"error\\":\\"invalid_connection_mode\\"}");
         }
