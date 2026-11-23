@@ -189,3 +189,22 @@
 - 子频道权限更新：`add` / `remove` 均为权限位图字符串；同一权限位同时设置时按移除处理，且不能修改“可管理子频道”权限。
 - 以上接口的精确 method/path/字段/权限/错误码来源记录在 JSON manifest；官方页面未逐项列出的错误码仍引用官方总表，不作猜测。
 - SDK 本批增加 8 个独立 C ABI、C++ 和易语言 DLL 映射函数。
+
+## QQ 群聊接口边界与类型化支持
+
+| 场景 | 官方接口/事件 | SDK 支持状态 |
+|---|---|---|
+| 发送群消息 | POST `/v2/groups/{group_openid}/messages` | C ABI 完整 JSON `qqb_send_group_message` + 文本快捷函数；C++、易语言同步 |
+| 接收群 @机器人消息 | `GROUP_AT_MESSAGE_CREATE` | 官方事件字段已记录；由 Gateway/WebSocket 事件层投递 |
+| 接收全量群消息 | `GROUP_MESSAGE_CREATE` | 当前官方事件页将其标记为私域/暂不开放，不得默认视为可用 |
+| 机器人加入/退出群 | `GROUP_ADD_ROBOT` / `GROUP_DEL_ROBOT` | WebSocket 事件，不是 REST API |
+| 群主动消息设置变化 | `GROUP_MSG_REJECT` / `GROUP_MSG_RECEIVE` | WebSocket 事件 |
+| 查询群资料、机器人入群列表、群成员列表 | 群管理 README 中相关条目为注释/暂不开放 | 不实现虚构的 REST API；等待官方开放 |
+
+群聊消息接口参数：`group_openid` 为路径参数；body 包含 `content`、`msg_type`，可选 `markdown`、`keyboard`、`media`、`ark`、`event_id`、`msg_id`、`msg_seq`。msg_type：0 文本、2 Markdown、3 Ark、4 Embed、7 Media。消息引用暂未支持。被动回复 5 分钟有效，每条入站消息最多回复 5 次；主动推送自 2025-04-21 起停止提供。
+
+官方来源：
+- `server-inter/message/send-receive/send.md`：群聊消息发送 API。
+- `server-inter/message/send-receive/event.md`：群 @机器人消息事件。
+- `server-inter/group/manage/event.md`：机器人入群/退群及主动消息设置事件。
+- `server-inter/group/manage/README.md`：群管理 REST 能力开放状态。
