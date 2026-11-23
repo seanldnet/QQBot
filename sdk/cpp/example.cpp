@@ -8,7 +8,8 @@ int main() {
         qqbot::Client bot("https://your-qqbot-host.example", "plugin-id", "plugin-token");
         qqbot::Event event;
         event.chat_type = "group";
-        event.timestamp = "2026-11-23T00:00:00Z";\n        event.has_msg_seq = false; // msg_seq is absent until supplied by an official event
+        event.timestamp = "2026-11-23T00:00:00Z";
+        event.has_msg_seq = false; // msg_seq is absent until supplied by an official event
 
         std::string response;
         long status = 0;
