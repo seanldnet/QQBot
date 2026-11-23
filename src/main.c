@@ -445,7 +445,7 @@ static enum MHD_Result handler(void *cls, struct MHD_Connection *c, const char *
     }
     if (strcmp(method, "GET") == 0 && strcmp(url, "/api/v1/status") == 0) {
         cJSON *out = cJSON_CreateObject();
-        if (!out) return json_reply(c, 500, "{\\"error\\":\\"out_of_memory\\"}");
+        if (!out) return json_reply(c, 500, "{\"error\":\"out_of_memory\"}");
         pthread_mutex_lock(&g_app.lock);
         cJSON_AddBoolToObject(out, "ok", 1);
         cJSON_AddBoolToObject(out, "authenticated", g_app.access_token[0] != 0);
@@ -455,7 +455,7 @@ static enum MHD_Result handler(void *cls, struct MHD_Connection *c, const char *
         pthread_mutex_unlock(&g_app.lock);
         cJSON_AddStringToObject(out, "version", "0.1.0");
         char *encoded = cJSON_PrintUnformatted(out); cJSON_Delete(out);
-        if (!encoded) return json_reply(c, 500, "{\\"error\\":\\"json_encode_failed\\"}");
+        if (!encoded) return json_reply(c, 500, "{\"error\":\"json_encode_failed\"}");
         enum MHD_Result result = json_reply(c, 200, encoded); free(encoded); return result;
     }
     if (strcmp(method, "GET") == 0 && strcmp(url, "/api/v1/logs") == 0) {
@@ -485,15 +485,15 @@ static enum MHD_Result handler(void *cls, struct MHD_Connection *c, const char *
         if (!cJSON_IsString(id) || !cJSON_IsString(secret) || !id->valuestring[0] ||
             !secret->valuestring[0] || strlen(id->valuestring) >= sizeof(g_app.app_id) ||
             strlen(secret->valuestring) >= sizeof(g_app.app_secret)) {
-            cJSON_Delete(j); return json_reply(c, 400, "{\\"error\\":\\"invalid_credentials\\"}");
+            cJSON_Delete(j); return json_reply(c, 400, "{\"error\":\"invalid_credentials\"}");
         }
         char selected_mode[16];
         snprintf(selected_mode, sizeof(selected_mode), "%s", cJSON_IsString(mode) ? mode->valuestring : "webhook");
         if (strcmp(selected_mode, "webhook") != 0 && strcmp(selected_mode, "websocket") != 0) {
-            cJSON_Delete(j); return json_reply(c, 400, "{\\"error\\":\\"invalid_connection_mode\\"}");
+            cJSON_Delete(j); return json_reply(c, 400, "{\"error\":\"invalid_connection_mode\"}");
         }
         if (strcmp(selected_mode, "websocket") == 0 && !qq_gateway_available()) {
-            cJSON_Delete(j); return json_reply(c, 501, "{\\"error\\":\\"websocket_not_supported_by_libcurl\\",\\"message\\":\\"当前运行库不支持 WebSocket\\"}");
+            cJSON_Delete(j); return json_reply(c, 501, "{\"error\":\"websocket_not_supported_by_libcurl\",\"message\":\"当前运行库不支持 WebSocket\"}");
         }
         if (g_app.gateway) { qq_gateway_stop(g_app.gateway); g_app.gateway = NULL; }
         pthread_mutex_lock(&g_app.lock);
@@ -509,20 +509,20 @@ static enum MHD_Result handler(void *cls, struct MHD_Connection *c, const char *
             g_app.app_id[0] = 0;
             pthread_mutex_lock(&g_app.lock); snprintf(g_app.connection_state, sizeof(g_app.connection_state), "auth_failed"); pthread_mutex_unlock(&g_app.lock);
             log_line("ERROR", "QQ 登录失败：access_token 获取失败");
-            return json_reply(c, 502, "{\\"error\\":\\"qq_auth_failed\\"}");
+            return json_reply(c, 502, "{\"error\":\"qq_auth_failed\"}");
         }
         if (strcmp(selected_mode, "websocket") == 0) {
             g_app.gateway = qq_gateway_start(g_app.api_base, gateway_get_token, gateway_event, gateway_state, &g_app);
             if (!g_app.gateway) {
                 pthread_mutex_lock(&g_app.lock); snprintf(g_app.connection_state, sizeof(g_app.connection_state), "start_failed"); pthread_mutex_unlock(&g_app.lock);
-                return json_reply(c, 500, "{\\"error\\":\\"websocket_start_failed\\"}");
+                return json_reply(c, 500, "{\"error\":\"websocket_start_failed\"}");
             }
             log_line("INFO", "QQ WSS 网关客户端已启动，等待 READY 事件");
-            return json_reply(c, 200, "{\\"ok\\":true,\\"message\\":\\"access_token 已获取，WSS 正在连接；请查看连接状态和消息日志\\"}");
+            return json_reply(c, 200, "{\"ok\":true,\"message\":\"access_token 已获取，WSS 正在连接；请查看连接状态和消息日志\"}");
         }
         pthread_mutex_lock(&g_app.lock); snprintf(g_app.connection_state, sizeof(g_app.connection_state), "awaiting_webhook"); pthread_mutex_unlock(&g_app.lock);
         log_line("INFO", "QQ Webhook 模式已启用，等待平台回调");
-        return json_reply(c, 200, "{\\"ok\\":true,\\"message\\":\\"access_token 已获取；请在 QQ 开放平台配置公网 HTTPS 回调地址 /webhook/qq\\"}");
+        return json_reply(c, 200, "{\"ok\":true,\"message\":\"access_token 已获取；请在 QQ 开放平台配置公网 HTTPS 回调地址 /webhook/qq\"}");
     }
     if (strcmp(method, "GET") == 0 && strcmp(url, "/") == 0) {
         FILE *f = fopen("web/index.html", "rb"); if (!f) return reply(c, 404, "web/index.html not found", "text/plain");
