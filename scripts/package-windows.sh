@@ -11,7 +11,7 @@ queue=("$@")
 is_windows_system_dll() {
   local n="${1,,}"
   case "$n" in
-    api-ms-win-*|ext-ms-win-*|kernel32.dll|user32.dll|advapi32.dll|shell32.dll|ole32.dll|oleaut32.dll|gdi32.dll|ws2_32.dll|bcrypt.dll|crypt32.dll|secur32.dll|ntdll.dll|rpcrt4.dll|comdlg32.dll|comctl32.dll|winmm.dll|version.dll|shlwapi.dll|iphlpapi.dll|wldap32.dll|normaliz.dll|dnsapi.dll|psapi.dll|setupapi.dll|cfgmgr32.dll|imm32.dll|msvcrt.dll) return 0 ;;
+    api-ms-win-*|ext-ms-win-*|kernel32.dll|user32.dll|advapi32.dll|shell32.dll|ole32.dll|oleaut32.dll|gdi32.dll|ws2_32.dll|bcrypt.dll|crypt32.dll|secur32.dll|ntdll.dll|rpcrt4.dll|comdlg32.dll|comctl32.dll|winmm.dll|version.dll|shlwapi.dll|iphlpapi.dll|wldap32.dll|ncrypt.dll|normaliz.dll|dnsapi.dll|psapi.dll|setupapi.dll|cfgmgr32.dll|imm32.dll|msvcrt.dll) return 0 ;;
     *) return 1 ;;
   esac
 }
