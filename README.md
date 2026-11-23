@@ -37,3 +37,8 @@
 ## Windows 成品包
 
 项目正在增加 Windows x64 一键运行包。目标为 Windows Server 2012 及更新版本，压缩包将包含宿主、SDK DLL、运行时依赖、Web UI、启动脚本和初始化管理员 Token。请从 GitHub Actions 的 Windows package job 获取验证产物；在 Windows CI 和逐版本实机测试全部通过前，不视为正式兼容性承诺。
+
+
+## Windows 成品交付
+
+目标提供可直接解压运行的 Windows x64 ZIP，包含宿主、SDK DLL、运行时依赖、启动脚本和默认资源。Windows Server 2012/2012 R2 至 2026 的逐版本实机兼容验收尚在进行；CI 成功不等于所有版本已验证。
