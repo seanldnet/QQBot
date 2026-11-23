@@ -2,6 +2,8 @@
 
 ## 2026-11-23 — 跨语言插件事件模型
 
+- 最后同步：完善 API.md 插件注册/启停/删除请求响应示例与管理令牌说明；更新易语言回调字段映射、C++ Event 结构、README SDK 导航及 TASKS 当前状态；修正 SDK 头文件对代理鉴权的描述，明确当前采用插件身份认证而非细粒度权限 scope。
+
 - 新增 sdk/event-schema.md：定义宿主向插件 POST 的统一事件 JSON 字段，保留官方 event_type 与 raw_event，并明确 group/c2c/channel 的 chat_type、openid 映射和被动回复上下文。
 - 新增 sdk/cpp/event.hpp 与 sdk/e-language/event-fields.md：提供 C++ 事件结构和易语言字段映射；事件投递器尚未实现，该文件是先行固定的跨语言契约。
 
