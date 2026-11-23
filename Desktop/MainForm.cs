@@ -137,7 +137,7 @@ public sealed class MainForm : AntdUI.Window
         var corePath = Path.Combine(_root, "runtime", "qqbot-core.exe");
         if (!File.Exists(corePath))
         {
-            AntdUI.Message.error("未找到 runtime\\qqbot-core.exe，请检查安装包目录。", "启动失败");
+            AntdUI.Message.error(this, "未找到 runtime\\qqbot-core.exe，请检查安装包目录。");
             return;
         }
 
