@@ -25,6 +25,7 @@
 - `chat_type` 为 `group`，`chat_id` 为 `group_openid`。
 - 群管理事件将 `op_member_openid` 映射到 `user_id`；消息事件将 `author.member_openid` 映射到 `user_id`。
 - 群消息的官方 `id` 映射为 `msg_id`，用于被动回复关联；`content` 仅在官方提供文本时映射。
+- `timestamp` 标准化为文本：群管理事件的整数 Unix 秒转为十进制文本，群 @ 消息的 RFC3339 字符串原样保留。
 - `event_id` 与 `msg_seq` 当前置为 JSON null，因为上述官方事件样例未提供可可靠映射的值。
 - `raw_event` 保留完整内层事件对象，包括附件等未标准化字段。
 
