@@ -8,14 +8,31 @@
 #include <pthread.h>
 #include <signal.h>
 #include <stdint.h>
+#ifdef _WIN32
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#include <windows.h>
+#include <direct.h>
+#include <io.h>
+#define mkdir(path, mode) _mkdir(path)
+#define access _access
+#ifndef F_OK
+#define F_OK 0
+#endif
+#define inet_pton(f,a,d) (InetPtonA((f),(a),(d)) == 1 ? 1 : 0)
+#else
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <sys/stat.h>
+#include <unistd.h>
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include <unistd.h>
 #include "qq/webhook.h"
 #include "qq/events.h"
 #include "qq/event_queue.h"
@@ -49,7 +66,12 @@ static size_t curl_write(char *ptr, size_t size, size_t nmemb, void *userdata) {
     b->data = p; memcpy(b->data + b->len, ptr, n); b->len += n; b->data[b->len] = 0; return n;
 }
 static void log_line(const char *level, const char *message) {
-    time_t now = time(NULL); struct tm tmv; localtime_r(&now, &tmv);
+    time_t now = time(NULL); struct tm tmv;
+#ifdef _WIN32
+    localtime_s(&tmv, &now);
+#else
+    localtime_r(&now, &tmv);
+#endif
     char ts[32]; strftime(ts, sizeof(ts), "%Y-%m-%d %H:%M:%S", &tmv);
     fprintf(stdout, "[%s] [%s] %s\n", ts, level, message); fflush(stdout);
     if (g_app.db) {
@@ -424,6 +446,15 @@ static void request_completed(void *cls, struct MHD_Connection *c, void **con_cl
 }
 int main(void) {
     memset(&g_app, 0, sizeof(g_app)); pthread_mutex_init(&g_app.lock, NULL);
+#ifdef _WIN32
+    {
+        WSADATA wsa;
+        if (WSAStartup(MAKEWORD(2,2), &wsa) != 0) {
+            fprintf(stderr, "Winsock initialization failed\\n");
+            return 1;
+        }
+    }
+#endif
     snprintf(g_app.api_base, sizeof(g_app.api_base), "%s", getenv("QQBOT_API_BASE") ? getenv("QQBOT_API_BASE") : API_BASE_DEFAULT);
     snprintf(g_app.token_url, sizeof(g_app.token_url), "%s", getenv("QQBOT_TOKEN_URL") ? getenv("QQBOT_TOKEN_URL") : TOKEN_URL_DEFAULT);
     if (curl_global_init(CURL_GLOBAL_DEFAULT) != CURLE_OK) return 1;
@@ -438,7 +469,17 @@ int main(void) {
     if (!daemon) { log_line("ERROR", "failed to start HTTP server"); return 1; }
     signal(SIGINT, on_signal); signal(SIGTERM, on_signal);
     char msg[128]; snprintf(msg, sizeof(msg), "QQBot host listening on http://%s:%u", bind_host, port); log_line("INFO", msg);
-    while (!g_stop) sleep(1);
+    while (!g_stop) {
+#ifdef _WIN32
+        Sleep(1000);
+#else
+        sleep(1);
+#endif
+    }
     MHD_stop_daemon(daemon); OPENSSL_cleanse(g_app.app_secret, sizeof(g_app.app_secret)); OPENSSL_cleanse(g_app.access_token, sizeof(g_app.access_token));
-    sqlite3_close(g_app.db); curl_global_cleanup(); pthread_mutex_destroy(&g_app.lock); log_line("INFO", "host stopped"); return 0;
+    sqlite3_close(g_app.db); curl_global_cleanup(); pthread_mutex_destroy(&g_app.lock);
+#ifdef _WIN32
+    WSACleanup();
+#endif
+    log_line("INFO", "host stopped"); return 0;
 }
