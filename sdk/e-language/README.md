@@ -83,3 +83,21 @@ qqb_mute_guild_member(client, guild_id, user_id, mute_end_timestamp, mute_second
 - 禁言：mute_end_timestamp 与 mute_seconds 至少提供一个；若两者都提供，官方以绝对到期时间戳优先；两个字段的单位分别为秒级 Unix 时间戳与秒数，均以字符串传入。
 - 权限：身份组创建/修改/删除需对应权限，机器人需为频道管理员；全员/成员禁言要求机器人为频道管理员。最终权限由 QQ 平台校验。
 - 该映射说明 DLL 导出签名，不等同于已在易语言 IDE 编译验证；Windows DLL 与易语言 IDE 测试仍待执行。
+
+
+## 第五批类型化接口：日程与语音上/下麦
+
+```text
+qqb_list_channel_schedules(client, channel_id, since_ms, response_json*, http_status*) -> 整数型
+qqb_get_channel_schedule(client, channel_id, schedule_id, response_json*, http_status*) -> 整数型
+qqb_create_channel_schedule(client, channel_id, body_json, response_json*, http_status*) -> 整数型
+qqb_update_channel_schedule(client, channel_id, schedule_id, body_json, response_json*, http_status*) -> 整数型
+qqb_delete_channel_schedule(client, channel_id, schedule_id, response_json*, http_status*) -> 整数型
+qqb_audio_mic_up(client, channel_id, response_json*, http_status*) -> 整数型
+qqb_audio_mic_down(client, channel_id, response_json*, http_status*) -> 整数型
+```
+
+- 日程 `since_ms` 是毫秒级 Unix 时间戳字符串；为空则不附加 since 查询参数。
+- 创建/修改日程 body_json 传完整 JSON 对象，内部包含 schedule 对象。
+- 上麦仅限音频类机器人，且腾讯文档当前要求联系平台申请权限；调用前应确认应用已获批。
+- 论坛帖子接口暂时只通过通用 `qqb_api_request` 调用。官方页面标记 PrivateDomain，接入前必须确认机器人应用具备私有域权限。
