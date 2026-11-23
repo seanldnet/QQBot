@@ -32,7 +32,7 @@ while IFS= read -r -d '' file; do
 
   printf 'PE baseline OK: %s (%s.%s)\n' "$(basename "$file")" "$major" "$minor"
   count=$((count + 1))
-done < <(find "$ROOT" -maxdepth 1 -type f \( -iname '*.exe' -o -iname '*.dll' \) -print0)
+done < <(find "$ROOT" -type f \( -iname '*.exe' -o -iname '*.dll' \) -print0)
 
 if (( count == 0 )); then
   echo "No PE executables or DLLs found in $ROOT" >&2
