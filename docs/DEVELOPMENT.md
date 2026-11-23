@@ -276,3 +276,10 @@
 - Windows full-build 已完成宿主与 SDK 编译，Windows CTest 3/3 通过；运行目录组装因 MSYS2 runner 不存在 `/etc/ssl/certs/ca-bundle.crt` 而中断。
 - 构建流程改为从 curl 官方 CA bundle 发布地址下载 `cacert.pem`，写入 `stage/certs/ca-bundle.crt` 并检查文件非空；启动脚本仍通过 `CURL_CA_BUNDLE` 指向包内证书。
 - 本修复仅消除已定位的证书路径阻塞；DLL 依赖扫描、ZIP 生成和 Server 2012–2026 实机兼容性仍待后续 CI/实机验证。
+
+
+## 2026-11-23 — Windows DLL 扫描器系统依赖白名单修正
+
+- 最新 Windows full-build 已完成宿主/SDK 编译、CTest 3/3、运行目录安装及 CA bundle 下载；依赖扫描因将 Windows 系统组件 `wldap32.dll` 误判为缺失的 MinGW DLL 而失败。
+- `scripts/package-windows.sh` 将 `wldap32.dll` 加入 Windows 系统 DLL 白名单。该 DLL 由目标 Windows 提供，不应复制进包；其余未识别的非系统 DLL 仍保持 fail-closed。
+- 修复提交 e57c2e6；下一轮 CI 需继续检查是否还有其他系统 DLL 未列入白名单，以及 ZIP/Artifact 是否成功。Server 版本实机矩阵仍未完成。
