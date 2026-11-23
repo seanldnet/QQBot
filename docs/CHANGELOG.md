@@ -183,3 +183,15 @@
 - 原因：`objdump -f` 输出格式行带有缩进，原 awk 分隔规则取出的字符串包含前导空格，导致合法的 `pei-x86-64` 被误判。
 - 修复：改为读取匹配行的最后一个字段，确保格式标识精确匹配。
 - 验证：失败 run `45183421951` 中 Windows 宿主/SDK 构建、CTest 3/3 和 DLL 依赖收集成功；PE 审计因上述脚本误判失败。修复提交 `ad19eb7` 的完整 CI 待确认。
+
+
+## 2026-11-23 — 机器人登录接入方式与消息日志首版
+
+- 新增 `src/qq/gateway.c/.h`：通过 libcurl WebSocket API 请求官方 Gateway URL 并建立 WSS 连接，首版处理 HELLO、IDENTIFY、心跳、READY 状态及断线退避重连。
+- `POST /api/v1/auth/login` 增加 WebSocket/Webhook 模式选择；支持 access_token 的 expires_in 为数字或字符串的响应格式。
+- `GET /api/v1/status` 返回认证状态、接入方式、传输状态和连接状态；WSS 握手不等于 READY，Webhook challenge 成功也不等于收到事件。
+- 事件解析器增加 `C2C_MESSAGE_CREATE`；群 @ 消息与 C2C 单聊消息进入 SQLite event inbox，并生成包含会话类型、会话 ID、发送者 ID、文本和时间的运行日志。
+- 管理页面增加 WSS/Webhook 选择、状态刷新和日志近实时刷新。
+- 增加 C2C 消息解析测试；Make/CMake 纳入 Gateway 模块。
+- 当前 CI run `45187828807` 执行中，未以此前失败的中间 run 作为通过依据。
+- 限制：WSS 尚未实现 RESUME/session 持久化、完整关闭码策略和心跳 ACK 超时；尚无 QQ 实机联调。Webhook 需公网 HTTPS 和开放平台回调配置。消息日志首批仅覆盖群 @ 与 C2C 文本，不含频道/附件完整信息。
