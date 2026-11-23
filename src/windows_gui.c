@@ -76,7 +76,7 @@ static int start_core(void) {
 }
 static int http_request(const char *method,const char *path,const char *body,char *out,DWORD cap) {
     HINTERNET s=NULL,c=NULL,r=NULL; DWORD got=0,total=0; BOOL ok=FALSE;
-    s=WinHttpOpen(L"QQBotDesktop/0.1",WINHTTP_ACCESS_TYPE_AUTOMATIC_PROXY,WINHTTP_NO_PROXY_NAME,WINHTTP_NO_PROXY_BYPASS,0);
+    s=WinHttpOpen(L"QQBotDesktop/0.1",WINHTTP_ACCESS_TYPE_NO_PROXY,WINHTTP_NO_PROXY_NAME,WINHTTP_NO_PROXY_BYPASS,0);
     if(!s)goto done;
     c=WinHttpConnect(s,L"127.0.0.1",8080,0); if(!c)goto done;
     wchar_t wpath[256]; MultiByteToWideChar(CP_UTF8,0,path,-1,wpath,256);
@@ -191,7 +191,7 @@ static LRESULT CALLBACK wndproc(HWND hwnd,UINT msg,WPARAM wp,LPARAM lp) {
 int WINAPI WinMain(HINSTANCE h,HINSTANCE prev,LPSTR cmd,int show) {
     (void)prev;(void)cmd;g_instance=h;make_paths();
     if(start_core()!=0){MessageBoxA(NULL,"无法启动 QQBot 核心程序。请确认 qqbot-core.exe 与 QQBot.exe 位于同一安装目录的 bin 文件夹。","QQBot",MB_ICONERROR);return 1;}
-    Sleep(900);
+    Sleep(1600);
     WNDCLASSA wc;ZeroMemory(&wc,sizeof(wc));wc.lpfnWndProc=wndproc;wc.hInstance=h;wc.lpszClassName="QQBotDesktopWindow";
     wc.hCursor=LoadCursor(NULL,IDC_ARROW);wc.hbrBackground=(HBRUSH)(COLOR_WINDOW+1);
     RegisterClassA(&wc);
