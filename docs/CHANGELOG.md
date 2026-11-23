@@ -75,3 +75,14 @@
 - 新增管理员 `GET /api/v1/events` 查询最近100条持久化事件。
 - 事件去重键：群消息为 event_type/group_openid/author_openid/msg_id；群管理事件为 event_type/group_openid/op_member_openid/timestamp。
 - 安全边界：事件仅持久化，不会向 callback_url 发起出站请求；插件投递 worker、逐插件 delivery 状态、重试与 SSRF 防护尚未实现。
+
+
+## 2026-11-23 — 逐插件事件投递任务扇出
+
+- 修改 `src/qq/event_queue.h/.c`：新增 `qq_event_queue_fanout`，为已入箱事件创建每个启用插件独立的 pending delivery row；过滤空 callback_url 和停用插件。
+- 新增 `event_deliveries` SQLite 表，快照 callback_url，保存 attempts、last_error、next_attempt_at；唯一约束 event_id/plugin_id，重复扇出幂等。
+- 修改 Webhook handler：入箱后执行 fanout；对于重复事件也补做 fanout，保证进程在 inbox commit 后、fanout 前退出时可通过重复推送修复遗漏。
+- 新增管理员 GET `/api/v1/event-deliveries`，查看最近 200 条任务状态，不返回插件 Token。
+- 扩展 `tests/test_event_queue.c`：覆盖两条启用插件任务、停用插件与空 callback 排除、重复 fanout 不产生重复行。
+- 更新 `docs/API.md`、`docs/DATABASE.md`、`docs/DEVELOPMENT.md`、`docs/TASKS.md`。
+- 安全边界：当前只建立持久化 pending delivery 记录，尚未向插件发 HTTP 请求；真实 worker 必须等 DNS/IP 拒绝、DNS pinning、HTTPS-only、禁止重定向和响应/超时限制完成后才能启用。
