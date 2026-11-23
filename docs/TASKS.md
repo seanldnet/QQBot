@@ -372,11 +372,11 @@
 - [x] Windows 包装布局调整为根目录唯一 QQBot.exe，runtime/ 存放 C 核心及 DLL，data/、certs/ 独立存放。
 - [x] 新增 docs/DESKTOP-UI.md，明确 AntdUI-only 业务 UI 约束、发布目录和验收标准。
 - [x] 首轮 Windows CI 已编译 C 核心并通过 CTest 3/3；AntdUI 桌面发布阶段发现 AntdUI.Message.error 参数签名错误，已按 Target + 文本形式修正。
-- [ ] 重新运行 Windows CI，确认 AntdUI NuGet restore、C# 编译、单文件发布、依赖扫描、PE 审计和 ZIP 生成全部成功。
+- [x] 修复 AntdUI.Message.error 缺少 Target 参数的 C# 编译错误；修复后的 Windows CI run 45200701206 全部 3 个 job 成功，C# 单文件发布、DLL 依赖扫描、PE 审计和 ZIP 上传均通过。
 - [ ] 在 Windows 10/11 实机验收中文显示、DPI、登录表单、导航、日志、核心进程生命周期及关闭行为。
 - [ ] 真实 QQ AppID/AppSecret 联调 WSS READY、Webhook challenge 和消息接收。
 
-> 当前状态：AntdUI 重构代码已进入仓库，但第一轮 CI 桌面编译失败；修复提交后的 CI 尚待确认。禁止将旧 Win32 GUI ZIP 作为 AntdUI 版本交付。
+> 当前状态：AntdUI 桌面版已通过 Windows CI 并生成 QQBot-AntdUI-Windows-x64.zip；压缩包 CRC 已检查通过。仍未完成 Windows 桌面截图/交互实测和 QQ 官方平台实机联调。禁止将旧 Win32 GUI ZIP 作为 AntdUI 版本交付。
 
 
 
