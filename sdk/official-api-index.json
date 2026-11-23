@@ -491,11 +491,7 @@
       "official_url": "https://github.com/tencent-connect/bot-docs/blob/master/docs/develop/api-v2/server-inter/user/manage/event.md"
     }
   ],
-  "endpoint_manifest": {
-    "markdown": "sdk/official-endpoints.md",
-    "json": "sdk/official-endpoints.json",
-    "verified_endpoint_count": 10,
-    "completeness": "incremental_not_complete",
-    "verified_at": "2026-11-23"
-  }
+  "endpoint_manifest": "sdk/official-endpoints.json",
+  "verified_endpoint_count": 26,
+  "endpoint_manifest_status": "incremental; not complete"
 }
