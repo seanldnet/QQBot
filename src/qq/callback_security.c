@@ -80,3 +80,27 @@ done:
     if (rc) memset(out,0,sizeof(*out));
     return rc;
 }
+
+int qq_callback_target_resolve_entry(const qq_callback_target *target, char *out, size_t capacity) {
+    size_t used = 0, i;
+    int n;
+    if (!target || !out || capacity == 0 || target->port != 443 ||
+        !target->host[0] || target->address_count == 0 ||
+        target->address_count > QQ_CALLBACK_MAX_ADDRESSES) return -1;
+    n = snprintf(out, capacity, "%s:%u:", target->host, (unsigned int)target->port);
+    if (n < 0 || (size_t)n >= capacity) return -1;
+    used = (size_t)n;
+    for (i = 0; i < target->address_count; ++i) {
+        const char *ip = target->addresses[i];
+        size_t len = strlen(ip);
+        const char *prefix = i ? "," : "";
+        size_t need = strlen(prefix) + len + (target->address_is_ipv6[i] ? 2u : 0u);
+        if (!ip[0] || used + need >= capacity) return -1;
+        if (i) out[used++] = ',';
+        if (target->address_is_ipv6[i]) out[used++] = '[';
+        memcpy(out + used, ip, len); used += len;
+        if (target->address_is_ipv6[i]) out[used++] = ']';
+        out[used] = '\\0';
+    }
+    return 0;
+}
