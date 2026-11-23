@@ -238,5 +238,22 @@ public:
         char*out=nullptr;int rc=qqb_batch_remove_group_members(p_,group.c_str(),body.c_str(),&out,&status);
         if(out){response.assign(out);qqb_free_string(out);}return rc;
     }
+
+    int list_group_blacklist(const std::string& group,const std::string& cursor,std::string& response,long& status) const {
+        char*out=nullptr;int rc=qqb_list_group_blacklist(p_,group.c_str(),cursor.empty()?nullptr:cursor.c_str(),&out,&status);
+        if(out){response.assign(out);qqb_free_string(out);}return rc;
+    }
+    int update_group_blacklist(const std::string& group,const std::string& body,std::string& response,long& status) const {
+        char*out=nullptr;int rc=qqb_update_group_blacklist(p_,group.c_str(),body.c_str(),&out,&status);
+        if(out){response.assign(out);qqb_free_string(out);}return rc;
+    }
+    int list_group_join_requests(const std::string& group,const std::string& cursor,std::string& response,long& status) const {
+        char*out=nullptr;int rc=qqb_list_group_join_requests(p_,group.c_str(),cursor.empty()?nullptr:cursor.c_str(),&out,&status);
+        if(out){response.assign(out);qqb_free_string(out);}return rc;
+    }
+    int approve_group_join_request(const std::string& group,const std::string& member,const std::string& body,std::string& response,long& status) const {
+        char*out=nullptr;int rc=qqb_approve_group_join_request(p_,group.c_str(),member.c_str(),body.c_str(),&out,&status);
+        if(out){response.assign(out);qqb_free_string(out);}return rc;
+    }
 };
 }
