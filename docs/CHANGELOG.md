@@ -1,5 +1,17 @@
 # 变更日志
 
+## 2026-11-23 — 插件管理与 SDK 官方 API 代理首版
+
+- 修改 src/main.c：新增管理员 Bearer Token 鉴权（QQBOT_ADMIN_TOKEN，至少 24 字符）；新增插件注册、列表、启停、删除 API；注册时使用 OpenSSL RAND_bytes 生成高熵插件 ID/Token，数据库只存 SHA-256 Token 摘要，Token 仅返回一次。
+- 修改 src/main.c：新增 POST /api/v1/plugins/{id}/qq-api；校验 X-Plugin-ID / X-Plugin-Token、插件启用状态和 method/path/body，再通过宿主 access_token 代理到官方 API Base URL；固定官方域名，拒绝绝对 URL、路径穿越和非法 method；设置 TLS 校验、超时和响应体上限。
+- 修改 SDK：增加频道私信（/dms/{guild_id}/messages）便利发送函数；C++ 和易语言接口映射同步更新；修复 SDK JSON 字符串转义、插件 Header CRLF 注入风险和空 body 处理。
+- 新增 sdk/windows/build-mingw.bat、sdk/windows/README.md：提供 MinGW Windows DLL 构建脚本和 x86/x64 位数匹配说明；CMake MinGW 构建增加 --kill-at。
+- 新增 sdk/QUICKSTART.md：记录管理员令牌设置、插件注册、C++ 与易语言 SDK 接入步骤。
+- 修改 .github/workflows/build.yml：增加 C++14 SDK 示例编译步骤。
+- 修复 src/main.c 状态接口：未确认公网回调可达性前不再将 transport_ready 报告为 true；修复插件 PATCH/DELETE 按 /{id} 路由匹配及 GET 无 body 代理行为。
+- 验证：提交成功；没有本地编译器/Windows 易语言 IDE 验证结果；CI 工作流尚未取得结果。插件 API 与 SDK 仅标记首版实现，端到端未验证。
+
+
 ## 2026-11-23 — C ABI / C++ / 易语言 SDK 首版与官方 API 目录
 
 - 新增 sdk/include/qqbot_sdk.h、sdk/src/qqbot_sdk.c：提供统一 C ABI 插件 SDK；libcurl 调用宿主插件代理契约，包含任意官方 REST method/path/body 通用调用、响应内存释放、HTTPS 校验、超时、响应体上限和插件 Token 头鉴权。
