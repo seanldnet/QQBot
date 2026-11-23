@@ -106,6 +106,6 @@
 - [x] 踢出频道成员 C ABI/C++/易语言映射。
 - [x] 成员加入/移除身份组 C ABI/C++/易语言映射。
 - [x] 成员/身份组子频道权限查询与修改 C ABI/C++/易语言映射。
-- [ ] 对新增 C ABI 执行 Make、CMake、C++ 示例 CI 验证；Windows DLL 和易语言 IDE 实测仍待执行。
+- [x] 新增 C ABI 通过 GitHub Actions Make、CMake、C++ 示例构建（run 45148983234）；Windows DLL 和易语言 IDE 实测仍待执行。
 
-当前覆盖统计：81 个官方文档目录页；42 条逐页核验 REST 路由（增量，非全量）；33 条具备独立 C ABI/C++/易语言类型化入口。剩余 9 条可经通用请求入口调用。
+当前覆盖统计：81 个官方文档目录页；42 条逐页核验 REST 路由（增量，非全量）；33 条具备独立 C ABI/C++/易语言类型化入口。剩余 9 条可经通用请求入口调用。GitHub Actions run 45148983234 已通过 Make、CMake 与 C++ SDK 示例编译；Windows DLL 加载、易语言 IDE 和 QQ 实机联调未执行。
