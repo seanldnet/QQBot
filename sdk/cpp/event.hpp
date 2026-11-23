@@ -1,0 +1,16 @@
+#pragma once
+#include <string>
+namespace qqbot {
+struct Event {
+    int schema_version{1};
+    std::string event_type;
+    std::string chat_type; // group / c2c / channel / unknown
+    std::string chat_id;
+    std::string user_id;
+    std::string content;
+    std::string event_id;
+    std::string msg_id;
+    int msg_seq{1};
+    std::string raw_event_json;
+};
+}
