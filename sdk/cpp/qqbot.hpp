@@ -44,6 +44,11 @@ public:
         char*out=nullptr;int rc=qqb_delete_channel(p_,id.c_str(),&out,&status);
         if(out){response.assign(out);qqb_free_string(out);}return rc;
     }
+    int send_group_message(const std::string& group_openid,const std::string& body,
+                           std::string& response,long& status) const {
+        char*out=nullptr;int rc=qqb_send_group_message(p_,group_openid.c_str(),body.c_str(),&out,&status);
+        if(out){response.assign(out);qqb_free_string(out);}return rc;
+    }
     int send_group_text(const std::string& id,const std::string& text,const std::string& event_id,
                         const std::string& msg_id,int seq,std::string& response,long& status) const {
         char*out=nullptr;int rc=qqb_send_group_text(p_,id.c_str(),text.c_str(),
