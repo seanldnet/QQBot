@@ -492,6 +492,6 @@
     }
   ],
   "endpoint_manifest": "sdk/official-endpoints.json",
-  "verified_endpoint_count": 26,
+  "verified_endpoint_count": 34,
   "endpoint_manifest_status": "incremental; not complete"
 }
