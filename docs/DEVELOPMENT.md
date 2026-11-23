@@ -298,3 +298,10 @@
 - Windows full-build 在 ZIP 生成前执行该检查，避免高于 Windows 8.1 / Server 2012 子系统标记的二进制进入成品包。
 - 当前已对上一版 ZIP 做离线检查：宿主及绝大多数依赖 DLL 标记 5.2，`libmicrohttpd-12.dll` 标记 6.0；均未超过 6.2。
 - 严格边界：PE SubsystemVersion 只是可执行文件元数据，不代表导入的 Windows API 均存在于 Server 2012，也不验证 TLS、证书链、运行时加载和服务启动。Server 2012–2026 逐版本实机验收仍未完成。
+
+
+## 2026-11-23 — PE 审计脚本格式字段解析修复
+
+- Windows CI run `45183421951` 的宿主编译、CTest 3/3 和 41 个非系统 DLL 收集均成功；新 PE 审计步骤因解析 `objdump -f` 输出时未去除前导空白，误将合法 `pei-x86-64` 判为异常格式。
+- 修复 `scripts/check-windows-pe-baseline.sh`：改为读取 `objdump -f` 的最后一个字段作为 PE 格式标识。
+- 修复提交 `ad19eb7` 后等待完整 Windows CI 重跑；此前失败的审计结果不作为兼容性结论。
