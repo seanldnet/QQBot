@@ -33,6 +33,8 @@
 
 管理员令牌通过环境变量 `QQBOT_ADMIN_TOKEN` 设置，长度至少 24 字符；注册插件时 Token 只返回一次，数据库仅存 SHA-256 摘要。
 
+插件注册请求示例：`{"name":"my-plugin","callback_url":"https://plugin.example/callback"}`，callback_url 可省略或留空。成功返回 `{ "id": "...", "token": "...", "enabled": true }`。插件列表不返回 Token；PATCH 请求体为 `{ "enabled": true }` 或 `{ "enabled": false }`；DELETE 成功返回 `{ "ok": true }`。
+
 ## 3. 插件事件 JSON 契约（初步）
 
 事件至少表达 `event_type`、`chat_type`、`chat_id`、`user_id`、`content`。正式字段需按 QQ 官方事件模型映射；原始事件可作为受限字段保留。插件回调使用 POST application/json，配置独立连接与响应超时。
