@@ -145,6 +145,7 @@ static int process_payload(qq_gateway_t *g, const char *payload,
     cJSON *op = root ? cJSON_GetObjectItemCaseSensitive(root, "op") : NULL;
     cJSON *data = root ? cJSON_GetObjectItemCaseSensitive(root, "d") : NULL;
     int reconnect = 0;
+    (void)token;
     if (!cJSON_IsNumber(op)) { cJSON_Delete(root); return 0; }
     switch (op->valueint) {
     case 10: {
@@ -154,7 +155,6 @@ static int process_payload(qq_gateway_t *g, const char *payload,
             reconnect = 1; break;
         }
         *heartbeat_ms = (unsigned int)interval->valuedouble;
-        if (send_identify((CURL *)NULL, token) == 0) { /* replaced below */ }
         break;
     }
     case 0: {
@@ -190,7 +190,6 @@ static void *gateway_thread(void *opaque) {
     while (!g->stopping) {
         char token[4096] = {0}, url[2048] = {0};
         CURL *ws = NULL;
-        struct curl_slist *headers = NULL;
         long long sequence = 0;
         unsigned int heartbeat_ms = 0;
         time_t next_heartbeat = 0;
