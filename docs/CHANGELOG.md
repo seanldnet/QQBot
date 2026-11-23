@@ -158,3 +158,5 @@
 - GitHub Actions run 45147820353 暴露 `sdk/cpp/example.cpp` 的 JSON 字符串转义错误，导致 C++ 示例编译步骤失败；该错误仅在新增示例字符串字面量中，不影响此前已通过的 C ABI/C++ SDK 实现构建。
 - 修复 `sdk/cpp/example.cpp` 中角色和日程 JSON 示例的反斜杠转义，保留 if(false) 编译期 API 调用检查，不会在示例执行时触发真实网络请求。
 - 修复提交 efda2ef 的 CI run 45148015752 已触发，尚待结果；在通过前不将示例编译标记为成功。
+
+- 后续验证结果：修复提交 efda2ef 的 GitHub Actions run 45148015752 已成功，C++ SDK 示例编译步骤通过；此前示例转义错误已关闭。
