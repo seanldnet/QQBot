@@ -341,3 +341,14 @@
 - [x] Windows x64 宿主与 SDK DLL 构建、CTest、DLL 依赖闭包扫描、PE 子系统基线审计成功。
 - [x] Windows 一键运行 ZIP 已生成并下载核验：47 个文件，ZIP CRC 检查通过，包含 qqbot.exe、SDK DLL、启动 BAT、管理页面与 admin-token.txt。
 - [ ] 使用真实 QQ AppID/AppSecret 完成 WSS READY、群 @ 消息、C2C 单聊和 Webhook 实机验收。
+
+
+## 2026-11-23 — WSS 心跳与日志接口安全加固
+
+- [x] WSS 心跳调度改用单调时钟，避免系统时间变化和秒级截断造成调度漂移。
+- [x] 追踪 Gateway HEARTBEAT_ACK；在一个心跳周期内未收到 ACK 时主动断开并进入退避重连。
+- [x] `/api/v1/status` 与 `/api/v1/logs` 增加 `QQBOT_ADMIN_TOKEN` Bearer 鉴权，避免未授权读取机器人状态和消息内容。
+- [x] 管理页面增加管理员令牌输入，并在状态/日志轮询请求中携带 Bearer 令牌；令牌只保存在当前页面内存，不写入 localStorage。
+- [ ] 等待本次提交触发的 Linux/Windows CI 全部通过，并重新生成 Windows x64 一键测试包。
+- [ ] 真实 QQ Gateway 心跳 ACK、异常断线恢复、群 @ 与 C2C 消息实测。
+- [ ] Webhook 官方签名向量与公网回调实测；当前仍未完成实机验收。
