@@ -1,5 +1,16 @@
 # 变更日志
 
+## 2026-11-23 — 首批频道管理接口三语言类型化封装
+
+- 修改 `sdk/include/qqbot_sdk.h`、`sdk/src/qqbot_sdk.c`：新增 `qqb_get_guild`、`qqb_list_channels`、`qqb_get_channel`、`qqb_create_channel`、`qqb_update_channel`、`qqb_delete_channel` 六个 C ABI 函数；路径 ID 仅允许字母、数字、下划线和连字符，避免将路径分隔符或路径穿越字符带入 URL。
+- 修改 `sdk/cpp/qqbot.hpp`：新增对应的 `qqbot::Client` 方法，自动释放 SDK 响应缓冲区。
+- 修改 `sdk/e-language/README.md`：补充六个函数的 DLL 导入映射。
+- 修改 `sdk/official-endpoints.json` / `sdk/official-endpoints.md`：将类型化封装映射回已核验 endpoint；消息四场景继续使用现有文本发送便利函数。
+- 修改 `sdk/cpp/example.cpp`、`docs/DEVELOPMENT.md`、`docs/TASKS.md`：同步示例和开发状态；同时修正 TASKS 中 endpoint 清单条目的换行格式。
+- 验证：前一提交的 GitHub Actions Make/CMake/C++ 示例构建已成功；本次代码提交触发的新一轮 CI 仍需单独确认。未执行易语言 IDE 编译、Windows DLL 构建或 QQ 实机 API 调用。
+- 边界：创建/修改接口接收调用者提供的完整 JSON 对象；SDK 不替调用者静默补齐必填字段，实际权限仍由 QQ 平台校验。
+
+
 ## 2026-11-23 — 官方 REST endpoint 首批逐项核验
 
 - 新增 `sdk/official-endpoints.json`：记录 10 条从腾讯官方原文直接核验的 REST endpoint，包括 method、path、路径参数、请求字段、权限说明、回复限制和已明确的错误码；对官方页面未写明的权限/错误码明确标注，不推断。
