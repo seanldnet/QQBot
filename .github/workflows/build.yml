@@ -14,6 +14,8 @@ jobs:
           sudo apt-get install -y build-essential pkg-config libmicrohttpd-dev libcurl4-openssl-dev libsqlite3-dev libcjson-dev libssl-dev
       - name: Check dependencies
         run: make check-deps
+      - name: Compile C++ SDK header example
+        run: c++ -std=c++14 -Wall -Wextra -Wpedantic -Isdk/include -Isdk/cpp -c sdk/cpp/example.cpp -o build-sdk-example.o
       - name: Build with Make
         run: make clean all
       - name: Configure and build with CMake
