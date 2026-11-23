@@ -90,3 +90,17 @@
 - POST /v2/groups/{group_openid}/approval_join_request/{member_openid}：`qqb_approve_group_join_request`，body 包含 op=approve/decline，可选 join_request_id、reject_reason。
 
 第三方接口实现注释指出黑名单操作需白名单；入群申请列表/审批需机器人具备群管理员身份。该信息只作为交叉核验线索，尚未逐页核验腾讯官方自动生成接口页面，因此不计入已核验 42 条 REST 路由。黑名单与申请列表 limit/cursor 参数亦须在官方页面复核后才视为正式协议约束。
+
+
+
+## 第三批：自动入群审批策略 SDK（2026-11-23）
+
+六个策略路由现已增加 C ABI / C++14 / 易语言 DLL wrapper：
+- GET /v2/groups/join_approval_strategy（limit=50、cursor 分页）
+- POST /v2/groups/join_approval_strategy（创建）
+- PATCH /v2/groups/join_approval_strategy/{strategy_id}（修改）
+- DELETE 同一策略资源（删除）
+- POST /v2/groups/join_approval_strategy/{strategy_id}/execute（执行）
+- POST /v2/groups/join_approval_strategy/{strategy_id}/whitelist_users（白名单增删）
+
+策略为机器人维度资源，列表/创建不带 group_openid；其余操作按 strategy_id 路径寻址。策略字段和约束目前来自第三方 fork 的 DTO/注释，官方自动生成页面仍需逐项复核，因此这些路由暂不计入官方逐页核验数量。
