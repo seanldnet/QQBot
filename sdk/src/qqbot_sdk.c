@@ -264,4 +264,66 @@ int QQB_CALL qqb_audio_mic_down(qqb_client*c,const char*channel,char**out,long*s
     return endpoint_call(c,"DELETE","/channels/",channel,"/mic",NULL,out,status);
 }
 
+
+int QQB_CALL qqb_list_guild_role_members(qqb_client*c,const char*guild,const char*role,
+    const char*start,unsigned int limit,char**out,long*status) {
+    if(!valid_path_id(guild)||!valid_path_id(role)||(start&&!valid_path_id(start))||limit<1||limit>400) return -1;
+    char path[640]; int n=snprintf(path,sizeof(path),"/guilds/%s/roles/%s/members?start_index=%s&limit=%u",
+        guild,role,(start&&*start)?start:"0",limit);
+    if(n<0||(size_t)n>=sizeof(path)) return -1;
+    return qqb_api_request(c,"GET",path,NULL,out,status);
+}
+int QQB_CALL qqb_kick_guild_member(qqb_client*c,const char*guild,const char*user,
+    const char*body,char**out,long*status) {
+    if(!valid_path_id(guild)||!valid_path_id(user)||!body||body[0]!='{') return -1;
+    char path[512]; int n=snprintf(path,sizeof(path),"/guilds/%s/members/%s",guild,user);
+    if(n<0||(size_t)n>=sizeof(path)) return -1;
+    return qqb_api_request(c,"DELETE",path,body,out,status);
+}
+static int member_role_request(qqb_client*c,const char*method,const char*guild,const char*user,
+    const char*role,const char*body,char**out,long*status) {
+    if(!valid_path_id(guild)||!valid_path_id(user)||!valid_path_id(role)||(body&&body[0]!='{')) return -1;
+    char path[640]; int n=snprintf(path,sizeof(path),"/guilds/%s/members/%s/roles/%s",guild,user,role);
+    if(n<0||(size_t)n>=sizeof(path)) return -1;
+    return qqb_api_request(c,method,path,body,out,status);
+}
+int QQB_CALL qqb_add_guild_member_role(qqb_client*c,const char*g,const char*u,const char*r,
+    const char*b,char**o,long*s) {
+    if(!b||b[0]!='{') return -1;
+    return member_role_request(c,"PUT",g,u,r,b,o,s);
+}
+int QQB_CALL qqb_remove_guild_member_role(qqb_client*c,const char*g,const char*u,const char*r,
+    const char*b,char**o,long*s) {
+    if(!b||b[0]!='{') return -1;
+    return member_role_request(c,"DELETE",g,u,r,b,o,s);
+}
+int QQB_CALL qqb_get_channel_member_permissions(qqb_client*c,const char*channel,const char*user,
+    char**out,long*status) {
+    if(!valid_path_id(channel)||!valid_path_id(user)) return -1;
+    char path[640]; int n=snprintf(path,sizeof(path),"/channels/%s/members/%s/permissions",channel,user);
+    if(n<0||(size_t)n>=sizeof(path)) return -1;
+    return qqb_api_request(c,"GET",path,NULL,out,status);
+}
+int QQB_CALL qqb_update_channel_member_permissions(qqb_client*c,const char*channel,const char*user,
+    const char*body,char**out,long*status) {
+    if(!valid_path_id(channel)||!valid_path_id(user)||!body||body[0]!='{') return -1;
+    char path[640]; int n=snprintf(path,sizeof(path),"/channels/%s/members/%s/permissions",channel,user);
+    if(n<0||(size_t)n>=sizeof(path)) return -1;
+    return qqb_api_request(c,"PUT",path,body,out,status);
+}
+int QQB_CALL qqb_get_channel_role_permissions(qqb_client*c,const char*channel,const char*role,
+    char**out,long*status) {
+    if(!valid_path_id(channel)||!valid_path_id(role)) return -1;
+    char path[640]; int n=snprintf(path,sizeof(path),"/channels/%s/roles/%s/permissions",channel,role);
+    if(n<0||(size_t)n>=sizeof(path)) return -1;
+    return qqb_api_request(c,"GET",path,NULL,out,status);
+}
+int QQB_CALL qqb_update_channel_role_permissions(qqb_client*c,const char*channel,const char*role,
+    const char*body,char**out,long*status) {
+    if(!valid_path_id(channel)||!valid_path_id(role)||!body||body[0]!='{') return -1;
+    char path[640]; int n=snprintf(path,sizeof(path),"/channels/%s/roles/%s/permissions",channel,role);
+    if(n<0||(size_t)n>=sizeof(path)) return -1;
+    return qqb_api_request(c,"PUT",path,body,out,status);
+}
+
 const char *QQB_CALL qqb_version(void){return "0.2.0";}
