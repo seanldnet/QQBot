@@ -62,6 +62,7 @@ typedef struct { char *body; size_t size; } request_t;
 static volatile sig_atomic_t g_stop = 0;
 static app_t g_app;
 static int ensure_token(void);
+static char g_auth_error[512];
 
 static void on_signal(int sig) { (void)sig; g_stop = 1; }
 static size_t curl_write(char *ptr, size_t size, size_t nmemb, void *userdata) {
@@ -168,6 +169,7 @@ static int db_init(void) {
     return 0;
 }
 static int fetch_access_token(const char *app_id, const char *secret, char *out, size_t outcap, long *expires) {
+    g_auth_error[0] = 0;
     cJSON *root = cJSON_CreateObject(); if (!root) return -1;
     cJSON_AddStringToObject(root, "appId", app_id); cJSON_AddStringToObject(root, "clientSecret", secret);
     char *payload = cJSON_PrintUnformatted(root); cJSON_Delete(root); if (!payload) return -1;
@@ -180,13 +182,30 @@ static int fetch_access_token(const char *app_id, const char *secret, char *out,
     curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 1L); curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 2L);
     CURLcode cr = curl_easy_perform(curl); long status = 0; curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &status);
     curl_slist_free_all(headers); curl_easy_cleanup(curl); free(payload);
-    if (cr != CURLE_OK || status < 200 || status >= 300 || !response.data) { free(response.data); return -1; }
-    cJSON *json = cJSON_Parse(response.data); free(response.data); if (!json) return -1;
+    if (cr != CURLE_OK || status < 200 || status >= 300 || !response.data) {
+        snprintf(g_auth_error, sizeof(g_auth_error), "QQ 认证请求失败：%s，HTTP %ld", curl_easy_strerror(cr), status);
+        if (response.data && response.data[0]) {
+            size_t used = strlen(g_auth_error);
+            snprintf(g_auth_error + used, sizeof(g_auth_error) - used, "；响应：%.180s", response.data);
+        }
+        free(response.data); return -1;
+    }
+    cJSON *json = cJSON_Parse(response.data);
+    if (!json) { snprintf(g_auth_error, sizeof(g_auth_error), "QQ 认证服务器返回了无法解析的响应"); free(response.data); return -1; }
     cJSON *token = cJSON_GetObjectItemCaseSensitive(json, "access_token");
     cJSON *ttl = cJSON_GetObjectItemCaseSensitive(json, "expires_in");
-    int ok = cJSON_IsString(token) && token->valuestring && strlen(token->valuestring) < outcap;
+    int ok = cJSON_IsString(token) && token->valuestring && token->valuestring[0] && strlen(token->valuestring) < outcap;
+    if (!ok) {
+        cJSON *code = cJSON_GetObjectItemCaseSensitive(json, "code");
+        cJSON *message = cJSON_GetObjectItemCaseSensitive(json, "message");
+        if (!cJSON_IsString(message)) message = cJSON_GetObjectItemCaseSensitive(json, "msg");
+        if (cJSON_IsString(message) && message->valuestring && message->valuestring[0]) {
+            if (cJSON_IsNumber(code)) snprintf(g_auth_error, sizeof(g_auth_error), "QQ 认证失败，错误码 %d：%s", code->valueint, message->valuestring);
+            else snprintf(g_auth_error, sizeof(g_auth_error), "QQ 认证失败：%s", message->valuestring);
+        } else snprintf(g_auth_error, sizeof(g_auth_error), "QQ 未返回 access_token，请核对 AppID、AppSecret 和机器人状态");
+    }
     if (ok) { snprintf(out, outcap, "%s", token->valuestring); *expires = cJSON_IsNumber(ttl) ? (long)ttl->valuedouble : (cJSON_IsString(ttl) ? strtol(ttl->valuestring, NULL, 10) : 7200L); }
-    cJSON_Delete(json); return ok ? 0 : -1;
+    cJSON_Delete(json); free(response.data); return ok ? 0 : -1;
 }
 static int ensure_token(void) {
     pthread_mutex_lock(&g_app.lock);
@@ -519,8 +538,16 @@ static enum MHD_Result handler(void *cls, struct MHD_Connection *c, const char *
             OPENSSL_cleanse(g_app.app_secret, sizeof(g_app.app_secret));
             g_app.app_id[0] = 0;
             pthread_mutex_lock(&g_app.lock); snprintf(g_app.connection_state, sizeof(g_app.connection_state), "auth_failed"); pthread_mutex_unlock(&g_app.lock);
-            log_line("ERROR", "QQ 登录失败：access_token 获取失败");
-            return json_reply(c, 502, "{\"error\":\"qq_auth_failed\"}");
+            log_line("ERROR", g_auth_error[0] ? g_auth_error : "QQ 登录失败：access_token 获取失败");
+            cJSON *failure = cJSON_CreateObject();
+            cJSON_AddStringToObject(failure, "error", "qq_auth_failed");
+            cJSON_AddStringToObject(failure, "message", g_auth_error[0] ? g_auth_error : "QQ 认证失败，请检查凭证和网络");
+            char *failure_json = cJSON_PrintUnformatted(failure);
+            cJSON_Delete(failure);
+            if (!failure_json) return json_reply(c, 502, "{\"error\":\"qq_auth_failed\"}");
+            enum MHD_Result failure_result = json_reply(c, 502, failure_json);
+            free(failure_json);
+            return failure_result;
         }
         if (strcmp(selected_mode, "websocket") == 0) {
             g_app.gateway = qq_gateway_start(g_app.api_base, gateway_get_token, gateway_event, gateway_state, &g_app);
