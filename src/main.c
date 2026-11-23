@@ -245,7 +245,8 @@ static enum MHD_Result handler(void *cls, struct MHD_Connection *c, const char *
     if (strcmp(method,"GET")==0 && strcmp(url,"/api/v1/plugins")==0) return plugin_list(c);
     if (strncmp(url,"/api/v1/plugins/",16)==0) {
         const char *id=url+16; const char *slash=strchr(id,'/');
-        if(slash && strcmp(method,"DELETE")==0 && slash[1]!=0) {\n            if(!admin_authorized(c))return json_reply(c,401,"{\\\"error\\\":\\\"admin_auth_required\\\"}");
+        if(slash && strcmp(method,"DELETE")==0 && slash[1]!=0) {
+            if(!admin_authorized(c))return json_reply(c,401,"{\"error\":\"admin_auth_required\"}");
             size_t idlen=(size_t)(slash-id);if(idlen==0||idlen>=128)return json_reply(c,404,"{\"error\":\"plugin_not_found\"}");
             char plugin_id[128];memcpy(plugin_id,id,idlen);plugin_id[idlen]=0;
             pthread_mutex_lock(&g_app.lock);sqlite3_stmt *st=NULL;int rc=sqlite3_prepare_v2(g_app.db,"DELETE FROM plugins WHERE id=?1",-1,&st,NULL);
