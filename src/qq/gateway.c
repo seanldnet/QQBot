@@ -112,6 +112,22 @@ static int get_gateway_url(qq_gateway_t *g, const char *token, char *url, size_t
         }
         cJSON_Delete(root);
     }
+    if (!ok) {
+        char detail[512];
+        cJSON *failure = response.data ? cJSON_Parse(response.data) : NULL;
+        cJSON *message = failure ? cJSON_GetObjectItemCaseSensitive(failure, "message") : NULL;
+        if (!cJSON_IsString(message) && failure) message = cJSON_GetObjectItemCaseSensitive(failure, "msg");
+        if (status == 403) {
+            snprintf(detail, sizeof(detail),
+                "获取 QQ Gateway 被拒绝（HTTP 403）。请检查 QQ 开放平台正式环境 IP 白名单是否包含当前公网出口 IP，以及机器人上线/订阅权限");
+        } else if (cJSON_IsString(message) && message->valuestring && message->valuestring[0]) {
+            snprintf(detail, sizeof(detail), "获取 QQ Gateway 失败（HTTP %ld）：%s", status, message->valuestring);
+        } else {
+            snprintf(detail, sizeof(detail), "获取 QQ Gateway 失败（HTTP %ld）。请检查机器人状态、IP 白名单和网络连接", status);
+        }
+        state(g, "error", detail);
+        cJSON_Delete(failure);
+    }
     free(response.data);
     curl_slist_free_all(headers);
     curl_easy_cleanup(curl);
@@ -221,9 +237,11 @@ static void *gateway_thread(void *opaque) {
         int ready = 0, reconnect = 0, hello = 0, awaiting_ack = 0;
         char aggregate[GATEWAY_FRAME_MAX + 1];
         size_t aggregate_len = 0;
-        if (g->token_fn(g->context, token, sizeof(token)) != 0 ||
-            get_gateway_url(g, token, url, sizeof(url)) != 0) {
-            state(g, "error", "获取 access_token 或 Gateway 地址失败");
+        if (g->token_fn(g->context, token, sizeof(token)) != 0) {
+            state(g, "error", "获取 QQ access_token 失败，请查看宿主日志中的认证错误详情");
+            goto retry;
+        }
+        if (get_gateway_url(g, token, url, sizeof(url)) != 0) {
             goto retry;
         }
         state(g, "connecting", "正在建立 WSS 连接");
