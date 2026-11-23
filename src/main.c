@@ -198,7 +198,7 @@ static enum MHD_Result plugin_proxy(struct MHD_Connection *c,const char *plugin_
     char url[1024];if(strlen(g_app.api_base)+strlen(p->valuestring)+1>=sizeof(url)){OPENSSL_cleanse(token_copy,sizeof(token_copy));cJSON_Delete(j);return json_reply(c,414,"{\"error\":\"qq_api_path_too_long\"}");}
     snprintf(url,sizeof(url),"%s%s",g_app.api_base,p->valuestring);
     char auth[4200];snprintf(auth,sizeof(auth),"Authorization: QQBot %s",token_copy);OPENSSL_cleanse(token_copy,sizeof(token_copy));
-    char *payload=b?cJSON_PrintUnformatted(b):NULL;struct curl_slist *headers=NULL;headers=curl_slist_append(headers,auth);headers=curl_slist_append(headers,"Content-Type: application/json");
+    char *payload=(b&&!cJSON_IsNull(b))?cJSON_PrintUnformatted(b):NULL;struct curl_slist *headers=NULL;headers=curl_slist_append(headers,auth);headers=curl_slist_append(headers,"Content-Type: application/json");
     CURL *curl=curl_easy_init();proxy_buffer_t response={0};long status=0;CURLcode cr=CURLE_FAILED_INIT;
     if(curl){curl_easy_setopt(curl,CURLOPT_URL,url);curl_easy_setopt(curl,CURLOPT_CUSTOMREQUEST,m->valuestring);curl_easy_setopt(curl,CURLOPT_HTTPHEADER,headers);
       if(payload){curl_easy_setopt(curl,CURLOPT_POSTFIELDS,payload);curl_easy_setopt(curl,CURLOPT_POSTFIELDSIZE,(long)strlen(payload));}
