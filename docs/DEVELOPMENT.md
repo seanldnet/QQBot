@@ -208,3 +208,13 @@
 - Makefile 增加 `make test`，CMake/CTest 增加 `qq_group_event_parser` 测试；宿主构建纳入 events.c。
 - 明确限制：本次仅实现 Gateway dispatch payload 的 JSON 归一化，不包含 WebSocket 连接、HELLO/IDENTIFY、心跳、重连、事件持久化去重、插件并发分发或 HTTP callback。
 - 腾讯官方来源：`server-inter/group/manage/event.md` 与 `server-inter/message/send-receive/event.md`（bot-docs main）。
+
+
+## 2026-11-23 — Webhook 群事件持久化入口
+
+- 扩展 `qq_webhook_process_ex`：仅在 op=0 Ed25519 签名验证成功后，额外返回外层事件名 `t` 与内层 `d` JSON；保留旧 `qq_webhook_process` ABI/调用方式作为兼容包装。
+- 宿主 Webhook 路由将已验签的群管理/群 @ 事件交给 `qq_event_normalize`，并写入 SQLite `event_inbox` 持久化收件箱。
+- 收件箱以唯一 dedupe_key 防止重复消息入库：群消息使用事件类型+群+作者+msg_id；群管理事件使用事件类型+群+操作人+timestamp。
+- 新增 `GET /api/v1/events` 管理员认证查询接口，最多返回最近100条入箱记录；不暴露插件 Token。
+- 新增 `qq_event_queue_init/enqueue` 数据层函数及 SQLite 内存库单元测试。
+- 重要边界：这是 Webhook 验签后的群事件持久化，不是 Gateway WebSocket transport；当前不执行插件 callback_url 投递、不自动确认消费、不重试 HTTP 回调。入箱记录状态保持 pending，后续需增加 delivery worker、逐插件投递状态、重试退避和 callback SSRF 防护。
