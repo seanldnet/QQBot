@@ -1,9 +1,21 @@
 #define _POSIX_C_SOURCE 200112L
 #include "callback_security.h"
 #include <curl/curl.h>
+#ifdef _WIN32
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#define qq_inet_pton(f,a,d) (InetPtonA((f),(a),(d)) == 1 ? 1 : 0)
+#define qq_inet_ntop(f,s,d,n) (InetNtopA((f),(PVOID)(s),(d),(DWORD)(n)) != NULL ? (d) : NULL)
+#else
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <sys/socket.h>
+#define qq_inet_pton inet_pton
+#define qq_inet_ntop inet_ntop
+#endif
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -13,7 +25,7 @@ static int in4(unsigned int ip, unsigned int net, unsigned int mask) {
 }
 int qq_callback_ipv4_is_public(const char *address) {
     struct in_addr a; unsigned int ip;
-    if (!address || inet_pton(AF_INET, address, &a) != 1) return 0;
+    if (!address || qq_inet_pton(AF_INET, address, &a) != 1) return 0;
     ip = ntohl(a.s_addr);
     if (in4(ip,0x00000000u,0xff000000u) || in4(ip,0x0a000000u,0xff000000u) ||
         in4(ip,0x64400000u,0xffc00000u) || in4(ip,0x7f000000u,0xff000000u) ||
@@ -27,7 +39,7 @@ int qq_callback_ipv4_is_public(const char *address) {
 }
 int qq_callback_ipv6_is_public(const char *address) {
     struct in6_addr a; const unsigned char *b;
-    if (!address || inet_pton(AF_INET6,address,&a) != 1) return 0;
+    if (!address || qq_inet_pton(AF_INET6,address,&a) != 1) return 0;
     b=a.s6_addr;
     if ((b[0] & 0xe0u) != 0x20u) return 0; /* only 2000::/3 */
     if (b[0]==0x20u && b[1]==0x01u && (b[2]&0xfeu)==0x00u) return 0;
@@ -57,17 +69,28 @@ int qq_callback_target_validate(const char *url, qq_callback_target *out) {
     } else strcpy(port_text,"443");
     port=strtol(port_text,NULL,10); if (port!=443) goto done;
     out->port=443;
-    if (inet_pton(AF_INET,out->host,&v4)==1 || inet_pton(AF_INET6,out->host,&v6)==1) goto done;
+    if (qq_inet_pton(AF_INET,out->host,&v4)==1 || qq_inet_pton(AF_INET6,out->host,&v6)==1) goto done;
     if (strchr(out->host,'.')==NULL || strchr(out->host,'/')!=NULL) goto done;
     memset(&hints,0,sizeof(hints)); hints.ai_socktype=SOCK_STREAM;
-    hints.ai_family=AF_UNSPEC; hints.ai_flags=AI_ADDRCONFIG;
-    if (getaddrinfo(out->host,"443",&hints,&list)!=0 || !list) goto done;
+    hints.ai_family=AF_UNSPEC; hints.ai_flags=0;
+#ifdef _WIN32
+    {
+        WSADATA wsa;
+        if (WSAStartup(MAKEWORD(2,2), &wsa) != 0) goto done;
+    }
+#endif
+    if (getaddrinfo(out->host,"443",&hints,&list)!=0 || !list) {
+#ifdef _WIN32
+        WSACleanup();
+#endif
+        goto done;
+    }
     for (it=list;it;it=it->ai_next) {
         char ip[INET6_ADDRSTRLEN]; const void *src; int is6=0;
         if (it->ai_family==AF_INET) src=&((struct sockaddr_in*)it->ai_addr)->sin_addr;
         else if (it->ai_family==AF_INET6) { src=&((struct sockaddr_in6*)it->ai_addr)->sin6_addr; is6=1; }
         else continue;
-        if (!inet_ntop(it->ai_family,src,ip,sizeof(ip))) goto done;
+        if (!qq_inet_ntop(it->ai_family,src,ip,sizeof(ip))) goto done;
         if (!(is6?qq_callback_ipv6_is_public(ip):qq_callback_ipv4_is_public(ip))) goto done;
         if (n>=QQ_CALLBACK_MAX_ADDRESSES || strlen(ip)>=QQ_CALLBACK_IP_MAX) goto done;
         strcpy(out->addresses[n],ip); out->address_is_ipv6[n]=is6; ++n;
@@ -77,6 +100,9 @@ int qq_callback_target_validate(const char *url, qq_callback_target *out) {
 done:
     if (explicit_port) curl_free(explicit_port);
     if (list) freeaddrinfo(list);
+#ifdef _WIN32
+    WSACleanup();
+#endif
     curl_url_cleanup(u);
     if (rc) memset(out,0,sizeof(*out));
     return rc;
