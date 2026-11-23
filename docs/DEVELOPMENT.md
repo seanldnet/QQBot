@@ -234,3 +234,11 @@
 新增 `src/qq/callback_security.h/.c`，提供 callback URL 校验和 DNS 解析结果结构：仅接受 HTTPS、443 端口、DNS 主机名；拒绝 userinfo、IP 字面量、非 443 端口；解析所有 DNS A/AAAA 结果，只要其中任意地址不是公网单播地址即整体拒绝。IPv4 拒绝私网、环回、链路本地、共享地址、文档网段、多播和保留网段；IPv6 仅接受 2000::/3 全球单播，并排除特殊用途、6to4 和文档地址。DNS 结果暂存于固定容量结构中，并可格式化为 libcurl `CURLOPT_RESOLVE` 所需的 host:port:address 列表。该格式化函数只生成 pinning 参数字符串；当前尚未由 HTTP 请求使用它，因此实际 DNS pinning 仍未完成。
 
 重要边界：本阶段仅提供校验/解析原语，尚未接入插件注册 URL 校验，也未实现 DNS pinning、HTTP worker、禁止重定向、响应体限制和重试。因此不能把它视为完整 SSRF 防护，也不得启用 callback 出站请求。当前实现使用 POSIX `getaddrinfo`/`inet_pton`，Windows Winsock 适配尚待完成。
+
+
+## 2026-11-23 — Callback DNS resolver Windows 适配
+
+- `src/qq/callback_security.c`：按平台选择 POSIX sockets 或 Winsock2/WS2TCPIP；Windows 解析路径在调用 `getaddrinfo` 前初始化 Winsock，并在所有退出路径释放 Winsock 会话。
+- 移除 `AI_ADDRCONFIG`，避免操作系统本地网卡配置影响 A/AAAA 查询结果；安全策略仍要求检查解析器返回的每个地址。
+- `CMakeLists.txt` 与 `Makefile`：Windows 构建链接 `ws2_32`。
+- 当前只是源代码级 Windows 适配；尚未在 MSVC/MinGW Windows runner 实际编译或运行，不能视为 Windows 验证通过。DNS pinning、callback URL 写入校验和 HTTP worker 仍未完成，出站请求继续禁用。
