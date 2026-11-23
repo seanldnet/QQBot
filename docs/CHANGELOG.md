@@ -1,3 +1,13 @@
+## 2026-11-24 — AntdUI 首页与账号管理流程调整
+
+- 桌面程序启动后直接进入主界面；机器人 AppID/AppSecret 与 WSS/Webhook 选择移入侧边栏“账号管理”页，不再单独弹出登录窗口。
+- 账号页改为宽布局，表单控件按主内容区域展开；加入 QQ IP 白名单配置提示。
+- C 宿主认证失败响应保留 HTTP 状态、QQ 错误码及 message；桌面端优先展示 message，避免只显示 `qq_auth_failed`。
+- 根据 QQ 官方文档区分 Token 获取与正式环境 WSS/OpenAPI 白名单：未启用白名单无需添加 IP；启用后必须添加运行环境公网出口 IP；`127.0.0.1` 仅为本机管理 API 地址。
+- 将 .NET 8 桌面程序由自包含单文件改为 framework-dependent single-file，减少 EXE/ZIP 体积；目标机需要预装 .NET 8 Windows Desktop Runtime x64。AntdUI 包版本仍固定 2.4.20。
+- 验证状态：以上为代码与文档变更，等待 Windows CI 验证构建、发布和 ZIP 大小；尚未进行 Windows 桌面实机与 QQ 官方账号联调。
+
+
 ## 2026-11-23 — QQ 群聊 API 专项纠偏
 
 - 修改 `sdk/include/qqbot_sdk.h`、`sdk/src/qqbot_sdk.c`：新增 `qqb_send_group_message`，支持完整 JSON body，不再局限纯文本；校验 group_openid 并调用官方 `POST /v2/groups/{group_openid}/messages`。
