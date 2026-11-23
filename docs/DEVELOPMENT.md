@@ -112,6 +112,15 @@
 - 新增 C ABI 类型化函数：`qqb_list_guild_members`、`qqb_get_guild_member`、`qqb_list_guild_roles`、`qqb_create_guild_role`、`qqb_update_guild_role`、`qqb_delete_guild_role`、`qqb_mute_guild`、`qqb_mute_guild_member`。
 - 新增 C++ `qqbot::Client` 对应方法；每个方法均释放底层响应缓冲区，并将 JSON 结果复制到 std::string。
 - 更新易语言 DLL 导入声明，保持统一 `__stdcall` ABI；说明成员分页游标、1–400 limit、禁言秒/时间戳字符串和 `"0"` 解除禁言语义。
-- 更新 `sdk/official-endpoints.json` 的 sdk_wrapper 映射。当前 34 条已核验路由中，14 条具备三语言类型化入口（四种消息发送、六种频道管理、八种本批成员/身份组/禁言操作中部分接口的 wrapper；其余仍走通用 API）。
+- 更新 `sdk/official-endpoints.json` 的 sdk_wrapper 映射。当前 34 条已核验路由中，18 条具备三语言类型化入口（四种消息发送、六种频道管理、八种本批成员/身份组/禁言操作中部分接口的 wrapper；其余仍走通用 API）。
 - 安全约束：路径 ID 限定为字母/数字/下划线/连字符；limit 只允许 1–400；禁言时间字段仅接受十进制数字字符串；创建/修改身份组要求 JSON object。
 - 验证：GitHub Actions 将对 C11 Make、CMake 和 C++ 示例执行编译；尚未取得本次提交 CI 结果。未执行 Windows DLL 实际加载、易语言 IDE 编译或 QQ 实机权限联调。
+
+
+## 2026-11-23 — 日程与语音控制 API 三语言封装、论坛接口登记
+
+- 新增 C ABI / C++ 类型化函数：日程列表、详情、创建、修改、删除；机器人上麦、下麦，共 7 个导出入口。
+- 成员/身份组/禁言接口 8 个 typed wrapper 也已合入；累计 42 条已核验 REST 路由，其中 25 条具有 C ABI/C++/易语言类型化入口，其余可经通用 method/path/body API 调用。
+- 从腾讯官方原文新增 8 条路由：日程修改/删除、语音上麦/下麦、论坛帖子列表/详情/发表/删除；更新 JSON 清单、Markdown 清单、易语言 DLL 声明和开发任务记录。
+- 安全/权限约束：since_ms 按十进制字符串校验并保持毫秒单位；路径 ID 仅允许安全字符；音频上/下麦仅限音频类机器人且当前文档要求联系平台申请权限；论坛接口标记 PrivateDomain，不宣称普通机器人可直接调用。
+- 验证：成员/身份组/禁言 C ABI 与 C++ 代码的 CI 已通过 Make、CMake 和 C++ 示例编译；本批日程/音频代码与文档提交后将触发新 CI，尚未取得结果。易语言 IDE、Windows DLL 加载和 QQ 实机权限测试仍未执行。
