@@ -267,3 +267,5 @@
 - 成品包另外包含 CA 根证书 bundle，并由启动脚本设置 `CURL_CA_BUNDLE`，避免目标机器没有开发环境证书目录时 HTTPS 请求因找不到 CA 文件而失败。
 
 - Windows runner 的 MINGW64 软件源当前无法通过包数据库解析 `mingw-w64-x86_64-libmicrohttpd`，构建流程改为下载固定版本归档并校验 SHA-256 后通过 pacman 安装；其余依赖仍由签名软件源解析。
+
+- Windows MINGW64 的 libmicrohttpd 已从该仓库当前软件源下架（CI 的 pacman 返回 target not found）；为保持 Server 2012/旧 CRT 兼容，Windows job 改为固定安装仍可获取的 MINGW64 1.0.10-1 历史二进制包，并从当前仓库安装其 GnuTLS 依赖。该历史包安装和完整构建仍待 CI 实证。
