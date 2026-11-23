@@ -221,4 +221,47 @@ int QQB_CALL qqb_mute_guild_member(qqb_client*c,const char*guild,const char*user
     return mute_request(c,path,end,seconds,out,status);
 }
 
+
+int QQB_CALL qqb_list_channel_schedules(qqb_client*c,const char*channel,const char*since,
+    char**out,long*status) {
+    if(!valid_path_id(channel)||(since&&!valid_decimal_string(since))) return -1;
+    char path[512]; int n;
+    if(since&&*since) n=snprintf(path,sizeof(path),"/channels/%s/schedules?since=%s",channel,since);
+    else n=snprintf(path,sizeof(path),"/channels/%s/schedules",channel);
+    if(n<0||(size_t)n>=sizeof(path)) return -1;
+    return qqb_api_request(c,"GET",path,NULL,out,status);
+}
+int QQB_CALL qqb_get_channel_schedule(qqb_client*c,const char*channel,const char*schedule,
+    char**out,long*status) {
+    if(!valid_path_id(channel)||!valid_path_id(schedule)) return -1;
+    char path[512]; int n=snprintf(path,sizeof(path),"/channels/%s/schedules/%s",channel,schedule);
+    if(n<0||(size_t)n>=sizeof(path)) return -1;
+    return qqb_api_request(c,"GET",path,NULL,out,status);
+}
+int QQB_CALL qqb_create_channel_schedule(qqb_client*c,const char*channel,const char*body,
+    char**out,long*status) {
+    if(!body||body[0]!='{') return -1;
+    return endpoint_call(c,"POST","/channels/",channel,"/schedules",body,out,status);
+}
+int QQB_CALL qqb_update_channel_schedule(qqb_client*c,const char*channel,const char*schedule,
+    const char*body,char**out,long*status) {
+    if(!valid_path_id(channel)||!valid_path_id(schedule)||!body||body[0]!='{') return -1;
+    char path[512]; int n=snprintf(path,sizeof(path),"/channels/%s/schedules/%s",channel,schedule);
+    if(n<0||(size_t)n>=sizeof(path)) return -1;
+    return qqb_api_request(c,"PATCH",path,body,out,status);
+}
+int QQB_CALL qqb_delete_channel_schedule(qqb_client*c,const char*channel,const char*schedule,
+    char**out,long*status) {
+    if(!valid_path_id(channel)||!valid_path_id(schedule)) return -1;
+    char path[512]; int n=snprintf(path,sizeof(path),"/channels/%s/schedules/%s",channel,schedule);
+    if(n<0||(size_t)n>=sizeof(path)) return -1;
+    return qqb_api_request(c,"DELETE",path,NULL,out,status);
+}
+int QQB_CALL qqb_audio_mic_up(qqb_client*c,const char*channel,char**out,long*status) {
+    return endpoint_call(c,"PUT","/channels/",channel,"/mic","{}",out,status);
+}
+int QQB_CALL qqb_audio_mic_down(qqb_client*c,const char*channel,char**out,long*status) {
+    return endpoint_call(c,"DELETE","/channels/",channel,"/mic",NULL,out,status);
+}
+
 const char *QQB_CALL qqb_version(void){return "0.2.0";}
