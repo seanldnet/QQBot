@@ -113,3 +113,10 @@
 - 修改 `Makefile`：Windows_NT 下增加 `ws2_32` 链接参数。
 - 移除 `AI_ADDRCONFIG`，避免本机网卡配置导致地址族过滤；仍对 DNS 返回的每个 A/AAAA 地址执行公网分类。
 - 验证状态：提交后 CI 待运行；本轮没有 Windows 主机可用，MSVC/MinGW 实机编译与测试未执行。此改动不启用 callback 出站请求；DNS pinning、写入口校验和 worker 仍待完成。
+
+
+## 2026-11-23 — 增加 Windows callback security CI
+
+- 修改 `.github/workflows/build.yml`：新增 Windows-latest + MSYS2/MinGW64 job，安装 MinGW GCC、pkgconf、libcurl，独立编译并运行 callback security 测试程序，链接 Winsock2。
+- 该 job 验证 Windows resolver 源码和测试的编译/执行，不代表整个 QQBot 宿主、MSVC 或易语言 DLL 已完成 Windows 支持。
+- GitHub Actions run 45179209231 已触发，当前排队；结果待确认。
