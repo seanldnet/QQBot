@@ -48,7 +48,7 @@ Windows 成品包还会携带 CA 根证书 bundle，并由启动脚本设置 `CU
 
 ## Windows 原生桌面程序
 
-Windows 构建桌面入口为 C# WinForms + AntdUI 发布的根目录 QQBot.exe；后台协议核心为 runtime/qqbot-core.exe。双击 QQBot.exe 后输入 AppID/AppSecret，选择 WSS 或 Webhook 登录；无需浏览器或 BAT。Web UI 保留作开发诊断用途，不是最终桌面入口。业务 UI 必须使用 AntdUI 官方控件；禁止另写 Win32/WPF/WebView 控件界面。
+Windows 构建桌面入口为 C# WinForms + AntdUI 发布的根目录 QQBot.exe；后台协议核心为 runtime/qqbot-core.exe。双击 QQBot.exe 直接进入主界面，在“账号管理”页添加 AppID/AppSecret 并选择 WSS 或 Webhook；无需独立登录弹窗、浏览器或 BAT。桌面 EXE 使用 .NET 8 Desktop Runtime 框架依赖发布以降低体积，目标电脑需安装 .NET 8 Windows Desktop Runtime x64。Web UI 保留作开发诊断用途，不是最终桌面入口。业务 UI 必须使用 AntdUI 官方控件；禁止另写 Win32/WPF/WebView 控件界面。
 
 
 ## Windows 桌面客户端（AntdUI）
