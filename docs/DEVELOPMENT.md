@@ -305,3 +305,26 @@
 - Windows CI run `45183421951` 的宿主编译、CTest 3/3 和 41 个非系统 DLL 收集均成功；新 PE 审计步骤因解析 `objdump -f` 输出时未去除前导空白，误将合法 `pei-x86-64` 判为异常格式。
 - 修复 `scripts/check-windows-pe-baseline.sh`：改为读取 `objdump -f` 的最后一个字段作为 PE 格式标识。
 - 修复提交 `ad19eb7` 后等待完整 Windows CI 重跑；此前失败的审计结果不作为兼容性结论。
+
+
+## 2026-11-23 — 机器人接入与消息日志优先迭代
+
+用户要求先交付两个可供实测的模块：机器人登录并选择 WSS/Webhook，以及查看谁给机器人发消息的日志；其他插件/面板功能暂缓。
+
+### 本轮实现
+- 新增 `src/qq/gateway.c/.h`，基于 libcurl WebSocket API 建立 WSS 客户端；动态请求 `/gateway`，执行 HELLO/IDENTIFY、按服务端 heartbeat_interval 发送心跳，识别 READY，并在断线后退避重连。
+- 登录 API 允许 `mode=websocket` 或 `mode=webhook`；WSS 模式启动 Gateway 后台线程，Webhook 模式继续使用原有 challenge/Ed25519 验签端点。
+- 新增 connection_state，状态 API 显示 authenticated、mode、connection_state、transport_ready。WSS 必须收到 READY 才算连接成功；Webhook 必须收到已验签事件才标记 webhook_active。
+- 扩展 `src/qq/events.c`，支持 `GROUP_AT_MESSAGE_CREATE` 与 `C2C_MESSAGE_CREATE`；日志记录会话类型、会话标识、发送者标识、消息时间和文本，并保留持久化 event inbox。
+- 管理页增加 WSS/Webhook 选择、状态轮询和近实时日志展示。
+- 增加 C2C 事件归一化测试，并把 Gateway 源文件加入 Make/CMake。
+
+### 尚未验收的边界
+- 本轮尚未获得新代码完整 CI 通过结果；相关最新 run 为 `45187828807`，正在执行。
+- WSS 当前为首版连接流程：未实现 RESUME/session 持久化、完整 Gateway 关闭码处理和 heartbeat ACK 超时监测。
+- 尚未使用真实 QQ AppID/AppSecret 完成平台联调；不能将 token 获取成功等同于机器人 Gateway 已 READY。
+- Webhook 仍要求公网 HTTPS 回调地址和 QQ 开放平台正确配置；本机默认 127.0.0.1 监听不能直接接收公网回调。
+- 消息日志当前只覆盖群 @ 消息与 C2C 单聊文本；频道、频道私信、附件、图片、昵称映射和全量消息事件待后续扩展。
+- Windows Server 2012–2026 逐版本实机测试仍未执行。
+
+下一步只围绕这两个用户测试目标修复 CI、打包并做可复现的联调准备；其他插件功能暂不扩展。
