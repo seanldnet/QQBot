@@ -101,3 +101,26 @@ qqb_audio_mic_down(client, channel_id, response_json*, http_status*) -> 整数�
 - 创建/修改日程 body_json 传完整 JSON 对象，内部包含 schedule 对象。
 - 上麦仅限音频类机器人，且腾讯文档当前要求联系平台申请权限；调用前应确认应用已获批。
 - 论坛帖子接口暂时只通过通用 `qqb_api_request` 调用。官方页面标记 PrivateDomain，接入前必须确认机器人应用具备私有域权限。
+
+
+## 第六批类型化接口：踢出成员、身份组成员与子频道权限
+
+以下新增导出均为 `__stdcall`；JSON 响应指针统一使用 `qqb_free_string` 释放。
+
+```text
+qqb_list_guild_role_members(client, guild_id, role_id, start_index, limit, response_json*, http_status*) -> 整数型
+qqb_kick_guild_member(client, guild_id, user_id, body_json, response_json*, http_status*) -> 整数型
+qqb_add_guild_member_role(client, guild_id, user_id, role_id, body_json, response_json*, http_status*) -> 整数型
+qqb_remove_guild_member_role(client, guild_id, user_id, role_id, body_json, response_json*, http_status*) -> 整数型
+qqb_get_channel_member_permissions(client, channel_id, user_id, response_json*, http_status*) -> 整数型
+qqb_update_channel_member_permissions(client, channel_id, user_id, body_json, response_json*, http_status*) -> 整数型
+qqb_get_channel_role_permissions(client, channel_id, role_id, response_json*, http_status*) -> 整数型
+qqb_update_channel_role_permissions(client, channel_id, role_id, body_json, response_json*, http_status*) -> 整数型
+```
+
+- 身份组成员列表 start_index 为空时从 `0` 开始，limit 必须为 1–400；下一页使用响应中的 next。
+- 踢出成员 body_json 必须包含官方要求的 `add_blacklist` 与 `delete_history_msg_days`；可选撤回天数为 0、3、7、15、30 或 -1。不能踢出管理员；需踢人权限且机器人为管理员。
+- 身份组添加/移除接口 body_json 传完整对象；对身份组类型为 5（子频道管理员），需按官方要求提供 channel 对象（至少含 id）。
+- 权限修改 body_json 传 `{"add":"权限位图","remove":"权限位图"}`。add 授权、remove 撤权；同一位同时设置时平台按删除处理；不能通过该接口修改“可管理子频道”权限。
+- 权限接口要求管理子频道权限，机器人必须为管理员；最终仍由 QQ 平台校验。
+- 本文仅描述 DLL ABI 映射，未声称已在易语言 IDE 编译验证。
