@@ -76,21 +76,17 @@ done:
 }
 static int send_text(qqb_client*c,const char*path,const char*content,const char*event_id,const char*msg_id,int seq,char**out,long*status) {
     if(!content) return -1;
-    size_t n=strlen(content)*6+((event_id?strlen(event_id):0)+(msg_id?strlen(msg_id):0))*6+256;
-    char *body=(char*)malloc(n); if(!body) return -3;
-    /* JSON escaping is delegated to a small, complete string encoder. */
-    char *q=(char*)malloc(strlen(content)*6+1); if(!q){free(body);return -3;}
-    size_t k=0; for(const unsigned char*p=(const unsigned char*)content;*p;p++){
-        if(*p=='"'||*p=='\\'){q[k++]='\\';q[k++]=(char)*p;}
-        else if(*p<0x20){snprintf(q+k,7,"\\u%04x",*p);k+=6;}
-        else q[k++]=(char)*p;
-    } q[k]=0;
-    snprintf(body,n,"{\"content\":\"%s\",\"msg_type\":0%s%s%s%s%s%s%s}",
-      q,event_id?",\"event_id\":\"":"",event_id?event_id:"",event_id?"\"":"",
-      msg_id?",\"msg_id\":\"":"",msg_id?msg_id:"",msg_id?"\"":"",
-      msg_id?",\"msg_seq\":":"");
-    if(msg_id){ size_t used=strlen(body); snprintf(body+used,n-used,"%d",seq>0?seq:1); }
-    int rc=qqb_api_request(c,"POST",path,body,out,status); free(q);free(body);return rc;
+    char *qc=json_quote(content), *qe=event_id?json_quote(event_id):NULL, *qm=msg_id?json_quote(msg_id):NULL;
+    if(!qc||(event_id&&!qe)||(msg_id&&!qm)){free(qc);free(qe);free(qm);return -3;}
+    size_t n=strlen(qc)+(qe?strlen(qe):0)+(qm?strlen(qm):0)+256;
+    char *body=(char*)malloc(n); if(!body){free(qc);free(qe);free(qm);return -3;}
+    snprintf(body,n,"{\"content\":%s,\"msg_type\":0%s%s%s%s%s}",
+      qc,qe?",\"event_id\":":"",qe?qe:"",
+      qm?",\"msg_id\":":"",qm?qm:"",
+      qm?",\"msg_seq\":1":"");
+    if(qm && seq>0){size_t used=strlen(body);char *p=strstr(body,"\"msg_seq\":1");if(p)snprintf(p,n-(size_t)(p-body),"\"msg_seq\":%d",seq);}
+    int rc=qqb_api_request(c,"POST",path,body,out,status);
+    free(qc);free(qe);free(qm);free(body);return rc;
 }
 static char *path_id(const char *prefix,const char *id,const char *suffix) {
     if(!id||!*id||strchr(id,'/')||strstr(id,"..")) return NULL;
