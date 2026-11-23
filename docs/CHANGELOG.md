@@ -138,3 +138,5 @@
 - 该工作流目前是首轮完整 Windows 构建探测；DLL 依赖收敛、CA 证书部署、Server 2012—2026 逐版本实机验收尚未完成，不能据此宣称全版本兼容。
 
 - Windows 成品包增加 CA 根证书 bundle 自动发现与打包；启动 BAT 配置 `CURL_CA_BUNDLE`，降低目标系统缺少构建机 CA 路径导致 TLS 校验失败的风险。缺少 CA bundle 时构建直接失败。
+
+- Windows 成品构建修复 MSYS2 MINGW64 包数据库未索引 libmicrohttpd 的问题：改为下载固定版本归档、校验 SHA-256 后由 pacman 安装，避免未校验的二进制依赖。
