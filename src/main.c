@@ -245,31 +245,32 @@ static enum MHD_Result handler(void *cls, struct MHD_Connection *c, const char *
     if (strcmp(method,"GET")==0 && strcmp(url,"/api/v1/plugins")==0) return plugin_list(c);
     if (strncmp(url,"/api/v1/plugins/",16)==0) {
         const char *id=url+16; const char *slash=strchr(id,'/');
-        if(slash && strcmp(method,"DELETE")==0 && slash[1]!=0) {
+        size_t idlen=slash?(size_t)(slash-id):strlen(id);
+        if(idlen==0||idlen>=128)return json_reply(c,404,"{\"error\":\"plugin_not_found\"}");
+        char plugin_id[128];memcpy(plugin_id,id,idlen);plugin_id[idlen]=0;
+        if(!slash && strcmp(method,"DELETE")==0) {
             if(!admin_authorized(c))return json_reply(c,401,"{\"error\":\"admin_auth_required\"}");
-            size_t idlen=(size_t)(slash-id);if(idlen==0||idlen>=128)return json_reply(c,404,"{\"error\":\"plugin_not_found\"}");
-            char plugin_id[128];memcpy(plugin_id,id,idlen);plugin_id[idlen]=0;
-            pthread_mutex_lock(&g_app.lock);sqlite3_stmt *st=NULL;int rc=sqlite3_prepare_v2(g_app.db,"DELETE FROM plugins WHERE id=?1",-1,&st,NULL);
-            if(rc==SQLITE_OK){sqlite3_bind_text(st,1,plugin_id,-1,SQLITE_TRANSIENT);rc=sqlite3_step(st);}int changed=sqlite3_changes(g_app.db);sqlite3_finalize(st);pthread_mutex_unlock(&g_app.lock);
+            pthread_mutex_lock(&g_app.lock);sqlite3_stmt *st=NULL;
+            int rc=sqlite3_prepare_v2(g_app.db,"DELETE FROM plugins WHERE id=?1",-1,&st,NULL);
+            if(rc==SQLITE_OK){sqlite3_bind_text(st,1,plugin_id,-1,SQLITE_TRANSIENT);rc=sqlite3_step(st);}
+            int changed=sqlite3_changes(g_app.db);sqlite3_finalize(st);pthread_mutex_unlock(&g_app.lock);
             if(rc!=SQLITE_DONE||!changed)return json_reply(c,404,"{\"error\":\"plugin_not_found\"}");
             return json_reply(c,200,"{\"ok\":true}");
         }
-        if(slash && strcmp(method,"PATCH")==0 && slash[1]!=0) {
+        if(!slash && strcmp(method,"PATCH")==0) {
             if(!admin_authorized(c))return json_reply(c,401,"{\"error\":\"admin_auth_required\"}");
-            size_t idlen=(size_t)(slash-id);if(idlen==0||idlen>=128)return json_reply(c,404,"{\"error\":\"plugin_not_found\"}");
-            char plugin_id[128];memcpy(plugin_id,id,idlen);plugin_id[idlen]=0;
-            cJSON *patch=cJSON_Parse(q->body?q->body:"");cJSON *enabled=patch?cJSON_GetObjectItemCaseSensitive(patch,"enabled"):NULL;
+            cJSON *patch=cJSON_Parse(q->body?q->body:"");
+            cJSON *enabled=patch?cJSON_GetObjectItemCaseSensitive(patch,"enabled"):NULL;
             if(!cJSON_IsBool(enabled)){cJSON_Delete(patch);return json_reply(c,400,"{\"error\":\"enabled_boolean_required\"}");}
-            pthread_mutex_lock(&g_app.lock);sqlite3_stmt *st=NULL;int rc=sqlite3_prepare_v2(g_app.db,"UPDATE plugins SET enabled=?1 WHERE id=?2",-1,&st,NULL);
-            if(rc==SQLITE_OK){sqlite3_bind_int(st,1,cJSON_IsTrue(enabled)?1:0);sqlite3_bind_text(st,2,plugin_id,-1,SQLITE_TRANSIENT);rc=sqlite3_step(st);}int changed=sqlite3_changes(g_app.db);sqlite3_finalize(st);pthread_mutex_unlock(&g_app.lock);cJSON_Delete(patch);
+            pthread_mutex_lock(&g_app.lock);sqlite3_stmt *st=NULL;
+            int rc=sqlite3_prepare_v2(g_app.db,"UPDATE plugins SET enabled=?1 WHERE id=?2",-1,&st,NULL);
+            if(rc==SQLITE_OK){sqlite3_bind_int(st,1,cJSON_IsTrue(enabled)?1:0);sqlite3_bind_text(st,2,plugin_id,-1,SQLITE_TRANSIENT);rc=sqlite3_step(st);}
+            int changed=sqlite3_changes(g_app.db);sqlite3_finalize(st);pthread_mutex_unlock(&g_app.lock);cJSON_Delete(patch);
             if(rc!=SQLITE_DONE||!changed)return json_reply(c,404,"{\"error\":\"plugin_not_found\"}");
             return json_reply(c,200,"{\"ok\":true}");
         }
-        if(slash && strcmp(slash,"/qq-api")==0 && strcmp(method,"POST")==0) {
-            size_t idlen=(size_t)(slash-id); if(idlen==0||idlen>=128)return json_reply(c,404,"{\"error\":\"plugin_not_found\"}");
-            char plugin_id[128];memcpy(plugin_id,id,idlen);plugin_id[idlen]=0;
+        if(slash && strcmp(slash,"/qq-api")==0 && strcmp(method,"POST")==0)
             return plugin_proxy(c,plugin_id,q->body);
-        }
     }
     if (strcmp(method, "GET") == 0 && strcmp(url, "/api/v1/status") == 0) {
         char out[256]; snprintf(out, sizeof(out), "{\"ok\":true,\"authenticated\":%s,\"transport_ready\":%s,\"mode\":\"%s\",\"version\":\"0.1.0\"}", g_app.access_token[0] ? "true" : "false", "false", g_app.connection_mode[0] ? g_app.connection_mode : "none"); return json_reply(c, 200, out);
