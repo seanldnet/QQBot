@@ -110,7 +110,7 @@ jobs:
       - name: Publish AntdUI desktop application
         shell: pwsh
         run: |
-          dotnet publish Desktop/QQBot.Desktop.csproj -c Release -r win-x64 --self-contained true -o stage/desktop-publish
+          dotnet publish Desktop/QQBot.Desktop.csproj -c Release -r win-x64 --self-contained false -o stage/desktop-publish
           if (!(Test-Path "stage/desktop-publish/QQBot.exe")) { throw "AntdUI desktop executable was not produced" }
           Move-Item "stage/desktop-publish/QQBot.exe" "stage/QQBot.exe"
           Remove-Item "stage/desktop-publish" -Recurse -Force
