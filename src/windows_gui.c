@@ -139,9 +139,10 @@ static void do_login(void) {
     EnableWindow(g_login,FALSE); set_text(g_login,"正在登录...");
     if(http_request("POST","/api/v1/auth/login",body,response,sizeof(response))==0){
         SecureZeroMemory(secret,sizeof(secret)); SecureZeroMemory(esec,sizeof(esec));
+        SecureZeroMemory(body,sizeof(body)); SetWindowTextA(g_secret,"");
         show_dashboard(); refresh_data();
     } else {
-        SecureZeroMemory(secret,sizeof(secret)); SecureZeroMemory(esec,sizeof(esec));
+        SecureZeroMemory(secret,sizeof(secret)); SecureZeroMemory(esec,sizeof(esec)); SecureZeroMemory(body,sizeof(body));
         MessageBoxA(g_main,response[0]?response:"无法连接本地宿主，请检查程序文件是否完整。","QQBot 登录失败",MB_ICONERROR);
         set_text(g_login,"登录"); EnableWindow(g_login,TRUE);
     }
