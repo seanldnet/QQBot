@@ -245,3 +245,12 @@
 
 
 - GitHub Actions 已增加 Windows-latest + MSYS2/MinGW64 的 callback security 独立编译与测试 job；该 job 只验证 resolver 模块，不代表整个宿主依赖栈已支持 Windows。首次运行结果待确认。
+
+
+## Windows 成品包目标与构建流水线
+
+- 交付目标调整为用户可直接解压启动的 Windows x64 成品 ZIP，不要求用户自行安装编译器或编译项目。
+- 新增 Windows Server 2012 API baseline（`_WIN32_WINNT=0x0602` / `WINVER=0x0602`）的 MinGW64 构建 job，构建宿主 EXE 与 SDK DLL，并执行 Windows 测试。
+- 新增 `scripts/package-windows.sh`：递归检查 PE 导入表并收集 MinGW 运行时 DLL；遇到无法解析的非系统 DLL 时失败，避免产出缺少依赖的压缩包。
+- 成品包计划包含 `qqbot.exe`、SDK DLL、依赖 DLL、`web/`、启动 BAT、数据目录和随机生成的管理员 API Token 文件。
+- 当前构建流水线正在首次验证；未通过 Windows runner 前不能宣称 Server 2012–2026 全版本已验证。2012/2012 R2、2016、2019、2022、2025/2026 的实际系统矩阵测试仍需逐步补齐。
