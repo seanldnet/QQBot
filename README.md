@@ -20,7 +20,7 @@
 
 ## 当前状态
 
-当前为首阶段开发版本：C11 HTTP 宿主、SQLite 日志、Access Token 获取、Webhook op=13 challenge 与 Ed25519 事件验签已写入；已新增 C ABI SDK、C++ 封装、易语言 DLL 接口映射和官方 API v2 目录索引。宿主插件代理、完整插件管理、WebSocket、真实消息收发和实机联调仍未完成。详见 docs/TASKS.md。
+当前为首阶段开发版本：C11 HTTP 宿主、SQLite 日志、Access Token 获取、Webhook op=13 challenge 与 Ed25519 事件验签已写入；已新增 C ABI SDK、C++ 封装、易语言 DLL 接口映射和官方 API v2 目录索引。已加入插件注册/启停/删除和官方 API 代理首版；插件事件分发、WebSocket、完整会话认证、真实消息收发和实机联调仍未完成。详见 docs/TASKS.md。
 
 ## 开发原则
 
