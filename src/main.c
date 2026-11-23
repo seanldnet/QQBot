@@ -237,12 +237,45 @@ static enum MHD_Result handler(void *cls, struct MHD_Connection *c, const char *
         }
         const char *sig = MHD_lookup_connection_value(c, MHD_HEADER_KIND, "X-Signature-Ed25519");
         const char *ts = MHD_lookup_connection_value(c, MHD_HEADER_KIND, "X-Signature-Timestamp");
-        char *response = NULL; unsigned int status = 400;
-        int rc = qq_webhook_process(secret, q->body ? q->body : "", q->size, sig, ts, &response, &status);
+        char *response = NULL, *event_type = NULL, *event_data = NULL;
+        unsigned int status = 400;
+        int rc = qq_webhook_process_ex(secret, q->body ? q->body : "", q->size,
+                                       sig, ts, &response, &status,
+                                       &event_type, &event_data);
         OPENSSL_cleanse(secret, sizeof(secret));
-        if (rc != 0 || !response) { free(response); return json_reply(c, 400, "{\"error\":\"invalid_webhook_payload\"}"); }
+        if (rc != 0 || !response) {
+            free(response); free(event_type); free(event_data);
+            return json_reply(c, 400, "{\"error\":\"invalid_webhook_payload\"}");
+        }
+        if (status == 200 && event_type && event_data) {
+            char *normalized = NULL;
+            if (qq_event_normalize(event_type, event_data, &normalized) == 0) {
+                cJSON *evt = cJSON_Parse(normalized);
+                cJSON *chat = evt ? cJSON_GetObjectItemCaseSensitive(evt, "chat_id") : NULL;
+                cJSON *user = evt ? cJSON_GetObjectItemCaseSensitive(evt, "user_id") : NULL;
+                cJSON *msg = evt ? cJSON_GetObjectItemCaseSensitive(evt, "msg_id") : NULL;
+                cJSON *stamp = evt ? cJSON_GetObjectItemCaseSensitive(evt, "timestamp") : NULL;
+                char dedupe[768];
+                const char *primary = cJSON_IsString(msg) ? msg->valuestring :
+                                      (cJSON_IsString(stamp) ? stamp->valuestring : "no-time");
+                snprintf(dedupe, sizeof(dedupe), "%s|%s|%s|%s",
+                         event_type, cJSON_IsString(chat) ? chat->valuestring : "",
+                         cJSON_IsString(user) ? user->valuestring : "", primary);
+                pthread_mutex_lock(&g_app.lock);
+                int queued = qq_event_queue_enqueue(g_app.db, dedupe, event_type, normalized);
+                pthread_mutex_unlock(&g_app.lock);
+                if (queued > 0) log_line("INFO", "Verified QQ group event stored in persistent inbox");
+                else if (queued == 0) log_line("INFO", "Duplicate QQ group event ignored");
+                else log_line("ERROR", "Failed to persist verified QQ group event");
+                cJSON_Delete(evt);
+                free(normalized);
+            }
+        }
+        free(event_type); free(event_data);
         if (status == 200) log_line("INFO", "QQ Webhook payload accepted; signature/challenge processed");
-        enum MHD_Result result = json_reply(c, status, response); free(response); return result;
+        enum MHD_Result result = json_reply(c, status, response);
+        free(response);
+        return result;
     }
     if (strcmp(method,"POST")==0 && strcmp(url,"/api/v1/plugins")==0) return plugin_register(c,q->body);
     if (strcmp(method,"GET")==0 && strcmp(url,"/api/v1/plugins")==0) return plugin_list(c);
