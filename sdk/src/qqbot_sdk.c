@@ -93,6 +93,11 @@ static char *path_id(const char *prefix,const char *id,const char *suffix) {
     size_t n=strlen(prefix)+strlen(id)+strlen(suffix)+1; char*p=(char*)malloc(n);
     if(p) snprintf(p,n,"%s%s%s",prefix,id,suffix); return p;
 }
+int QQB_CALL qqb_send_group_message(qqb_client*c,const char*id,const char*body,char**out,long*status){
+    if(!valid_path_id(id)||!body||body[0]!='{') return -1;
+    char *p=path_id("/v2/groups/",id,"/messages");if(!p)return -1;
+    int r=qqb_api_request(c,"POST",p,body,out,status);free(p);return r;
+}
 int QQB_CALL qqb_send_group_text(qqb_client*c,const char*id,const char*content,const char*event_id,const char*msg_id,int seq,char**out,long*status){
     char*p=path_id("/v2/groups/",id,"/messages");if(!p)return -1;int r=send_text(c,p,content,event_id,msg_id,seq,out,status);free(p);return r;
 }
