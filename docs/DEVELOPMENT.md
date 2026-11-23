@@ -283,3 +283,10 @@
 - 最新 Windows full-build 已完成宿主/SDK 编译、CTest 3/3、运行目录安装及 CA bundle 下载；依赖扫描因将 Windows 系统组件 `wldap32.dll` 误判为缺失的 MinGW DLL 而失败。
 - `scripts/package-windows.sh` 将 `wldap32.dll` 加入 Windows 系统 DLL 白名单。该 DLL 由目标 Windows 提供，不应复制进包；其余未识别的非系统 DLL 仍保持 fail-closed。
 - 修复提交 e57c2e6；下一轮 CI 需继续检查是否还有其他系统 DLL 未列入白名单，以及 ZIP/Artifact 是否成功。Server 版本实机矩阵仍未完成。
+
+
+## 2026-11-23 — Windows DLL 扫描器补充 CNG 系统依赖
+
+- 最新 Windows full-build 再次通过宿主/SDK 编译、CTest 3/3、运行目录安装和 CA bundle 下载；PE 依赖扫描发现 `libgnutls-30.dll` 导入 `ncrypt.dll`，此前白名单未识别该 Windows CNG 系统组件。
+- `scripts/package-windows.sh` 将 `ncrypt.dll` 加入 Windows OS DLL 白名单；该 DLL 由 Windows 系统提供，不应从 MinGW 目录复制。未知非系统 DLL 仍保持 fail-closed。
+- 本次修复提交 `1fb5e24`；需要新 CI 继续验证依赖闭包、ZIP 与 Artifact。Windows Server 2012–2026 实机矩阵尚未完成，不能据此宣称全版本兼容。
