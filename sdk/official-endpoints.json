@@ -1,7 +1,7 @@
 {
   "source": "Tencent official tencent-connect/bot-docs API v2 pages",
   "verified_at": "2026-11-23",
-  "scope_note": "This is an incremental, source-verified endpoint manifest, not yet the complete API v2 endpoint set. Permission requirements not explicitly stated on the referenced page are marked undocumented_here.",
+  "scope_note": "增量核验清单；已逐页核对 25 条 endpoint 路由，尚非官方 API v2 全量 REST 路由。未在页面明确给出的权限或错误码均不推断。",
   "api_base": "https://api.sgroup.qq.com",
   "endpoints": [
     {
@@ -369,6 +369,565 @@
       "response": "HTTP 200; irreversible operation.",
       "errors": "See official OpenAPI error catalogue.",
       "sdk_wrapper": "qqb_delete_channel / qqbot::Client::delete_channel / 易语言 qqb_delete_channel"
+    },
+    {
+      "id": "guild.members.list",
+      "method": "GET",
+      "path": "/guilds/{guild_id}/members",
+      "source": "server-inter/channel/role/member/get_members.md",
+      "path_parameters": [
+        {
+          "name": "guild_id",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "body_fields": [
+        {
+          "name": "after",
+          "type": "string",
+          "required": true,
+          "description": "string (默认 0；下一页使用上一页最后一个 user id)"
+        },
+        {
+          "name": "limit",
+          "type": "uint32",
+          "required": true,
+          "description": "uint32 (1-400，默认 1)"
+        }
+      ],
+      "query_parameters": [
+        {
+          "name": "after",
+          "type": "string",
+          "required": false,
+          "description": "string (默认 0；下一页使用上一页最后一个 user id)"
+        },
+        {
+          "name": "limit",
+          "type": "uint32",
+          "required": false,
+          "description": "uint32 (1-400，默认 1)"
+        }
+      ],
+      "permissions": "页面未明确具体权限；错误码引用官方错误码总表。",
+      "description": "频道成员列表；分页结果可能重复，调用方按 user.id 去重。",
+      "response": "Member 对象数组",
+      "errors": "详见官方 OpenAPI 错误码总表；对应页面未逐项列出错误码。",
+      "sdk_access": "qqb_api_request / qqbot::Client::request / 易语言 qqb_api_request"
+    },
+    {
+      "id": "guild.role_members.list",
+      "method": "GET",
+      "path": "/guilds/{guild_id}/roles/{role_id}/members",
+      "source": "server-inter/channel/role/member/get_role_members.md",
+      "path_parameters": [
+        {
+          "name": "guild_id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "role_id",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "body_fields": [
+        {
+          "name": "start_index",
+          "type": "string",
+          "required": true,
+          "description": "string (默认 0；下一页使用 next)"
+        },
+        {
+          "name": "limit",
+          "type": "uint32",
+          "required": true,
+          "description": "uint32 (1-400，默认 1)"
+        }
+      ],
+      "query_parameters": [
+        {
+          "name": "start_index",
+          "type": "string",
+          "required": false,
+          "description": "string (默认 0；下一页使用 next)"
+        },
+        {
+          "name": "limit",
+          "type": "uint32",
+          "required": false,
+          "description": "uint32 (1-400，默认 1)"
+        }
+      ],
+      "permissions": "页面未明确具体权限；错误码引用官方错误码总表。",
+      "description": "指定身份组成员列表；返回 data 与 next。",
+      "response": "{data: Member[], next: string}",
+      "errors": "详见官方 OpenAPI 错误码总表；对应页面未逐项列出错误码。",
+      "sdk_access": "qqb_api_request / qqbot::Client::request / 易语言 qqb_api_request"
+    },
+    {
+      "id": "guild.member.get",
+      "method": "GET",
+      "path": "/guilds/{guild_id}/members/{user_id}",
+      "source": "server-inter/channel/role/member/get_member.md",
+      "path_parameters": [
+        {
+          "name": "guild_id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "user_id",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "body_fields": [],
+      "query_parameters": [],
+      "permissions": "页面未明确具体权限；错误码引用官方错误码总表。",
+      "description": "获取频道成员详情。",
+      "response": "Member 对象",
+      "errors": "详见官方 OpenAPI 错误码总表；对应页面未逐项列出错误码。",
+      "sdk_access": "qqb_api_request / qqbot::Client::request / 易语言 qqb_api_request"
+    },
+    {
+      "id": "guild.member.delete",
+      "method": "DELETE",
+      "path": "/guilds/{guild_id}/members/{user_id}",
+      "source": "server-inter/channel/role/member/delete_member.md",
+      "path_parameters": [
+        {
+          "name": "guild_id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "user_id",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "body_fields": [
+        {
+          "name": "add_blacklist",
+          "type": "boolean",
+          "required": true,
+          "description": "boolean"
+        },
+        {
+          "name": "delete_history_msg_days",
+          "type": "int",
+          "required": true,
+          "description": "int (0,3,7,15,30,-1；-1 表示撤回全部消息)"
+        }
+      ],
+      "query_parameters": [],
+      "permissions": "调用方需有踢人权限；机器人必须为管理员。错误码引用官方总表。",
+      "description": "踢出成员；成功 HTTP 204；不能移除管理员；可同步加入黑名单及撤回消息。",
+      "response": "HTTP 204",
+      "errors": "详见官方 OpenAPI 错误码总表；对应页面未逐项列出错误码。",
+      "sdk_access": "qqb_api_request / qqbot::Client::request / 易语言 qqb_api_request"
+    },
+    {
+      "id": "guild.roles.list",
+      "method": "GET",
+      "path": "/guilds/{guild_id}/roles",
+      "source": "server-inter/channel/role-group/get_guild_roles.md",
+      "path_parameters": [
+        {
+          "name": "guild_id",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "body_fields": [],
+      "query_parameters": [],
+      "permissions": "页面未明确具体权限；错误码引用官方错误码总表。",
+      "description": "获取频道身份组列表。",
+      "response": "Guild roles 对象",
+      "errors": "详见官方 OpenAPI 错误码总表；对应页面未逐项列出错误码。",
+      "sdk_access": "qqb_api_request / qqbot::Client::request / 易语言 qqb_api_request"
+    },
+    {
+      "id": "guild.role.create",
+      "method": "POST",
+      "path": "/guilds/{guild_id}/roles",
+      "source": "server-inter/channel/role-group/post_guild_role.md",
+      "path_parameters": [
+        {
+          "name": "guild_id",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "body_fields": [
+        {
+          "name": "name",
+          "type": "string",
+          "required": false,
+          "description": "string (可选)"
+        },
+        {
+          "name": "color",
+          "type": "uint32",
+          "required": true,
+          "description": "uint32 (可选，ARGB 十进制)"
+        },
+        {
+          "name": "hoist",
+          "type": "int32",
+          "required": true,
+          "description": "int32 (可选，0/1)"
+        }
+      ],
+      "query_parameters": [],
+      "permissions": "需创建身份组权限；机器人必须为管理员。错误码引用官方总表。",
+      "description": "创建身份组；请求字段至少传一个。",
+      "response": "{role_id, role}",
+      "errors": "详见官方 OpenAPI 错误码总表；对应页面未逐项列出错误码。",
+      "sdk_access": "qqb_api_request / qqbot::Client::request / 易语言 qqb_api_request"
+    },
+    {
+      "id": "guild.role.update",
+      "method": "PATCH",
+      "path": "/guilds/{guild_id}/roles/{role_id}",
+      "source": "server-inter/channel/role-group/patch_guild_role.md",
+      "path_parameters": [
+        {
+          "name": "guild_id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "role_id",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "body_fields": [
+        {
+          "name": "name",
+          "type": "string",
+          "required": false,
+          "description": "string (可选)"
+        },
+        {
+          "name": "color",
+          "type": "uint32",
+          "required": true,
+          "description": "uint32 (可选，ARGB 十进制)"
+        },
+        {
+          "name": "hoist",
+          "type": "int32",
+          "required": true,
+          "description": "int32 (可选，0/1)"
+        }
+      ],
+      "query_parameters": [],
+      "permissions": "需修改身份组权限；机器人必须为管理员。错误码引用官方总表。",
+      "description": "修改身份组；至少传一个字段，未传字段保持不变。",
+      "response": "{guild_id, role_id, role}",
+      "errors": "详见官方 OpenAPI 错误码总表；对应页面未逐项列出错误码。",
+      "sdk_access": "qqb_api_request / qqbot::Client::request / 易语言 qqb_api_request"
+    },
+    {
+      "id": "guild.role.delete",
+      "method": "DELETE",
+      "path": "/guilds/{guild_id}/roles/{role_id}",
+      "source": "server-inter/channel/role-group/delete_guild_role.md",
+      "path_parameters": [
+        {
+          "name": "guild_id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "role_id",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "body_fields": [],
+      "query_parameters": [],
+      "permissions": "需删除身份组权限；机器人必须为管理员。错误码引用官方总表。",
+      "description": "删除频道身份组。",
+      "response": "HTTP 204",
+      "errors": "详见官方 OpenAPI 错误码总表；对应页面未逐项列出错误码。",
+      "sdk_access": "qqb_api_request / qqbot::Client::request / 易语言 qqb_api_request"
+    },
+    {
+      "id": "guild.member_role.add",
+      "method": "PUT",
+      "path": "/guilds/{guild_id}/members/{user_id}/roles/{role_id}",
+      "source": "server-inter/channel/role-group/put_guild_member_role.md",
+      "path_parameters": [
+        {
+          "name": "guild_id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "user_id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "role_id",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "body_fields": [
+        {
+          "name": "channel",
+          "type": "Channel",
+          "required": true,
+          "description": "Channel object (身份组为 5-子频道管理员时必需，至少含 id)"
+        }
+      ],
+      "query_parameters": [],
+      "permissions": "需增加身份组成员权限；机器人必须为管理员。错误码引用官方总表。",
+      "description": "将用户加入身份组。",
+      "response": "HTTP 204",
+      "errors": "详见官方 OpenAPI 错误码总表；对应页面未逐项列出错误码。",
+      "sdk_access": "qqb_api_request / qqbot::Client::request / 易语言 qqb_api_request"
+    },
+    {
+      "id": "guild.member_role.remove",
+      "method": "DELETE",
+      "path": "/guilds/{guild_id}/members/{user_id}/roles/{role_id}",
+      "source": "server-inter/channel/role-group/delete_guild_member_role.md",
+      "path_parameters": [
+        {
+          "name": "guild_id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "user_id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "role_id",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "body_fields": [
+        {
+          "name": "channel",
+          "type": "Channel",
+          "required": true,
+          "description": "Channel object (身份组为 5-子频道管理员时用于指定子频道)"
+        }
+      ],
+      "query_parameters": [],
+      "permissions": "需删除身份组成员权限；机器人必须为管理员。错误码引用官方总表。",
+      "description": "将用户移出身份组。",
+      "response": "HTTP 204",
+      "errors": "详见官方 OpenAPI 错误码总表；对应页面未逐项列出错误码。",
+      "sdk_access": "qqb_api_request / qqbot::Client::request / 易语言 qqb_api_request"
+    },
+    {
+      "id": "channel.member_permissions.get",
+      "method": "GET",
+      "path": "/channels/{channel_id}/members/{user_id}/permissions",
+      "source": "server-inter/channel/role-group/channel_permissions/get_channel_permissions.md",
+      "path_parameters": [
+        {
+          "name": "channel_id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "user_id",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "body_fields": [],
+      "query_parameters": [],
+      "permissions": "需具备管理子频道权限；机器人必须为管理员。错误码引用官方总表。",
+      "description": "获取子频道指定用户权限。",
+      "response": "ChannelPermissions 对象",
+      "errors": "详见官方 OpenAPI 错误码总表；对应页面未逐项列出错误码。",
+      "sdk_access": "qqb_api_request / qqbot::Client::request / 易语言 qqb_api_request"
+    },
+    {
+      "id": "channel.member_permissions.update",
+      "method": "PUT",
+      "path": "/channels/{channel_id}/members/{user_id}/permissions",
+      "source": "server-inter/channel/role-group/channel_permissions/put_channel_permissions.md",
+      "path_parameters": [
+        {
+          "name": "channel_id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "user_id",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "body_fields": [
+        {
+          "name": "add",
+          "type": "string",
+          "required": true,
+          "description": "string (权限位图)"
+        },
+        {
+          "name": "remove",
+          "type": "string",
+          "required": true,
+          "description": "string (权限位图)"
+        }
+      ],
+      "query_parameters": [],
+      "permissions": "需具备管理子频道权限；机器人必须为管理员。错误码引用官方总表。",
+      "description": "修改用户权限；add 授权、remove 撤权；同一位同时置 1 时按删除处理；不支持修改“可管理子频道”权限。",
+      "response": "HTTP 204",
+      "errors": "详见官方 OpenAPI 错误码总表；对应页面未逐项列出错误码。",
+      "sdk_access": "qqb_api_request / qqbot::Client::request / 易语言 qqb_api_request"
+    },
+    {
+      "id": "channel.role_permissions.get",
+      "method": "GET",
+      "path": "/channels/{channel_id}/roles/{role_id}/permissions",
+      "source": "server-inter/channel/role-group/channel_permissions/get_channel_roles_permissions.md",
+      "path_parameters": [
+        {
+          "name": "channel_id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "role_id",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "body_fields": [],
+      "query_parameters": [],
+      "permissions": "需具备管理子频道权限；机器人必须为管理员。错误码引用官方总表。",
+      "description": "获取子频道身份组权限。",
+      "response": "ChannelPermissions 对象",
+      "errors": "详见官方 OpenAPI 错误码总表；对应页面未逐项列出错误码。",
+      "sdk_access": "qqb_api_request / qqbot::Client::request / 易语言 qqb_api_request"
+    },
+    {
+      "id": "channel.role_permissions.update",
+      "method": "PUT",
+      "path": "/channels/{channel_id}/roles/{role_id}/permissions",
+      "source": "server-inter/channel/role-group/channel_permissions/put_channel_roles_permissions.md",
+      "path_parameters": [
+        {
+          "name": "channel_id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "role_id",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "body_fields": [
+        {
+          "name": "add",
+          "type": "string",
+          "required": true,
+          "description": "string (权限位图)"
+        },
+        {
+          "name": "remove",
+          "type": "string",
+          "required": true,
+          "description": "string (权限位图)"
+        }
+      ],
+      "query_parameters": [],
+      "permissions": "需具备管理子频道权限；机器人必须为管理员。错误码引用官方总表。",
+      "description": "修改身份组权限；add 授权、remove 撤权；同一位同时置 1 时按删除处理；不支持修改“可管理子频道”权限。",
+      "response": "HTTP 204",
+      "errors": "详见官方 OpenAPI 错误码总表；对应页面未逐项列出错误码。",
+      "sdk_access": "qqb_api_request / qqbot::Client::request / 易语言 qqb_api_request"
+    },
+    {
+      "id": "guild.mute.all",
+      "method": "PATCH",
+      "path": "/guilds/{guild_id}/mute",
+      "source": "server-inter/channel/speak/patch_guild_mute.md",
+      "path_parameters": [
+        {
+          "name": "guild_id",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "body_fields": [
+        {
+          "name": "mute_end_timestamp",
+          "type": "string",
+          "required": true,
+          "description": "string (绝对秒级时间戳)"
+        },
+        {
+          "name": "mute_seconds",
+          "type": "string",
+          "required": true,
+          "description": "string (秒数；与前者同时传时前者优先；任一传 '0' 可解除)"
+        }
+      ],
+      "query_parameters": [],
+      "permissions": "需频道管理员权限；机器人必须为管理员。错误码引用官方总表。",
+      "description": "全员禁言（非管理员）或解除；成功 HTTP 204。",
+      "response": "HTTP 204",
+      "errors": "详见官方 OpenAPI 错误码总表；对应页面未逐项列出错误码。",
+      "sdk_access": "qqb_api_request / qqbot::Client::request / 易语言 qqb_api_request"
+    },
+    {
+      "id": "guild.member.mute",
+      "method": "PATCH",
+      "path": "/guilds/{guild_id}/members/{user_id}/mute",
+      "source": "server-inter/channel/speak/patch_guild_member_mute.md",
+      "path_parameters": [
+        {
+          "name": "guild_id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "user_id",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "body_fields": [
+        {
+          "name": "mute_end_timestamp",
+          "type": "string",
+          "required": true,
+          "description": "string (绝对秒级时间戳)"
+        },
+        {
+          "name": "mute_seconds",
+          "type": "string",
+          "required": true,
+          "description": "string (秒数；与前者同时传时前者优先；任一传 '0' 可解除)"
+        }
+      ],
+      "query_parameters": [],
+      "permissions": "需频道管理员权限；机器人必须为管理员。错误码引用官方总表。",
+      "description": "指定成员禁言或解除；成功 HTTP 204。",
+      "response": "HTTP 204",
+      "errors": "详见官方 OpenAPI 错误码总表；对应页面未逐项列出错误码。",
+      "sdk_access": "qqb_api_request / qqbot::Client::request / 易语言 qqb_api_request"
     }
   ],
   "typed_wrapper_status": "6 of 10 verified endpoint routes have dedicated C ABI, C++ and E-language import wrappers; four message routes retain existing typed text-send helpers."
