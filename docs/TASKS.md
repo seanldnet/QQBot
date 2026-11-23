@@ -389,8 +389,8 @@
 - [x] `src/main.c` 保留 QQ Token 接口 HTTP 状态、错误码及 message，向桌面端返回可读原因；不再只返回不含上下文的 `qq_auth_failed`。
 - [x] 桌面错误解析优先显示 API 返回的 message。
 - [x] .NET 桌面端改为 framework-dependent single-file 发布，避免把整套 .NET Desktop Runtime 重复塞进约 70 MB 的自包含 EXE。
-- [ ] Windows CI 验证新 C/C# 代码与 framework-dependent 发布，并检查 ZIP 大小。
+- [x] Windows CI run 45219978391 全部 3 个 job 成功；C 后端、CTest、AntdUI C# framework-dependent 单文件发布、DLL 扫描、PE 审计均通过。Artifact ZIP 为 11,631,014 bytes（约 11.1 MiB），已下载并验证内层 ZIP CRC。
 - [ ] Windows 10/11 实机确认启动首页、账号页布局、错误详情显示和 .NET Desktop Runtime 缺失提示。
 - [ ] QQ 实机分别验证 Token 错误、WSS IP 白名单拒绝、白名单未启用三种情况。
 
-> 注意：当前 C 核心只支持一个活动机器人实例；账号页目前是该实例的添加/连接入口，不代表已经实现多机器人并行托管。
+> 注意：当前 C 核心只支持一个活动机器人实例；账号页目前是该实例的添加/连接入口，不代表已经实现多机器人并行托管。新的 11.1 MiB Windows 包已生成，根目录 QQBot.exe 约 3.6 MiB；目标机需安装 .NET 8 Windows Desktop Runtime x64。
