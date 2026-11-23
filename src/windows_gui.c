@@ -48,17 +48,23 @@ static int start_core(void) {
     static const char hex[]="0123456789abcdef";
     for(int i=0;i<32;i++){token[i*2]=hex[(unsigned char)raw[i]>>4];token[i*2+1]=hex[(unsigned char)raw[i]&15];}
     token[64]=0; strcpy(g_admin_token,token);
-    DWORD n=GetEnvironmentVariableA(NULL,env,sizeof(env));
-    if(n==0||n>=sizeof(env))env[0]=0;
-    char *q=env; while(*q){q+=strlen(q)+1;} 
-    if(q>env && q[-1]!=0)*q++=0;
+    LPCH inherited=GetEnvironmentStringsA();
+    if(!inherited)return -1;
+    size_t used=0;
+    for(LPCH item=inherited;*item;item+=strlen(item)+1){
+        size_t len=strlen(item)+1;
+        if(used+len+256>=sizeof(env)){FreeEnvironmentStringsA(inherited);return -1;}
+        memcpy(env+used,item,len);used+=len;
+    }
+    FreeEnvironmentStringsA(inherited);
+    char *q=env+used;
     q+=sprintf(q,"QQBOT_ADMIN_TOKEN=%s",g_admin_token)+1;
     q+=sprintf(q,"QQBOT_BIND=127.0.0.1")+1;
     q+=sprintf(q,"QQBOT_PORT=8080")+1; *q=0;
     snprintf(exe,sizeof(exe),"\"%s\"",g_core_path);
     snprintf(cwd,sizeof(cwd),"%s",g_root);
     STARTUPINFOA si; PROCESS_INFORMATION pi; ZeroMemory(&si,sizeof(si)); ZeroMemory(&pi,sizeof(pi)); si.cb=sizeof(si);
-    if(!CreateProcessA(NULL,exe,NULL,NULL,FALSE,CREATE_NO_WINDOW|CREATE_UNICODE_ENVIRONMENT,(LPVOID)env,cwd,&si,&pi)) {
+    if(!CreateProcessA(NULL,exe,NULL,NULL,FALSE,CREATE_NO_WINDOW,(LPVOID)env,cwd,&si,&pi)) {
         /* MinGW builds use an ANSI environment block. */
         if(!CreateProcessA(NULL,exe,NULL,NULL,FALSE,CREATE_NO_WINDOW,env,cwd,&si,&pi))return -1;
     }
