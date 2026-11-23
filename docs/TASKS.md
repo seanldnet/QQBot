@@ -180,4 +180,4 @@
 
 
 - [x] 增加群事件解析器 Make/CMake 单元测试执行步骤；run 45160609516 的 Make unit tests 与 CMake 构建步骤成功。
-- [ ] 群事件 timestamp 增量及 C++ Event 示例换行修复后的最终 CI（run 45160886586）完成确认。
+- [x] 群事件 timestamp 增量及 C++ Event 示例换行修复后的最终 CI（run 45160886586）成功：C++ 示例、Make、Make tests、CMake/CTest 均通过。
