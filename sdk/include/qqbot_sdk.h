@@ -19,7 +19,7 @@ typedef struct qqb_client qqb_client;
 /* Create a plugin client. plugin_token is never logged or returned. */
 QQB_API qqb_client *QQB_CALL qqb_create(const char *host_url, const char *plugin_id, const char *plugin_token);
 QQB_API void QQB_CALL qqb_destroy(qqb_client *client);
-/* Call any QQ official API path through the host's permission-checked proxy.
+/* Call any QQ official API path through the host's plugin-authenticated proxy.
  * method: GET/POST/PUT/PATCH/DELETE; path: /v2/...; body_json may be NULL.
  * response_json is allocated by SDK; release with qqb_free_string.
  * Returns 0 on transport success, negative SDK error otherwise.
