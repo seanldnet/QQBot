@@ -263,3 +263,13 @@
 - [x] 修复 CA bundle staging：改为下载 curl 官方 cacert.pem 并检查非空。
 - [ ] 重新验证完整 runtime install、PE DLL 依赖闭包扫描及 ZIP 上传。
 - [ ] 在 Windows Server 2012/2012 R2、2016、2019、2022、2025/2026 实机矩阵验证启动、TLS、数据库和端口监听；未实测前不得宣称全版本兼容。
+
+
+## Windows 一键包状态更新（2026-11-23）
+
+- [x] 宿主与 SDK 编译成功，Windows CTest 3/3 通过。
+- [x] 安装运行目录、Web UI、启动脚本、随机管理员 Token 和 CA bundle 成功。
+- [x] 定位 DLL 扫描失败原因：`wldap32.dll` 是 Windows 系统依赖，不是缺失的 MinGW runtime。
+- [x] 将 `wldap32.dll` 加入系统 DLL 白名单，其他未知非系统 DLL 仍严格报错。
+- [ ] 重新跑 DLL 递归扫描、ZIP 生成及 Artifact 上传。
+- [ ] Windows Server 2012–2026 实机矩阵验证。
