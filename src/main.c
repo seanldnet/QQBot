@@ -183,7 +183,8 @@ static int fetch_access_token(const char *app_id, const char *secret, char *out,
     CURLcode cr = curl_easy_perform(curl); long status = 0; curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &status);
     curl_slist_free_all(headers); curl_easy_cleanup(curl); free(payload);
     if (cr != CURLE_OK || status < 200 || status >= 300 || !response.data) {
-        snprintf(g_auth_error, sizeof(g_auth_error), "QQ 认证请求失败：%s，HTTP %ld", curl_easy_strerror(cr), status);
+        if (cr != CURLE_OK) snprintf(g_auth_error, sizeof(g_auth_error), "连接 QQ 认证服务器失败：%s", curl_easy_strerror(cr));
+        else snprintf(g_auth_error, sizeof(g_auth_error), "QQ 认证服务器返回 HTTP %ld", status);
         if (response.data && response.data[0]) {
             size_t used = strlen(g_auth_error);
             snprintf(g_auth_error + used, sizeof(g_auth_error) - used, "；响应：%.180s", response.data);
