@@ -134,3 +134,37 @@
 - [channel.role_permissions.update](https://github.com/tencent-connect/bot-docs/blob/main/docs/develop/api-v2/server-inter/channel/role-group/channel_permissions/put_channel_roles_permissions.md)
 - [guild.mute.all](https://github.com/tencent-connect/bot-docs/blob/main/docs/develop/api-v2/server-inter/channel/speak/patch_guild_mute.md)
 - [guild.member.mute](https://github.com/tencent-connect/bot-docs/blob/main/docs/develop/api-v2/server-inter/channel/speak/patch_guild_member_mute.md)
+
+
+## 第四批：日程修改/删除、语音上麦与论坛
+
+| channel.schedule.update | PATCH | `/channels/{channel_id}/schedules/{schedule_id}` | 修改日程；要求管理频道权限，机器人需为管理员。 |
+| channel.schedule.delete | DELETE | `/channels/{channel_id}/schedules/{schedule_id}` | 删除日程；要求管理频道权限，机器人需为管理员。 |
+| channel.audio.mic_up | PUT | `/channels/{channel_id}/mic` | 机器人在语音子频道上麦；仅音频类机器人可用，当前需联系平台申请权限。 |
+| channel.audio.mic_down | DELETE | `/channels/{channel_id}/mic` | 机器人在语音子频道下麦；仅音频类机器人可用，当前需联系平台申请权限。 |
+| channel.forum.threads.list | GET | `/channels/{channel_id}/threads` | 获取子频道帖子列表；官方页面标记 PrivateDomain。 |
+| channel.forum.thread.get | GET | `/channels/{channel_id}/threads/{thread_id}` | 获取帖子详情；官方页面标记 PrivateDomain。 |
+| channel.forum.thread.create | PUT | `/channels/{channel_id}/threads` | 发表帖子并返回 task_id/create_time；官方页面标记 PrivateDomain。 |
+| channel.forum.thread.delete | DELETE | `/channels/{channel_id}/threads/{thread_id}` | 删除帖子；官方页面标记 PrivateDomain。 |
+
+- **channel.schedule.update**：路径参数 channel_id, schedule_id；字段 schedule:Schedule (without id)。修改日程；要求管理频道权限，机器人需为管理员。 返回：Schedule object。
+- **channel.schedule.delete**：路径参数 channel_id, schedule_id；字段 无。删除日程；要求管理频道权限，机器人需为管理员。 返回：HTTP 204。
+- **channel.audio.mic_up**：路径参数 channel_id；字段 无。机器人在语音子频道上麦；仅音频类机器人可用，当前需联系平台申请权限。 返回：Empty JSON object。
+- **channel.audio.mic_down**：路径参数 channel_id；字段 无。机器人在语音子频道下麦；仅音频类机器人可用，当前需联系平台申请权限。 返回：Empty JSON object。
+- **channel.forum.threads.list**：路径参数 channel_id；字段 无。获取子频道帖子列表；官方页面标记 PrivateDomain。 返回：threads[] and is_finish。官方标记 PrivateDomain，须具备私有域资格。
+- **channel.forum.thread.get**：路径参数 channel_id, thread_id；字段 无。获取帖子详情；官方页面标记 PrivateDomain。 返回：thread object。官方标记 PrivateDomain，须具备私有域资格。
+- **channel.forum.thread.create**：路径参数 channel_id；字段 title:string；content:string；format:uint32 (1 text, 2 HTML, 3 Markdown, 4 JSON)。发表帖子并返回 task_id/create_time；官方页面标记 PrivateDomain。 返回：task_id and create_time。官方标记 PrivateDomain，须具备私有域资格。
+- **channel.forum.thread.delete**：路径参数 channel_id, thread_id；字段 无。删除帖子；官方页面标记 PrivateDomain。 返回：HTTP 204。官方标记 PrivateDomain，须具备私有域资格。
+
+本批新增 8 条，累计核验 42 条。论坛四条接口均标记 PrivateDomain，不应将文档可见误解为所有机器人都可调用。音频上下麦仅限音频类机器人，且文档注明需联系平台申请权限。
+
+## 本批官方原文
+
+- [channel.schedule.update](https://github.com/tencent-connect/bot-docs/blob/main/docs/develop/api-v2/server-inter/channel/content/schedule/patch_schedule.md)
+- [channel.schedule.delete](https://github.com/tencent-connect/bot-docs/blob/main/docs/develop/api-v2/server-inter/channel/content/schedule/delete_schedule.md)
+- [channel.audio.mic_up](https://github.com/tencent-connect/bot-docs/blob/main/docs/develop/api-v2/server-inter/channel/content/audio/put_mic.md)
+- [channel.audio.mic_down](https://github.com/tencent-connect/bot-docs/blob/main/docs/develop/api-v2/server-inter/channel/content/audio/delete_mic.md)
+- [channel.forum.threads.list](https://github.com/tencent-connect/bot-docs/blob/main/docs/develop/api-v2/server-inter/channel/content/forum/get_threads_list.md)
+- [channel.forum.thread.get](https://github.com/tencent-connect/bot-docs/blob/main/docs/develop/api-v2/server-inter/channel/content/forum/get_thread.md)
+- [channel.forum.thread.create](https://github.com/tencent-connect/bot-docs/blob/main/docs/develop/api-v2/server-inter/channel/content/forum/put_thread.md)
+- [channel.forum.thread.delete](https://github.com/tencent-connect/bot-docs/blob/main/docs/develop/api-v2/server-inter/channel/content/forum/delete_thread.md)
