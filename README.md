@@ -42,3 +42,5 @@
 ## Windows 成品交付
 
 目标提供可直接解压运行的 Windows x64 ZIP，包含宿主、SDK DLL、运行时依赖、启动脚本和默认资源。Windows Server 2012/2012 R2 至 2026 的逐版本实机兼容验收尚在进行；CI 成功不等于所有版本已验证。
+
+Windows 成品包还会携带 CA 根证书 bundle，并由启动脚本设置 `CURL_CA_BUNDLE`，避免依赖构建机上的证书路径。
