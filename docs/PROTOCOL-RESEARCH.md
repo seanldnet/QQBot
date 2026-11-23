@@ -20,7 +20,9 @@
 - API v2 消息发送文档：https://github.com/tencent-connect/bot-docs/blob/main/docs/develop/api-v2/server-inter/message/send-receive/send.md
 - 事件订阅与通知（含 opcode、Webhook、WebSocket）：https://github.com/tencent-connect/bot-docs/blob/main/docs/develop/api-v2/dev-prepare/interface-framework/event-emit.md
 - Ed25519 签名算法与示例：https://github.com/tencent-connect/bot-docs/blob/main/docs/develop/api-v2/dev-prepare/interface-framework/sign.md
-- 当前 API 根域名及令牌接口检索记录：官方 API v2 文档页面与文档站搜索结果（2026-11-23）。
+- 官方当前 `api-use.md` 明确列出 Token URL `https://bots.qq.com/app/getAppAccessToken`、OpenAPI 根地址 `https://api.sgroup.qq.com`，Authorization 格式 `QQBot ACCESS_TOKEN`。这与最初用户指定的 `https://api.bot.qq.com` 不一致，当前代码已按官方文档修正默认值，并支持 `QQBOT_API_BASE` / `QQBOT_TOKEN_URL` 覆盖。
+
+官方消息发送文档 `send.md` 列出四种场景：单聊 `/v2/users/{openid}/messages`、群聊 `/v2/groups/{group_openid}/messages`、文字子频道 `/channels/{channel_id}/messages`、频道私信 `/dms/{guild_id}/messages`。该文档明确自 2025-04-21 起不再提供主动推送能力，回复必须遵守事件上下文和时效限制。
 
 ## 尚需在编码前/联调时核验
 
