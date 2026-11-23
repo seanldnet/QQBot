@@ -152,7 +152,7 @@ static enum MHD_Result plugin_register(struct MHD_Connection *c,const char *body
     cJSON *j=cJSON_Parse(body?body:"");cJSON *name=j?cJSON_GetObjectItemCaseSensitive(j,"name"):NULL;
     cJSON *callback=j?cJSON_GetObjectItemCaseSensitive(j,"callback_url"):NULL;
     if(!cJSON_IsString(name)||!name->valuestring[0]||strlen(name->valuestring)>128||
-       (callback&&!cJSON_IsString(callback))){cJSON_Delete(j);return json_reply(c,400,"{\"error\":\"invalid_plugin\"}");}
+       (callback&&!cJSON_IsString(callback))||(cJSON_IsString(callback)&&callback->valuestring[0]&&strncmp(callback->valuestring,"https://",8)!=0)){cJSON_Delete(j);return json_reply(c,400,"{\"error\":\"invalid_plugin\"}");}
     unsigned char idraw[16],tokenraw[32];char id[33],token[65],hash[65];
     if(RAND_bytes(idraw,sizeof(idraw))!=1||RAND_bytes(tokenraw,sizeof(tokenraw))!=1){cJSON_Delete(j);return json_reply(c,500,"{\"error\":\"random_generation_failed\"}");}
     bytes_hex(idraw,sizeof(idraw),id);bytes_hex(tokenraw,sizeof(tokenraw),token);
@@ -245,7 +245,7 @@ static enum MHD_Result handler(void *cls, struct MHD_Connection *c, const char *
     if (strcmp(method,"GET")==0 && strcmp(url,"/api/v1/plugins")==0) return plugin_list(c);
     if (strncmp(url,"/api/v1/plugins/",16)==0) {
         const char *id=url+16; const char *slash=strchr(id,'/');
-        if(slash && strcmp(method,"DELETE")==0 && slash[1]!=0 && admin_authorized(c)) {
+        if(slash && strcmp(method,"DELETE")==0 && slash[1]!=0) {\n            if(!admin_authorized(c))return json_reply(c,401,"{\\\"error\\\":\\\"admin_auth_required\\\"}");
             size_t idlen=(size_t)(slash-id);if(idlen==0||idlen>=128)return json_reply(c,404,"{\"error\":\"plugin_not_found\"}");
             char plugin_id[128];memcpy(plugin_id,id,idlen);plugin_id[idlen]=0;
             pthread_mutex_lock(&g_app.lock);sqlite3_stmt *st=NULL;int rc=sqlite3_prepare_v2(g_app.db,"DELETE FROM plugins WHERE id=?1",-1,&st,NULL);
