@@ -10,7 +10,15 @@ static int hex_decode(const char *src, unsigned char *dst, size_t dst_len) {
     if (!src || strlen(src) != dst_len * 2) return -1;
     for (size_t i = 0; i < dst_len; ++i) {
         unsigned int v = 0;
-        if (sscanf(src + i * 2, "%2x", &v) != 1) return -1;
+        for (size_t j = 0; j < 2; ++j) {
+            unsigned char ch = (unsigned char)src[i * 2 + j];
+            unsigned int nibble;
+            if (ch >= '0' && ch <= '9') nibble = ch - '0';
+            else if (ch >= 'a' && ch <= 'f') nibble = ch - 'a' + 10;
+            else if (ch >= 'A' && ch <= 'F') nibble = ch - 'A' + 10;
+            else return -1;
+            v = (v << 4) | nibble;
+        }
         dst[i] = (unsigned char)v;
     }
     return 0;
