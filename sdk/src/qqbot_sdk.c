@@ -105,4 +105,45 @@ int QQB_CALL qqb_send_dms_text(qqb_client*c,const char*id,const char*content,con
 int QQB_CALL qqb_send_channel_text(qqb_client*c,const char*id,const char*content,const char*event_id,const char*msg_id,int seq,char**out,long*status){
     char*p=path_id("/channels/",id,"/messages");if(!p)return -1;int r=send_text(c,p,content,event_id,msg_id,seq,out,status);free(p);return r;
 }
-const char *QQB_CALL qqb_version(void){return "0.1.0";}
+static int valid_path_id(const char *id) {
+    const unsigned char *p=(const unsigned char*)id;
+    if(!p||!*p) return 0;
+    for(;*p;p++) if(!((*p>='0'&&*p<='9')||(*p>='A'&&*p<='Z')||
+                       (*p>='a'&&*p<='z')||*p=='_'||*p=='-')) return 0;
+    return 1;
+}
+static int endpoint_call(qqb_client *c,const char *method,const char *prefix,
+                         const char *id,const char *suffix,const char *body,
+                         char **out,long *status) {
+    if(out) *out=NULL;
+    if(status) *status=0;
+    if(!valid_path_id(id)) return -1;
+    size_t n=strlen(prefix)+strlen(id)+strlen(suffix)+1;
+    char *path=(char*)malloc(n);
+    if(!path) return -3;
+    snprintf(path,n,"%s%s%s",prefix,id,suffix);
+    int rc=qqb_api_request(c,method,path,body,out,status);
+    free(path);
+    return rc;
+}
+int QQB_CALL qqb_get_guild(qqb_client*c,const char*id,char**out,long*status) {
+    return endpoint_call(c,"GET","/guilds/",id,"",NULL,out,status);
+}
+int QQB_CALL qqb_list_channels(qqb_client*c,const char*id,char**out,long*status) {
+    return endpoint_call(c,"GET","/guilds/",id,"/channels",NULL,out,status);
+}
+int QQB_CALL qqb_get_channel(qqb_client*c,const char*id,char**out,long*status) {
+    return endpoint_call(c,"GET","/channels/",id,"",NULL,out,status);
+}
+int QQB_CALL qqb_create_channel(qqb_client*c,const char*id,const char*body,char**out,long*status) {
+    if(!body||body[0]!='{') return -1;
+    return endpoint_call(c,"POST","/guilds/",id,"/channels",body,out,status);
+}
+int QQB_CALL qqb_update_channel(qqb_client*c,const char*id,const char*body,char**out,long*status) {
+    if(!body||body[0]!='{') return -1;
+    return endpoint_call(c,"PATCH","/channels/",id,"",body,out,status);
+}
+int QQB_CALL qqb_delete_channel(qqb_client*c,const char*id,char**out,long*status) {
+    return endpoint_call(c,"DELETE","/channels/",id,"",NULL,out,status);
+}
+const char *QQB_CALL qqb_version(void){return "0.2.0";}
