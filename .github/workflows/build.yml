@@ -25,3 +25,25 @@ jobs:
           cmake -S . -B build-cmake -DCMAKE_BUILD_TYPE=Release
           cmake --build build-cmake --parallel
           ctest --test-dir build-cmake --output-on-failure
+
+  windows-callback-security:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up MinGW64 toolchain
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: true
+          install: >-
+            mingw-w64-x86_64-gcc
+            mingw-w64-x86_64-pkgconf
+            mingw-w64-x86_64-curl
+      - name: Build Windows callback security test
+        run: |
+          gcc -std=c11 -D_WIN32 -Wall -Wextra -Wpedantic -Isrc tests/test_callback_security.c src/qq/callback_security.c -o test_callback_security.exe $(pkg-config --cflags --libs libcurl) -lws2_32
+      - name: Run Windows callback security test
+        run: ./test_callback_security.exe
