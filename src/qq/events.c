@@ -1,6 +1,8 @@
 #include "events.h"
 #include <cjson/cJSON.h>
 #include <stdlib.h>
+#include <stdint.h>
+#include <stdio.h>
 #include <string.h>
 
 static int is_group_management(const char *type) {
@@ -19,7 +21,8 @@ int qq_event_normalize(const char *event_type, const char *data_json,
                        char **normalized_json) {
     cJSON *data = NULL, *root = NULL, *author = NULL, *field = NULL, *raw = NULL;
     const char *chat_type = "unknown", *chat_id = NULL, *user_id = NULL;
-    const char *content = NULL, *msg_id = NULL;
+    const char *content = NULL, *msg_id = NULL, *timestamp = NULL;
+    char timestamp_buf[32];
     int is_message = 0, is_management = 0;
     char *printed = NULL;
 
@@ -43,6 +46,8 @@ int qq_event_normalize(const char *event_type, const char *data_json,
         user_id = field->valuestring;
         field = cJSON_GetObjectItemCaseSensitive(data, "timestamp");
         if (!cJSON_IsNumber(field)) goto invalid;
+        snprintf(timestamp_buf, sizeof(timestamp_buf), "%lld", (long long)field->valuedouble);
+        timestamp = timestamp_buf;
     } else {
         author = cJSON_GetObjectItemCaseSensitive(data, "author");
         field = author ? cJSON_GetObjectItemCaseSensitive(author, "member_openid") : NULL;
@@ -50,6 +55,9 @@ int qq_event_normalize(const char *event_type, const char *data_json,
         user_id = field->valuestring;
         field = cJSON_GetObjectItemCaseSensitive(data, "content");
         if (cJSON_IsString(field)) content = field->valuestring;
+        field = cJSON_GetObjectItemCaseSensitive(data, "timestamp");
+        if (!cJSON_IsString(field) || !field->valuestring) goto invalid;
+        timestamp = field->valuestring;
         field = cJSON_GetObjectItemCaseSensitive(data, "id");
         if (!cJSON_IsString(field) || !field->valuestring || !field->valuestring[0]) goto invalid;
         msg_id = field->valuestring;
@@ -64,6 +72,7 @@ int qq_event_normalize(const char *event_type, const char *data_json,
         !add_string_or_null(root, "chat_id", chat_id) ||
         !add_string_or_null(root, "user_id", user_id) ||
         !add_string_or_null(root, "content", content) ||
+        !add_string_or_null(root, "timestamp", timestamp) ||
         !add_string_or_null(root, "event_id", NULL) ||
         !add_string_or_null(root, "msg_id", msg_id) ||
         !cJSON_AddNullToObject(root, "msg_seq") ||
