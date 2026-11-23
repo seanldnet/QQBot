@@ -6,5 +6,6 @@
 - 修改 `sdk/official-api-index.json`：补入官方群消息事件文档索引。
 - 修改 `sdk/official-endpoints.json` / `sdk/official-endpoints.md`：标记群消息接口的完整类型化 wrapper，记录群聊开放能力边界。
 - 修改 `docs/DEVELOPMENT.md`、`docs/TASKS.md`：明确群消息和频道 API 分离；群聊优先级上调，频道管理功能转入维护队列。
-- 官方核验来源：腾讯 `bot-docs` main 分支的 `server-inter/message/send-receive/send.md`、`server-inter/message/send-receive/event.md`、`server-inter/group/manage/event.md`、`server-inter/group/manage/README.md`。
+- 官方核验来源：腾讯 `bot-docs` main 分支的群消息发送/事件与群管理事件文档。另交叉发现 17 条较新的群管理 REST 路由，单独记录于 `sdk/group-api-discovery.md`，待官方自动生成 API 页面逐项复核；旧版群管理 README 注释不能作为接口不存在的最终结论。
 - 验证：本次代码提交触发 CI，结果待确认；未执行易语言 IDE、Windows DLL 加载或 QQ 实机测试。
+- 修正：群消息 C 文件首次构建因 `valid_path_id` 前置声明缺失而失败（run 45150884024）；新增静态函数原型后，修复提交 `44c2d5f89597e0c74cab75d8cddea2e2f5a26520` 对应 run 45150939145 已成功，Make、CMake、C++ SDK 示例通过。
