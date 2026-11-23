@@ -1,3 +1,12 @@
+## 2026-11-23 — 第六批 SDK 成员与子频道权限类型化接口
+
+- 修改 `sdk/include/qqbot_sdk.h`、`sdk/src/qqbot_sdk.c`：新增身份组成员分页、踢出成员、身份组成员增删、成员/身份组子频道权限查询与修改共 8 个 C ABI 函数。路径 ID 校验安全字符；分页限制 1–400；修改请求要求 JSON object。
+- 修改 `sdk/cpp/qqbot.hpp`：新增 8 个 `qqbot::Client` 方法，统一复制并释放 C ABI 响应缓冲区。
+- 修改 `sdk/e-language/README.md`：新增全部导出函数的易语言 DLL ABI 映射，记录踢人、撤回天数、type 5 身份组 channel 对象和权限位图语义。
+- 修改 `sdk/official-endpoints.json` / `sdk/official-endpoints.md`：为 8 条已核验 REST 路由增加三语言 typed wrapper 映射与说明。
+- 修改 `docs/DEVELOPMENT.md`、`docs/TASKS.md`：同步本批实现范围和统计。当前 42 条已核验路由中 33 条具备三语言类型化入口；仍非全量 API 覆盖。
+- 验证：本次提交后需检查 GitHub Actions 的 Make、CMake 和 C++ 示例构建结果；当前尚未执行。未执行 Windows DLL 加载、易语言 IDE 编译或 QQ 实机权限联调。
+
 # 变更日志
 
 ## 2026-11-23 — 首批频道管理接口三语言类型化封装
