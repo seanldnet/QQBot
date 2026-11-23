@@ -144,3 +144,14 @@
 - GitHub Actions C11 build run 45152192633 已完成并成功：C++ SDK header example、Make build、CMake configure/build 全部通过。
 - 本次构建覆盖群管理 SDK 第一批 7 个 C ABI 入口及对应 C++ wrapper；仍未执行 Windows DLL 加载、易语言 IDE 编译和 QQ 实机白名单/管理员权限联调。
 - 官方群管理事件页确认 GROUP_ADD_ROBOT、GROUP_DEL_ROBOT、GROUP_MSG_REJECT、GROUP_MSG_RECEIVE 共用 intents 位 1<<25，推送方式为 WebSocket，事件字段含 timestamp/group_openid/op_member_openid。详见 sdk/group-api-discovery.md。
+
+
+
+## 2026-11-23 — QQ 群管理 SDK 第二批
+
+- [x] 新增群黑名单分页查询、黑名单增删、入群申请分页查询、入群申请审批 4 个 C ABI 接口。
+- [x] 新增对应 C++14 Client 方法与易语言 DLL ABI 映射。
+- [x] cursor URL 编码；黑名单 limit=100、入群申请 limit=50。
+- [ ] 自动审批策略列表、创建、修改、删除、执行、白名单管理 6 个 wrapper。
+- [ ] 腾讯官方自动生成页面逐条复核群管理接口参数、权限和错误码。
+- [ ] Windows DLL、易语言 IDE、QQ 实机白名单/管理员权限联调。
