@@ -12,7 +12,7 @@
 
 ## 1. 协议与架构
 
-- [ ] 核验 QQ 官方 API v2 域名、鉴权、令牌生命周期与消息接口
+- [ ] 完整核验 QQ 官方 API v2 所有 REST endpoint、参数、权限和错误码（已核验 API 根域名、Token URL、Authorization 和四种消息发送路由）
 - [ ] 核验 WebSocket Gateway、鉴权、心跳、重连和事件序号协议
 - [ ] 核验 Webhook URL 验证、签名算法、请求体字段与 ACK 语义
 - [ ] 确定 HTTP 服务端库与模块接口
@@ -58,4 +58,4 @@
 
 ## 当前状态（2026-11-23）
 
-已建立文档基线与 C11 宿主首阶段代码：HTTP 首页、登录取 token、SQLite 日志与查询、Webhook op=13 challenge 签名、op=0 Ed25519 验签及 op=12 ACK 已写入仓库。仍未实现消息自动回复、插件注册/分发/发消息 API、SDK 官方 API 代理、WebSocket、完整管理认证与设置页面。已新增 C ABI SDK、C++ 封装、易语言 DLL 映射、官方 API 文档全量目录索引（81 页）；均未取得编译或 Windows 易语言实机验证。未执行编译、运行、官方向量测试或 QQ 实机联调；相关任务不得标记为已验证完成。
+已建立文档基线与 C11 宿主首阶段代码：HTTP 首页、登录取 token、SQLite 日志与查询、Webhook op=13 challenge 签名、op=0 Ed25519 验签及 op=12 ACK 已写入仓库。仍未实现消息自动回复、插件注册/分发/发消息 API、SDK 官方 API 代理、WebSocket、完整管理认证与设置页面。已新增 C ABI SDK、C++ 封装、易语言 DLL 映射、官方 API 文档全量目录索引（81 页）；宿主插件代理尚未实现，SDK 仍未形成端到端可运行闭环。均未取得编译或 Windows 易语言实机验证。未执行编译、运行、官方向量测试或 QQ 实机联调；相关任务不得标记为已验证完成。
