@@ -97,3 +97,71 @@ jobs:
           path: QQBot-Windows-x64-Server2012plus.zip
           if-no-files-found: error
           retention-days: 30
+
+  windows-full-build:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up MinGW64 with complete native dependencies
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: true
+          install: >-
+            mingw-w64-x86_64-gcc
+            mingw-w64-x86_64-cmake
+            mingw-w64-x86_64-ninja
+            mingw-w64-x86_64-pkgconf
+            mingw-w64-x86_64-libmicrohttpd
+            mingw-w64-x86_64-curl
+            mingw-w64-x86_64-sqlite3
+            mingw-w64-x86_64-cjson
+            mingw-w64-x86_64-openssl
+      - name: Configure complete Windows host and SDK
+        run: cmake -S . -B build-win -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=stage
+      - name: Build complete Windows host and SDK
+        run: cmake --build build-win --parallel
+      - name: Run Windows tests
+        run: ctest --test-dir build-win --output-on-failure
+      - name: Install Windows runtime layout
+        run: cmake --install build-win
+      - name: Bundle MinGW and native dependency DLLs
+        run: |
+          mkdir -p stage/bin stage/data
+          cp /mingw64/bin/*.dll stage/bin/
+          cp web/index.html stage/
+          cp README.md DEPENDENCIES.md stage/
+          cat > stage/启动QQBot.bat <<'EOF'
+          @echo off
+          cd /d "%~dp0"
+          if not exist data mkdir data
+          set QQBOT_BIND=127.0.0.1
+          set QQBOT_PORT=8080
+          if "%QQBOT_ADMIN_TOKEN%"=="" (
+            echo 请先设置 QQBOT_ADMIN_TOKEN 环境变量，长度至少24位。
+            pause
+            exit /b 1
+          )
+          bin\qqbot.exe
+          pause
+          EOF
+          cat > stage/运行环境说明.txt <<'EOF'
+          QQBot Windows x64 测试成品目录
+          包含 Windows MinGW64 Release 宿主、SDK DLL 与 MinGW64 运行时 DLL。
+          首次启动前设置 QQBOT_ADMIN_TOKEN 环境变量，长度至少24位。
+          双击“启动QQBot.bat”启动。默认仅监听 127.0.0.1:8080。
+          数据库保存在 data\qqbot.db。
+          此包为 CI 测试包。Windows Server 2012/2012 R2 至 2026 仍需逐版本实机验收后才能标记正式兼容。
+          EOF
+      - name: Create ready-to-run ZIP
+        run: 7z a -tzip QQBot-Windows-x64.zip ./stage/*
+      - name: Upload Windows ready-to-run package
+        uses: actions/upload-artifact@v4
+        with:
+          name: QQBot-Windows-x64
+          path: QQBot-Windows-x64.zip
+          if-no-files-found: error
+          retention-days: 30
