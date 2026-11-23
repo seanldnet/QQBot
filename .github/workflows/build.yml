@@ -70,6 +70,7 @@ jobs:
             mingw-w64-x86_64-sqlite3
             mingw-w64-x86_64-cjson
             mingw-w64-x86_64-openssl
+            zip
       - name: Configure for Windows Server 2012 API baseline
         run: |
           cmake -S . -B build-win -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_FLAGS="-D_WIN32_WINNT=0x0602 -DWINVER=0x0602" -DCMAKE_EXE_LINKER_FLAGS="-static -static-libgcc"
@@ -81,13 +82,14 @@ jobs:
         run: |
           mkdir -p package/QQBot
           cp build-win/qqbot.exe package/QQBot/
-          cp build-win/libqqbot_sdk.dll package/QQBot/ 2>/dev/null || true
+          cp build-win/libqqbot_sdk.dll package/QQBot/
+          bash scripts/package-windows.sh package/QQBot package/QQBot/qqbot.exe package/QQBot/libqqbot_sdk.dll
           cp -r web package/QQBot/
           mkdir -p package/QQBot/data
           printf "QQBot Windows runtime package\nTarget API baseline: Windows 8.1 / Server 2012 (0x0602)\n" > package/QQBot/README-Windows.txt
           printf "@echo off\r\ncd /d %%~dp0\r\nif not exist data mkdir data\r\nset QQBOT_BIND=127.0.0.1\r\nset QQBOT_PORT=8080\r\nqqbot.exe\r\npause\r\n" > package/QQBot/start.bat
           printf "@echo off\r\ncd /d %%~dp0\r\nqqbot.exe\r\n" > package/QQBot/start-console.bat
-          cd package && 7z a -tzip ../QQBot-Windows-x64-Server2012plus.zip QQBot
+          cd package && zip -qr ../QQBot-Windows-x64-Server2012plus.zip QQBot
       - name: Upload Windows ready-to-run package
         uses: actions/upload-artifact@v4
         with:
