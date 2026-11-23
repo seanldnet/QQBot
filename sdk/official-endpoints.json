@@ -1131,5 +1131,5 @@
       "sdk_access": "qqb_api_request / qqbot::Client::request / 易语言 qqb_api_request"
     }
   ],
-  "typed_wrapper_status": "14 of 34 verified endpoint routes have dedicated C ABI/C++/E-language typed wrappers (4 message send + 6 guild/channel + 4 member/role/mute?); all remaining routes remain available through the generic request API."
+  "typed_wrapper_status": "18 of 34 verified endpoint routes have dedicated C ABI/C++/E-language typed wrappers (4 message-send, 6 guild/channel management, and 8 member/role/mute operations); all remaining routes remain accessible through the generic request API."
 }
