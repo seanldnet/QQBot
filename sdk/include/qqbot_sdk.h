@@ -59,6 +59,29 @@ QQB_API int QQB_CALL qqb_update_channel(qqb_client *client, const char *channel_
                                          const char *body_json, char **response_json, long *http_status);
 QQB_API int QQB_CALL qqb_delete_channel(qqb_client *client, const char *channel_id,
                                          char **response_json, long *http_status);
+
+/* Typed member and role management wrappers. Query cursor IDs use official opaque IDs.
+ * limit must be in [1,400]. Mute duration/timestamp are decimal strings; "0" un-mutes.
+ */
+QQB_API int QQB_CALL qqb_list_guild_members(qqb_client *client, const char *guild_id,
+    const char *after, unsigned int limit, char **response_json, long *http_status);
+QQB_API int QQB_CALL qqb_get_guild_member(qqb_client *client, const char *guild_id,
+    const char *user_id, char **response_json, long *http_status);
+QQB_API int QQB_CALL qqb_list_guild_roles(qqb_client *client, const char *guild_id,
+    char **response_json, long *http_status);
+QQB_API int QQB_CALL qqb_create_guild_role(qqb_client *client, const char *guild_id,
+    const char *body_json, char **response_json, long *http_status);
+QQB_API int QQB_CALL qqb_update_guild_role(qqb_client *client, const char *guild_id,
+    const char *role_id, const char *body_json, char **response_json, long *http_status);
+QQB_API int QQB_CALL qqb_delete_guild_role(qqb_client *client, const char *guild_id,
+    const char *role_id, char **response_json, long *http_status);
+QQB_API int QQB_CALL qqb_mute_guild(qqb_client *client, const char *guild_id,
+    const char *mute_end_timestamp, const char *mute_seconds,
+    char **response_json, long *http_status);
+QQB_API int QQB_CALL qqb_mute_guild_member(qqb_client *client, const char *guild_id,
+    const char *user_id, const char *mute_end_timestamp, const char *mute_seconds,
+    char **response_json, long *http_status);
+
 QQB_API const char *QQB_CALL qqb_version(void);
 #ifdef __cplusplus
 }
