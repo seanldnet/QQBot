@@ -11,7 +11,7 @@
 - 修改 `src/qq/webhook.c`：签名 hex 解码改为逐字符严格校验，拒绝包含非十六进制字符的签名。
 - 修改 `web/index.html`：默认连接方式切换为 Webhook，登录后显示并轮询运行日志。
 - 新增 `.github/workflows/build.yml`：在 push / pull request 时安装依赖，分别执行 Make 与 CMake 构建。
-- 修改 `README.md`、`docs/DEVELOPMENT.md`、`docs/TASKS.md`、`DEPENDENCIES.md`：同步当前实现范围、官方协议约束与未完成事项。
+- 修改 `README.md`、`docs/DEVELOPMENT.md`、`docs/API.md`、`docs/TASKS.md`、`DEPENDENCIES.md`：同步当前实现范围、接口状态、官方协议约束与未完成事项。
 - 验证：GitHub 已接受工作流文件提交；当前未取得 Actions 构建结果，因此编译仍标记为未验证。
 
 ## 2026-11-23 — Webhook 接入与运行日志首版
