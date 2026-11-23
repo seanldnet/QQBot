@@ -17,6 +17,8 @@
 #include <time.h>
 #include <unistd.h>
 #include "qq/webhook.h"
+#include "qq/events.h"
+#include "qq/event_queue.h"
 
 #define DEFAULT_PORT 8080
 #define MAX_BODY (1024U * 1024U)
@@ -68,6 +70,7 @@ static int db_init(void) {
       "INSERT OR IGNORE INTO schema_migrations(version) VALUES(1);";
     char *err = NULL; int rc = sqlite3_exec(g_app.db, sql, NULL, NULL, &err);
     if (rc != SQLITE_OK) { fprintf(stderr, "SQLite init: %s\n", err ? err : "unknown"); sqlite3_free(err); return -1; }
+    if (qq_event_queue_init(g_app.db) != 0) return -1;
     return 0;
 }
 static int fetch_access_token(const char *app_id, const char *secret, char *out, size_t outcap, long *expires) {
