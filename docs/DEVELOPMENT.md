@@ -65,12 +65,20 @@
 
 ## 6. 已核验的协议约束
 
-- 当前 API v2 文档根地址使用 `https://api.bot.qq.com`；token endpoint 按 API v2 资料使用 `/app/getAppAccessToken`，同时保留环境覆盖配置。
+- 官方 API v2 文档当前给出的 OpenAPI 根地址为 `https://api.sgroup.qq.com`，Access Token 地址为 `https://bots.qq.com/app/getAppAccessToken`。这与用户最初需求中的 `https://api.bot.qq.com` 不一致；保留原始需求原文，实际请求以官方当前文档为准，并通过 `QQBOT_API_BASE` / `QQBOT_TOKEN_URL` 配置覆盖。
 - Webhook op=13：Bot Secret 重复至至少 32 字节并截取 32 字节 seed；签名消息为 `event_ts + plain_token`，响应 `plain_token` 与 hex `signature`。
 - Webhook 普通事件：用 `X-Signature-Ed25519`（hex）和 `X-Signature-Timestamp` 验证 `timestamp + 原始 body`；通过后回复 `{"op":12}`。
 - 官方文档标注 WebSocket 事件推送计划逐步下线，故 Webhook 是当前首选实现；WebSocket 仍按用户需求保留兼容目标，但必须在实机验证可用性后才能启用。
 
-## 7. 当前基线
+## 7. 多语言 SDK 强制要求
+
+- 必须提供统一 C ABI SDK 核心，并以该 ABI 为唯一底层接口。
+- 必须提供 C++ SDK（C++14 或以上封装、示例和插件模板）与易语言 Windows DLL SDK（导出函数、DLL 命令声明映射、示例和 x86/x64 验证说明）。
+- SDK 必须覆盖官方 API v2 全部已公开接口：以官方文档目录生成全量索引；通用 method/path/body 调用保证新接口可用，常用接口再生成强类型便利函数。事件、消息结构、错误码、权限、频控也必须记录。
+- AppSecret / access_token 保留在宿主，插件 SDK 仅使用插件 ID + Token 调用宿主代理；宿主必须执行权限、速率、路径和参数校验。
+- 每次官方接口目录更新，必须同步更新 `sdk/official-api-catalog.md` 与 `sdk/official-api-index.json`，并记录变更日志。
+
+## 8. 当前基线
 
 - 仓库地址：https://github.com/seanldnet/QQBot
 - 初始仓库为空；本次首先建立文档基线。
