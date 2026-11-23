@@ -18,7 +18,9 @@ Desktop/
   MainForm.cs
 ```
 
-- 登录视图：AntdUI.Panel、Label、Input、Select、Button。
+- 启动后直接进入主界面，不再显示独立登录窗口。
+- 账号管理页：使用 AntdUI.Panel、Label、Input、Select、Button 添加并连接机器人；当前 C 宿主核心只支持一个活动机器人实例，后续多机器人需扩展核心实例隔离。
+- 认证失败时显示 QQ 返回的 HTTP 状态、错误码和 message；不再只显示笼统的 qq_auth_failed。
 - 主界面：AntdUI.Window、Panel、Label、Button、Input。
 - 消息/运行日志：AntdUI.Input 多行只读视图，按 1.8 秒轮询宿主日志 API。
 - 连接方式：WSS 对应后端 `websocket`；Webhook 对应后端 `webhook`。
@@ -27,7 +29,7 @@ Desktop/
 ## 发布包布局
 
 ```
-QQBot.exe                 # 唯一桌面主程序，AntdUI + .NET 单文件自包含发布
+QQBot.exe                 # 唯一桌面主程序，AntdUI + .NET 单文件框架依赖发布
 runtime/
   qqbot-core.exe          # C 语言 QQ 协议宿主
   libqqbot_sdk.dll        # SDK
@@ -36,7 +38,7 @@ data/                     # SQLite 数据
 certs/                    # CA bundle
 ```
 
-用户只需双击根目录 `QQBot.exe`。不提供 BAT 作为启动入口，不要求用户打开浏览器或手动启动后台核心。
+用户双击根目录 `QQBot.exe` 直接进入主界面，在“账号管理”页添加机器人。不提供 BAT 作为启动入口，不要求用户打开浏览器或手动启动后台核心。为减少安装包体积，桌面程序改为 .NET 8 Desktop Runtime 框架依赖发布；目标电脑需预先安装 .NET 8 Windows Desktop Runtime x64，AntdUI 与业务程序集仍合并进单文件 EXE。
 
 ## 构建与验收
 
@@ -45,18 +47,18 @@ certs/                    # CA bundle
 ```powershell
 dotnet restore Desktop/QQBot.Desktop.csproj
 dotnet build Desktop/QQBot.Desktop.csproj -c Release
-dotnet publish Desktop/QQBot.Desktop.csproj -c Release -r win-x64 --self-contained true -o publish/desktop
+dotnet publish Desktop/QQBot.Desktop.csproj -c Release -r win-x64 --self-contained false -o publish/desktop
 ```
 
 Windows CI 必须完成 .NET restore/build/publish、C 后端构建与测试、DLL 依赖闭包扫描、PE 基线检查及 ZIP 完整性检查。
 
 构建成功不等于 GUI 验收成功。发布候选还必须在 Windows 10/11 桌面环境实测：
 1. 首次启动无空白窗口、无中文乱码。
-2. AppID/AppSecret 输入与 WSS/Webhook 选择可操作。
+2. 主界面直接打开；在账号管理页添加 AppID/AppSecret 并选择 WSS/Webhook。
 3. WSS 能显示 READY 后连接状态；Webhook 显示等待公网回调配置状态。
 4. 消息日志能显示事件数据。
 5. 关闭主窗口会终止后台核心进程。
-6. 登录失败能显示可读错误，不能把“提交登录请求成功”误报为 QQ 已连接。
+6. Access Token 认证失败能显示 QQ 返回的 HTTP 状态/错误码/message；Token 获取成功但 WSS 被拒绝时，应提示检查 QQ 开放平台 IP 白名单、机器人状态和订阅权限，不能把提交请求成功误报为 READY。
 
 ## AntdUI 官方资料
 
@@ -66,3 +68,10 @@ Windows CI 必须完成 .NET restore/build/publish、C 后端构建与测试、D
 - 官方示例：https://github.com/AntdUI/AntdUI-Demo
 
 AntdUI 为基于 Ant Design 设计语言的 WinForms UI 库。项目使用其官方控件与主题/文本渲染配置，不复制其内部绘制代码。
+
+## QQ IP 白名单与认证阶段
+
+- Access Token 通过 `https://bots.qq.com/app/getAppAccessToken` 获取；凭证交换失败应优先检查 AppID、AppSecret、网络及 QQ 返回错误码。
+- QQ 官方 IP 白名单限制的是启用白名单后的正式环境 WSS 连接与 OpenAPI 调用。若未启用白名单，不要求填写 IP；若已启用，则必须把运行此程序的公网出口 IP 添加到 QQ 开放平台白名单。
+- 本机 `127.0.0.1` 仅是桌面程序与本机 C 核心之间的管理接口绑定地址，不是 QQ 平台需要加入白名单的公网 IP。
+- 新版本不再把所有认证失败折叠成 `qq_auth_failed`，应保留 QQ 响应中的 message/code 供界面显示。
