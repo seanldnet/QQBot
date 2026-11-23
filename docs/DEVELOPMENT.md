@@ -197,3 +197,14 @@
 - 策略列表分页 cursor 做 URL 编码，limit 固定 50；执行接口由 SDK 发送空 JSON object。
 - 具体请求字段、策略数量上限、群绑定限制、白名单号码限制和执行时效来自第三方维护 fork 的交叉核验，官方自动生成页面尚待逐项复核，不纳入 verified endpoint 统计。
 - CI 将由本批代码提交触发；Windows DLL、易语言 IDE 和 QQ 实机权限测试未执行。
+
+
+## 2026-11-23 — 群事件归一化基础设施
+
+- 新增 `src/qq/events.h` / `src/qq/events.c`：实现宿主内部 `qq_event_normalize`，支持 `GROUP_ADD_ROBOT`、`GROUP_DEL_ROBOT`、`GROUP_MSG_REJECT`、`GROUP_MSG_RECEIVE` 与 `GROUP_AT_MESSAGE_CREATE`。
+- 群管理事件要求 `group_openid`、`op_member_openid`、整数 timestamp；群 @ 消息要求 `group_openid`、`author.member_openid`、消息 `id`，并映射 content。统一输出保留 `raw_event`。
+- `GROUP_AT_MESSAGE_CREATE` 的官方消息 id 映射为 `msg_id`；官方样例未提供的 `event_id` / `msg_seq` 不伪造，输出 null。
+- 新增 `sdk/group-events.md`，记录官方事件字段、Intent、消息权限边界、重复投递风险；更新 SDK 通用事件契约和易语言字段映射。
+- Makefile 增加 `make test`，CMake/CTest 增加 `qq_group_event_parser` 测试；宿主构建纳入 events.c。
+- 明确限制：本次仅实现 Gateway dispatch payload 的 JSON 归一化，不包含 WebSocket 连接、HELLO/IDENTIFY、心跳、重连、事件持久化去重、插件并发分发或 HTTP callback。
+- 腾讯官方来源：`server-inter/group/manage/event.md` 与 `server-inter/message/send-receive/event.md`（bot-docs main）。
