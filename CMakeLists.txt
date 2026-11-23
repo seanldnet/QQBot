@@ -32,7 +32,7 @@ if(WIN32)
   set_target_properties(qqbot PROPERTIES OUTPUT_NAME qqbot-core)
   add_executable(QQBot WIN32 src/windows_gui.c)
   target_compile_options(QQBot PRIVATE -Wall -Wextra -Wpedantic)
-  target_link_libraries(QQBot PRIVATE winhttp bcrypt comctl32 PkgConfig::CJSON)
+  target_link_libraries(QQBot PRIVATE winhttp bcrypt comctl32)
   install(TARGETS QQBot RUNTIME DESTINATION bin)
 endif()
 
