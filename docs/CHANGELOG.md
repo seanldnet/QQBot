@@ -202,3 +202,9 @@
 - 将 libcurl WebSocket 最低版本明确为 7.86.0，Make/CMake 增加版本检查；运行时通过 libcurl version_num 判断 WSS 支持。
 - WSS 仅在收到 Gateway READY 后标记 connected，避免将 TLS/WebSocket 握手误报为机器人已鉴权上线。
 - 修正后的完整 CI run 45188659260 正在执行；此前 run 45188150559 的 Linux/Windows 构建、测试和 ZIP 打包已通过。
+
+
+## 2026-11-23 — 修复 WSS libcurl 版本检查脚本
+
+- Makefile 的 shell 循环变量改回 `$$p`，避免被 Make 提前展开；保留 libcurl 7.86.0 最低版本检查。
+- 修复提交对应 CI run 45188880579 执行中。
