@@ -63,7 +63,14 @@
 
 用户指定的 API 根域名 `https://api.bot.qq.com`、API v2、Webhook op 语义、Ed25519 签名字段、Gateway 鉴权与心跳格式，必须在实现前逐项对照 QQ 官方开发者文档核验。不得将其他平台（例如 Discord）的 Gateway opcode 或签名格式套用到 QQ。若官方文档与需求中的描述不同，保留原始需求并在本节和变更日志中记录差异，采用官方实际协议实现。
 
-## 6. 当前基线
+## 6. 已核验的协议约束
+
+- 当前 API v2 文档根地址使用 `https://api.bot.qq.com`；token endpoint 按 API v2 资料使用 `/app/getAppAccessToken`，同时保留环境覆盖配置。
+- Webhook op=13：Bot Secret 重复至至少 32 字节并截取 32 字节 seed；签名消息为 `event_ts + plain_token`，响应 `plain_token` 与 hex `signature`。
+- Webhook 普通事件：用 `X-Signature-Ed25519`（hex）和 `X-Signature-Timestamp` 验证 `timestamp + 原始 body`；通过后回复 `{"op":12}`。
+- 官方文档标注 WebSocket 事件推送计划逐步下线，故 Webhook 是当前首选实现；WebSocket 仍按用户需求保留兼容目标，但必须在实机验证可用性后才能启用。
+
+## 7. 当前基线
 
 - 仓库地址：https://github.com/seanldnet/QQBot
 - 初始仓库为空；本次首先建立文档基线。
