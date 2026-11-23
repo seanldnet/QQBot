@@ -160,3 +160,12 @@
 ### QQ 群管理接口专项发现
 
 已新增 `sdk/group-api-discovery.md`，记录 17 条新发现的群管理路由和核验状态。此前“群管理接口暂不开放”的结论基于旧版 README，现已纠正；群管理 API 是下一阶段第一优先级。群消息完整 JSON 发送 wrapper 已新增，详见 SDK。
+
+
+## 2026-11-23 — QQ 群管理 SDK 第一批类型化入口
+
+- 新增群资料、机器人群内状态、群禁言查询/设置、群成员分页/详情、批量移出群成员共 7 个 C ABI 入口；新增对应 C++14 Client 方法与易语言 DLL ABI 映射。
+- 群接口独立使用 group_openid / member_openid，不与频道 API 的 guild_id / user_id 混用。
+- 成员分页游标按 URL query component 编码；群成员分页 limit 限制为 1–30；所有群路径标识复用安全 ID 校验；body 参数要求 JSON object 起始符。
+- 接口字段、分页限制、白名单及管理员要求来自维护中第三方 Go SDK fork 的交叉核验，不冒充腾讯官方原文。腾讯官方 bot-docs 群管理 README 仍保留旧版注释；17 条新发现路由尚未全部逐页核验官方自动生成 API 页面，因此本批 wrapper 不计入逐页核验 REST 数量。
+- 验证：待 GitHub Actions 对 C11 Make/CMake 与 C++ 示例执行构建；Windows DLL 加载、易语言 IDE 和 QQ 实机权限测试未执行。
