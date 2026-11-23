@@ -154,7 +154,10 @@
         22009,
         304082,
         304083
-      ]
+      ],
+      "sdk_wrapper": "qqb_send_group_message / qqbot::Client::send_group_message; qqb_send_group_text convenience wrapper / 易语言 qqb_send_group_message + qqb_send_group_text",
+      "sdk_access": "typed C ABI / C++ / 易语言 DLL wrapper",
+      "notes": "群聊被动回复窗口5分钟，每条入站消息最多5次；主动推送自2025-04-21起停止提供。群管理 README 中资料查询、机器人入群列表、成员列表等仍标为暂不开放/注释，不应伪造 REST 管理能力。"
     },
     {
       "id": "message.channel.create",
@@ -1349,5 +1352,5 @@
       "sdk_access": "qqb_api_request / qqbot::Client::request / 易语言 qqb_api_request"
     }
   ],
-  "typed_wrapper_status": "33 of 42 verified endpoint routes have dedicated C ABI/C++/E-language typed wrappers (4 message-send, 6 guild/channel management, 8 member/role/mute, 7 schedule/audio, and 8 member-role-permission controls); all remaining routes remain accessible through the generic request API."
+  "typed_wrapper_status": "33 of 42 verified endpoint routes have dedicated C ABI/C++/E-language typed wrappers; QQ group message route now additionally has a full JSON payload wrapper supporting all documented message types, alongside text convenience wrapper."
 }
