@@ -67,6 +67,10 @@ jobs:
           curl -fL https://mirror.msys2.org/mingw/mingw64/mingw-w64-x86_64-libmicrohttpd-1.0.10-1-any.pkg.tar.zst -o libmicrohttpd.pkg.tar.zst
           echo "560a836a918d7bdc5cf5f8a032a43d0700cf1dc7140097e1a1ba1a971b760095  libmicrohttpd.pkg.tar.zst" | sha256sum -c -
           pacman -U --needed --noconfirm ./libmicrohttpd.pkg.tar.zst
+      - name: Set up .NET 8 SDK for AntdUI desktop
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
       - name: Configure Windows Server 2012 API baseline
         run: cmake -S . -B build-win -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=stage -DCMAKE_C_FLAGS="-D_WIN32_WINNT=0x0602 -DWINVER=0x0602"
       - name: Build Windows host and SDK
@@ -78,10 +82,11 @@ jobs:
           cmake --install build-win
           mkdir -p stage/data stage/runtime
           cp README.md DEPENDENCIES.md stage/
-          mv stage/bin/QQBot.exe stage/QQBot.exe
           mv stage/bin/qqbot-core.exe stage/runtime/qqbot-core.exe
           mv stage/bin/libqqbot_sdk.dll stage/runtime/libqqbot_sdk.dll
           rm -rf stage/bin stage/include stage/lib
+          mkdir -p stage/data
+          touch stage/data/.keep
           cat > stage/桌面版说明.txt <<'EOF'
           QQBot 桌面版
           双击根目录 QQBot.exe 启动原生 Windows 窗口。
@@ -102,17 +107,24 @@ jobs:
           数据库位于 data\qqbot.db。
           本包仍须在各目标 Windows Server 版本实机验收后才能宣称全版本兼容。
           EOF
+      - name: Publish AntdUI desktop application
+        shell: pwsh
+        run: |
+          dotnet publish Desktop/QQBot.Desktop.csproj -c Release -r win-x64 --self-contained true -o stage/desktop-publish
+          if (!(Test-Path "stage/desktop-publish/QQBot.exe")) { throw "AntdUI desktop executable was not produced" }
+          Move-Item "stage/desktop-publish/QQBot.exe" "stage/QQBot.exe"
+          Remove-Item "stage/desktop-publish" -Recurse -Force
       - name: Bundle and verify all non-system DLL dependencies
         run: |
           bash scripts/package-windows.sh stage/runtime stage/QQBot.exe stage/runtime/qqbot-core.exe stage/runtime/libqqbot_sdk.dll
       - name: Audit PE subsystem baseline
         run: bash scripts/check-windows-pe-baseline.sh stage 6 2
       - name: Create ready-to-run ZIP
-        run: zip -qr QQBot-Windows-x64-Server2012plus.zip stage
+        run: (cd stage && zip -qr ../QQBot-AntdUI-Windows-x64.zip .)
       - name: Upload Windows ready-to-run package
         uses: actions/upload-artifact@v4
         with:
-          name: QQBot-Windows-x64-Server2012plus
-          path: QQBot-Windows-x64-Server2012plus.zip
+          name: QQBot-AntdUI-Windows-x64
+          path: QQBot-AntdUI-Windows-x64.zip
           if-no-files-found: error
           retention-days: 30
