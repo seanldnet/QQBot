@@ -146,3 +146,10 @@
 
 - CI 实测发现 MSYS2 当前 MINGW64 索引不再提供 `mingw-w64-x86_64-libmicrohttpd`（pacman target not found）；已调整 Windows 构建流程，安装当前 MINGW64 GnuTLS 后固定下载并安装 1.0.10-1 历史 MINGW64 libmicrohttpd 包，避免转用要求较新 UCRT 的工具链。
 - 修正后的完整 Windows 构建与 ZIP 生成仍待 CI 验证，不能视为已通过。
+
+
+## 2026-11-23 — 修复 Windows ZIP 打包阶段 CA bundle 缺失
+
+- 文件：`.github/workflows/build.yml`。原因：Windows full-build 已编译成功且 CTest 3/3 通过，但 MSYS2 环境不存在 `/etc/ssl/certs/ca-bundle.crt`，导致运行目录组装失败。
+- 行为变化：改为从 `https://curl.se/ca/cacert.pem` 下载 CA bundle 至 `stage/certs/ca-bundle.crt`，并用 `test -s` 阻止空文件进入成品包；启动脚本继续引用包内路径。
+- 验证：此前 run 45181038608 的 Windows 宿主/SDK 编译、3 项 CTest、固定版 libmicrohttpd 安装均成功；本次 CA 路径修复尚待新 CI 运行。DLL 依赖收集、ZIP 和 Server 全版本实机验证未完成。
