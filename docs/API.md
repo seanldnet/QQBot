@@ -33,7 +33,7 @@
 
 请求头：`X-Plugin-ID`、`X-Plugin-Token`。请求体：`{"method":"POST","path":"/v2/groups/{group_openid}/messages","body":{"content":"...","msg_type":0}}`。代理固定请求官方配置的 API Base URL，不接受绝对 URL；仅允许 GET/POST/PUT/PATCH/DELETE，插件必须启用且 Token 摘要校验成功。响应透传官方 HTTP 状态码与 JSON body。
 
-管理员令牌通过环境变量 `QQBOT_ADMIN_TOKEN` 设置，长度至少 24 字符；注册插件时 Token 只返回一次，数据库仅存 SHA-256 摘要。
+管理员令牌通过环境变量 `QQBOT_ADMIN_TOKEN` 设置，长度至少 24 字符；`GET /api/v1/status`、`GET /api/v1/logs`、事件收件箱及插件管理接口均要求 `Authorization: Bearer <token>`。管理页面登录前须输入此令牌，Windows 包可从 `admin-token.txt` 读取；Linux/macOS 部署须自行设置环境变量。注册插件时插件 Token 只返回一次，数据库仅存 SHA-256 摘要。
 
 插件注册请求示例：`{"name":"my-plugin","callback_url":"https://plugin.example/callback"}`，callback_url 可省略或留空。成功返回 `{ "id": "...", "token": "...", "enabled": true }`。插件列表不返回 Token；PATCH 请求体为 `{ "enabled": true }` 或 `{ "enabled": false }`；DELETE 成功返回 `{ "ok": true }`。
 
