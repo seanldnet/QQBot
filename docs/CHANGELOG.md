@@ -152,3 +152,9 @@
 - 将此前错误的 14 条类型化覆盖计数修正为 18 条，再计入本批 7 条日程/音频 wrapper 后，当前准确计数为 25 条。
 - GitHub Actions run 45147601516 对日程/音频 C ABI 实现通过 Make、CMake 与 C++ SDK 示例构建；成员/身份组/禁言 C ABI/C++ 实现 run 45147339957、45147345153 同样成功。
 - 更新 sdk/cpp/example.cpp，加入禁用执行的类型化 API 编译示例；该示例更新的 CI run 尚待最终结果。未执行 Windows DLL 加载、易语言 IDE 编译或 QQ 实机 API 权限验证。
+
+## 2026-11-23 — C++ SDK 示例编译错误修复
+
+- GitHub Actions run 45147820353 暴露 `sdk/cpp/example.cpp` 的 JSON 字符串转义错误，导致 C++ 示例编译步骤失败；该错误仅在新增示例字符串字面量中，不影响此前已通过的 C ABI/C++ SDK 实现构建。
+- 修复 `sdk/cpp/example.cpp` 中角色和日程 JSON 示例的反斜杠转义，保留 if(false) 编译期 API 调用检查，不会在示例执行时触发真实网络请求。
+- 修复提交 efda2ef 的 CI run 45148015752 已触发，尚待结果；在通过前不将示例编译标记为成功。
