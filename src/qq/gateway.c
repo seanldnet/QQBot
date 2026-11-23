@@ -44,12 +44,16 @@ static void state(qq_gateway_t *g, const char *name, const char *detail) {
     if (g->state_fn) g->state_fn(g->context, name, detail ? detail : "");
 }
 
-static void pause_seconds(unsigned int seconds) {
+static void pause_seconds(qq_gateway_t *g, unsigned int seconds) {
+    unsigned int ticks = seconds * 10U;
+    while (ticks-- && !g->stopping) {
 #ifdef _WIN32
-    Sleep(seconds * 1000U);
+        Sleep(100);
 #else
-    sleep(seconds);
+        struct timespec ts = {0, 100000000L};
+        nanosleep(&ts, NULL);
 #endif
+    }
 }
 
 static int get_gateway_url(qq_gateway_t *g, const char *token, char *url, size_t cap) {
@@ -217,7 +221,6 @@ static void *gateway_thread(void *opaque) {
             goto retry;
         }
         state(g, "connected", "WSS 握手完成，等待 HELLO");
-        backoff = 1;
         while (!g->stopping && !reconnect) {
             char frame[65536];
             size_t received = 0;
@@ -253,6 +256,7 @@ static void *gateway_thread(void *opaque) {
                             int action = process_payload(g, aggregate, token, &sequence,
                                                           &heartbeat_ms, &ready);
                             if (action) reconnect = 1;
+                            if (ready) backoff = 1;
                         }
                         aggregate_len = 0;
                     }
@@ -279,7 +283,7 @@ static void *gateway_thread(void *opaque) {
 retry:
         memset(token, 0, sizeof(token));
         if (!g->stopping) {
-            pause_seconds(backoff);
+            pause_seconds(g, backoff);
             if (backoff < 60) backoff = backoff < 30 ? backoff * 2 : 60;
         }
     }
