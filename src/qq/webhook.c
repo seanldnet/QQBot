@@ -94,7 +94,7 @@ int qq_webhook_process_ex(const char *secret, const char *body, size_t body_len,
         if (!valid) {
             cJSON_Delete(root);
             *status = 401;
-            *response = strdup("{\\"error\\":\\"invalid_signature\\"}");
+            *response = strdup("{\"error\":\"invalid_signature\"}");
             return *response ? 0 : -1;
         }
         type = cJSON_GetObjectItemCaseSensitive(root, "t");
@@ -111,12 +111,12 @@ int qq_webhook_process_ex(const char *secret, const char *body, size_t body_len,
         }
         cJSON_Delete(root);
         *status = 200;
-        *response = strdup("{\\"op\\":12}");
+        *response = strdup("{\"op\":12}");
         return *response ? 0 : -1;
     }
     cJSON_Delete(root);
     *status = 200;
-    *response = strdup("{\\"op\\":12}");
+    *response = strdup("{\"op\":12}");
     return *response ? 0 : -1;
 }
 
