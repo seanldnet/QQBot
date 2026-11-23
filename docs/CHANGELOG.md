@@ -214,3 +214,10 @@
 
 - 将依赖失败提示中的 shell 变量从 `$p` 改为 `$$p`，修复 Make 提前展开导致的空依赖名。
 - 修复提交 81a6624 的 CI 待验证；此前 Windows full-build、CTest、DLL 扫描、PE 审计和 ZIP 上传已成功。
+
+
+## 2026-11-23 — 登录与消息日志测试包构建验证通过
+
+- GitHub Actions run `45189464000` 全部成功：Linux Make/CMake/单元测试、Windows callback-security、Windows 完整宿主/SDK 构建、CTest、DLL 依赖扫描、PE 子系统审计和 ZIP 上传。
+- 生成 Windows x64 测试 ZIP，内层压缩包 47 个文件，CRC 校验通过；包含 WSS/Webhook 选择、连接状态、群 @ 与 C2C 日志界面。
+- 真实 QQ 官方机器人凭据登录与消息实测尚未执行，当前交付定位为用户联调测试包。
