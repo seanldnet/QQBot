@@ -23,7 +23,7 @@
 
 ## 当前状态
 
-当前为首阶段开发版本：C11 HTTP 宿主、SQLite 日志、Access Token 获取、Webhook op=13 challenge 与 Ed25519 事件验签已写入；已新增 C ABI SDK、C++ 封装、易语言 DLL 接口映射和官方 API v2 目录索引。已加入插件注册/启停/删除和官方 API 代理首版；插件事件分发、WebSocket、完整会话认证、真实消息收发和实机联调仍未完成。详见 docs/TASKS.md。
+当前包含 C11 QQ 机器人协议核心、SQLite 日志、Access Token 获取、WSS Gateway 首版、Webhook challenge/Ed25519 验签和 C/C++ SDK。Windows 正在转向原生桌面 EXE：新增 Win32 GUI 登录入口，桌面程序启动本机核心进程并通过本机 API 展示状态与日志。WSS RESUME、完整插件投递、真实 QQ 官方平台实机联调仍待完成。详见 docs/TASKS.md。
 
 ## 开发原则
 
@@ -44,3 +44,8 @@
 目标提供可直接解压运行的 Windows x64 ZIP，包含宿主、SDK DLL、运行时依赖、启动脚本和默认资源。Windows Server 2012/2012 R2 至 2026 的逐版本实机兼容验收尚在进行；CI 成功不等于所有版本已验证。
 
 Windows 成品包还会携带 CA 根证书 bundle，并由启动脚本设置 `CURL_CA_BUNDLE`，避免依赖构建机上的证书路径。
+
+
+## Windows 原生桌面程序
+
+Windows 构建目标为 `bin/QQBot.exe`（原生桌面窗口）和 `bin/qqbot-core.exe`（后台协议核心）。双击 QQBot.exe 后输入 AppID/AppSecret，选择 WSS 或 Webhook 登录；无需浏览器。Web UI 保留作开发诊断用途，不是最终桌面入口。桌面 GUI 首阶段的 CI 与 Windows 实机验收状态以 docs/TASKS.md 为准。
