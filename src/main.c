@@ -61,6 +61,7 @@ typedef struct {
 typedef struct { char *body; size_t size; } request_t;
 static volatile sig_atomic_t g_stop = 0;
 static app_t g_app;
+static int ensure_token(void);
 
 static void on_signal(int sig) { (void)sig; g_stop = 1; }
 static size_t curl_write(char *ptr, size_t size, size_t nmemb, void *userdata) {
