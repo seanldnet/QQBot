@@ -1,9 +1,11 @@
 #include "../include/qqbot_sdk.h"
 #include "qqbot.hpp"
+#include "event.hpp"
 #include <iostream>
 int main() {
     try {
         qqbot::Client bot("https://your-qqbot-host.example", "plugin-id", "plugin-token");
+        qqbot::Event event; event.chat_type = "group"; event.msg_seq = 1;
         std::string response; long status = 0;
         // Generic access: this same method exposes every officially documented REST route.
         int rc = bot.request("GET", "/users/@me", "", response, status);
