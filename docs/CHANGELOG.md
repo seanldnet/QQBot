@@ -195,3 +195,10 @@
 - 增加 C2C 消息解析测试；Make/CMake 纳入 Gateway 模块。
 - 当前 CI run `45187828807` 执行中，未以此前失败的中间 run 作为通过依据。
 - 限制：WSS 尚未实现 RESUME/session 持久化、完整关闭码策略和心跳 ACK 超时；尚无 QQ 实机联调。Webhook 需公网 HTTPS 和开放平台回调配置。消息日志首批仅覆盖群 @ 与 C2C 文本，不含频道/附件完整信息。
+
+
+## 2026-11-23 — WSS 运行时能力与就绪状态校正
+
+- 将 libcurl WebSocket 最低版本明确为 7.86.0，Make/CMake 增加版本检查；运行时通过 libcurl version_num 判断 WSS 支持。
+- WSS 仅在收到 Gateway READY 后标记 connected，避免将 TLS/WebSocket 握手误报为机器人已鉴权上线。
+- 修正后的完整 CI run 45188659260 正在执行；此前 run 45188150559 的 Linux/Windows 构建、测试和 ZIP 打包已通过。
