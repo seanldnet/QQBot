@@ -22,7 +22,7 @@ public sealed class MainForm : AntdUI.Window
     private readonly AntdUI.Input _appSecret = new() { PlaceholderText = "请输入 AppSecret", UseSystemPasswordChar = true, AllowClear = true, Size = new Size(410, 42) };
     private readonly AntdUI.Select _mode = new() { Size = new Size(410, 42), DropDownArrow = true };
     private readonly AntdUI.Button _loginButton = new() { Text = "添加并连接机器人", Size = new Size(780, 46), Radius = 8 };
-    private readonly AntdUI.Label _loginHint = new() { Text = "凭据仅用于本机连接，管理接口仅监听 127.0.0.1。", ForeColor = Color.Gray, AutoSize = true };
+    private readonly AntdUI.Label _loginHint = new() { Text = "若 QQ 开放平台启用了 IP 白名单，请将本机公网出口 IP 加入白名单；未启用时无需填写。", ForeColor = Color.Gray, AutoSize = true };
 
     private readonly AntdUI.Panel _sidebar = new() { Back = Color.White, Size = new Size(210, 700) };
     private readonly AntdUI.Panel _content = new() { Back = Color.FromArgb(245, 247, 250) };
