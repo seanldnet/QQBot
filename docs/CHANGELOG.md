@@ -57,3 +57,10 @@
 - 新增 `sdk/group-events.md`；更新 `sdk/event-schema.md`、`sdk/e-language/event-fields.md`，同步 C/C++/易语言插件事件字段契约。
 - 官方核验：腾讯 bot-docs 群管理事件页确认四种事件均为 Intent `1<<25`；消息事件页确认 `GROUP_AT_MESSAGE_CREATE` 同为 `1<<25`，群作者字段为 `author.member_openid`，消息 ID 为 `id`，timestamp 为 RFC3339。全量群消息事件仍标注私域/暂不开放。
 - CI 工作流新增 `make test` 与 `ctest --output-on-failure` 执行步骤；此前已通过的编译 run 不包含本次新增测试执行。\n- WebSocket transport、Gateway 心跳/重连、插件分发/回调、msg_id 持久化去重和 QQ 实机事件接收仍未实现。
+
+
+## 2026-11-23 — 群事件解析器 CI 修正记录
+
+- 中间提交的 C++ SDK 示例编译失败，原因是示例源码误写入字面量 `\\n`，导致换行符未生效；已修正为真实换行并重新触发 CI。
+- 失败发生在 C++ 示例编译步骤，Make/CMake/解析器测试因此被跳过；此前独立提交 run 45160609516 已通过 Make unit tests 与 CMake/CTest 步骤，但不包含后续 timestamp 增量。
+- 最终修复提交对应 run 45160886586 正在执行；未取得完成状态前不标记最终 CI 通过。
