@@ -112,7 +112,7 @@ static enum MHD_Result handler(void *cls, struct MHD_Connection *c, const char *
         q->body = p; memcpy(q->body + q->size, upload, *upload_size); q->size += *upload_size; q->body[q->size] = 0; *upload_size = 0; return MHD_YES;
     }
     if (strcmp(method, "GET") == 0 && strcmp(url, "/api/v1/status") == 0) {
-        char out[256]; snprintf(out, sizeof(out), "{\"ok\":true,\"connected\":%s,\"mode\":\"websocket\",\"version\":\"0.1.0\"}", g_app.access_token[0] ? "true" : "false"); return json_reply(c, 200, out);
+        char out[256]; snprintf(out, sizeof(out), "{\"ok\":true,\"authenticated\":%s,\"transport_connected\":false,\"mode\":\"websocket\",\"version\":\"0.1.0\"}", g_app.access_token[0] ? "true" : "false"); return json_reply(c, 200, out);
     }
     if (strcmp(method, "POST") == 0 && strcmp(url, "/api/v1/auth/login") == 0) {
         cJSON *j = cJSON_Parse(q->body ? q->body : ""); cJSON *id = j ? cJSON_GetObjectItemCaseSensitive(j, "app_id") : NULL;
