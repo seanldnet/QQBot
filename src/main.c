@@ -216,10 +216,10 @@ static enum MHD_Result event_inbox_list(struct MHD_Connection *c) {
     return result;
 }
 static enum MHD_Result event_delivery_list(struct MHD_Connection *c) {
-    if (!admin_authorized(c)) return json_reply(c, 401, "{\\"error\\":\\"admin_auth_required\\"}");
+    if (!admin_authorized(c)) return json_reply(c, 401, "{\"error\":\"admin_auth_required\"}");
     cJSON *array = cJSON_CreateArray();
     sqlite3_stmt *st = NULL;
-    if (!array) return json_reply(c, 500, "{\\"error\\":\\"out_of_memory\\"}");
+    if (!array) return json_reply(c, 500, "{\"error\":\"out_of_memory\"}");
     pthread_mutex_lock(&g_app.lock);
     int rc = sqlite3_prepare_v2(g_app.db,
         "SELECT id,event_id,plugin_id,state,attempts,last_error,next_attempt_at,created_at "
@@ -243,7 +243,7 @@ static enum MHD_Result event_delivery_list(struct MHD_Connection *c) {
     pthread_mutex_unlock(&g_app.lock);
     char *encoded = cJSON_PrintUnformatted(array);
     cJSON_Delete(array);
-    if (!encoded) return json_reply(c, 500, "{\\"error\\":\\"json_encode_failed\\"}");
+    if (!encoded) return json_reply(c, 500, "{\"error\":\"json_encode_failed\"}");
     enum MHD_Result result = json_reply(c, rc == SQLITE_OK ? 200 : 500, encoded);
     free(encoded);
     return result;
