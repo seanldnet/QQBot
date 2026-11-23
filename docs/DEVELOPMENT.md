@@ -334,3 +334,8 @@
 - libcurl WebSocket API 自 7.86.0 提供，Make/CMake 已要求最低版本 7.86.0；运行时按 version_num 检查，不依赖不存在的 feature bit。
 - WSS TLS 握手完成只显示 authenticating，只有收到 READY 才显示 connected/transport_ready。
 - 新增修正后的 CI run：45188659260，仍在执行；前一版成功 run 45188150559 已验证 WSS 模块、Windows 宿主构建、CTest、PE 审计和 ZIP 打包，但不包含本次就绪状态与最低版本检查修正。
+
+
+### Makefile 依赖检查修复（2026-11-23）
+- 新增 libcurl 最低版本检查后，CI 发现 Makefile shell 循环中的变量使用单美元符号，被 Make 作为自身变量提前展开，导致依赖名为空。
+- 已恢复为双美元符号传递给 shell；修复后完整 CI run 45188880579 正在执行。
