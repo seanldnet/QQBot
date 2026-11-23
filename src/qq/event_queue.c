@@ -1,4 +1,5 @@
 #include "event_queue.h"
+#include <stddef.h>
 
 int qq_event_queue_init(sqlite3 *db) {
     const char *sql =
