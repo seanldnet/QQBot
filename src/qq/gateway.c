@@ -40,6 +40,16 @@ static size_t collect_http(char *ptr, size_t size, size_t count, void *opaque) {
     return n;
 }
 
+static unsigned long long monotonic_milliseconds(void) {
+#ifdef _WIN32
+    return (unsigned long long)GetTickCount64();
+#else
+    struct timespec ts;
+    if (clock_gettime(CLOCK_MONOTONIC, &ts) != 0) return (unsigned long long)time(NULL) * 1000ULL;
+    return (unsigned long long)ts.tv_sec * 1000ULL + (unsigned long long)ts.tv_nsec / 1000000ULL;
+#endif
+}
+
 static void state(qq_gateway_t *g, const char *name, const char *detail) {
     if (g->state_fn) g->state_fn(g->context, name, detail ? detail : "");
 }
@@ -155,7 +165,7 @@ done:
 
 static int process_payload(qq_gateway_t *g, const char *payload,
                            const char *token, long long *sequence,
-                           unsigned int *heartbeat_ms, int *ready) {
+                           unsigned int *heartbeat_ms, int *ready, int *awaiting_ack) {
     cJSON *root = cJSON_Parse(payload);
     cJSON *op = root ? cJSON_GetObjectItemCaseSensitive(root, "op") : NULL;
     cJSON *data = root ? cJSON_GetObjectItemCaseSensitive(root, "d") : NULL;
@@ -191,7 +201,7 @@ static int process_payload(qq_gateway_t *g, const char *payload,
     }
     case 7: reconnect = 1; state(g, "reconnecting", "Gateway 请求重新连接"); break;
     case 9: reconnect = 1; *ready = 0; state(g, "reconnecting", "Gateway 会话失效，重新鉴权"); break;
-    case 11: break;
+    case 11: *awaiting_ack = 0; break;
     default: break;
     }
     cJSON_Delete(root);
@@ -207,8 +217,8 @@ static void *gateway_thread(void *opaque) {
         CURL *ws = NULL;
         long long sequence = 0;
         unsigned int heartbeat_ms = 0;
-        time_t next_heartbeat = 0;
-        int ready = 0, reconnect = 0, hello = 0;
+        unsigned long long next_heartbeat_ms = 0, ack_deadline_ms = 0;
+        int ready = 0, reconnect = 0, hello = 0, awaiting_ack = 0;
         char aggregate[GATEWAY_FRAME_MAX + 1];
         size_t aggregate_len = 0;
         if (g->token_fn(g->context, token, sizeof(token)) != 0 ||
@@ -259,12 +269,12 @@ static void *gateway_thread(void *opaque) {
                             if (cJSON_IsNumber(op) && op->valueint == 10 && cJSON_IsNumber(interval)) {
                                 heartbeat_ms = (unsigned int)interval->valuedouble;
                                 if (send_identify(ws, token) != 0) reconnect = 1;
-                                else { hello = 1; next_heartbeat = time(NULL) + (time_t)(heartbeat_ms / 1000U); }
+                                else { hello = 1; next_heartbeat_ms = monotonic_milliseconds() + heartbeat_ms; }
                             } else reconnect = 1;
                             cJSON_Delete(probe);
                         } else {
                             int action = process_payload(g, aggregate, token, &sequence,
-                                                          &heartbeat_ms, &ready);
+                                                          &heartbeat_ms, &ready, &awaiting_ack);
                             if (action) reconnect = 1;
                             if (ready) backoff = 1;
                         }
@@ -272,15 +282,24 @@ static void *gateway_thread(void *opaque) {
                     }
                 }
             }
-            if (hello && heartbeat_ms && time(NULL) >= next_heartbeat && !reconnect) {
+            unsigned long long now_ms = monotonic_milliseconds();
+            if (awaiting_ack && now_ms >= ack_deadline_ms && !reconnect) {
+                state(g, "reconnecting", "Gateway 心跳 ACK 超时，主动重连");
+                reconnect = 1;
+            }
+            if (hello && heartbeat_ms && now_ms >= next_heartbeat_ms && !reconnect) {
                 cJSON *hb = cJSON_CreateObject();
                 cJSON_AddNumberToObject(hb, "op", 1);
                 if (sequence > 0) cJSON_AddNumberToObject(hb, "d", (double)sequence);
                 else cJSON_AddNullToObject(hb, "d");
                 char *json = cJSON_PrintUnformatted(hb);
                 if (!json || send_json(ws, json) != 0) reconnect = 1;
+                else {
+                    awaiting_ack = 1;
+                    ack_deadline_ms = now_ms + heartbeat_ms;
+                }
                 free(json); cJSON_Delete(hb);
-                next_heartbeat = time(NULL) + (time_t)(heartbeat_ms / 1000U);
+                next_heartbeat_ms = now_ms + heartbeat_ms;
             }
         }
         if (ws) {
