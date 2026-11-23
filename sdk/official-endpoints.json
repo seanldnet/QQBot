@@ -401,7 +401,8 @@
       "description": "频道成员列表；分页结果可能重复，调用方按 user.id 去重。",
       "response": "Member 对象数组",
       "errors": "详见官方 OpenAPI 错误码总表；对应页面未逐项列出错误码。",
-      "sdk_access": "qqb_api_request / qqbot::Client::request / 易语言 qqb_api_request"
+      "sdk_access": "qqb_api_request / qqbot::Client::request / 易语言 qqb_api_request",
+      "sdk_wrapper": "qqb_list_guild_members / qqbot::Client::list_guild_members / 易语言 qqb_list_guild_members"
     },
     {
       "id": "guild.role_members.list",
@@ -464,7 +465,8 @@
       "description": "获取频道成员详情。",
       "response": "Member 对象",
       "errors": "详见官方 OpenAPI 错误码总表；对应页面未逐项列出错误码。",
-      "sdk_access": "qqb_api_request / qqbot::Client::request / 易语言 qqb_api_request"
+      "sdk_access": "qqb_api_request / qqbot::Client::request / 易语言 qqb_api_request",
+      "sdk_wrapper": "qqb_get_guild_member / qqbot::Client::get_guild_member / 易语言 qqb_get_guild_member"
     },
     {
       "id": "guild.member.delete",
@@ -522,7 +524,8 @@
       "description": "获取频道身份组列表。",
       "response": "Guild roles 对象",
       "errors": "详见官方 OpenAPI 错误码总表；对应页面未逐项列出错误码。",
-      "sdk_access": "qqb_api_request / qqbot::Client::request / 易语言 qqb_api_request"
+      "sdk_access": "qqb_api_request / qqbot::Client::request / 易语言 qqb_api_request",
+      "sdk_wrapper": "qqb_list_guild_roles / qqbot::Client::list_guild_roles / 易语言 qqb_list_guild_roles"
     },
     {
       "id": "guild.role.create",
@@ -561,7 +564,8 @@
       "description": "创建身份组；请求字段至少传一个。",
       "response": "{role_id, role}",
       "errors": "详见官方 OpenAPI 错误码总表；对应页面未逐项列出错误码。",
-      "sdk_access": "qqb_api_request / qqbot::Client::request / 易语言 qqb_api_request"
+      "sdk_access": "qqb_api_request / qqbot::Client::request / 易语言 qqb_api_request",
+      "sdk_wrapper": "qqb_create_guild_role / qqbot::Client::create_guild_role / 易语言 qqb_create_guild_role"
     },
     {
       "id": "guild.role.update",
@@ -605,7 +609,8 @@
       "description": "修改身份组；至少传一个字段，未传字段保持不变。",
       "response": "{guild_id, role_id, role}",
       "errors": "详见官方 OpenAPI 错误码总表；对应页面未逐项列出错误码。",
-      "sdk_access": "qqb_api_request / qqbot::Client::request / 易语言 qqb_api_request"
+      "sdk_access": "qqb_api_request / qqbot::Client::request / 易语言 qqb_api_request",
+      "sdk_wrapper": "qqb_update_guild_role / qqbot::Client::update_guild_role / 易语言 qqb_update_guild_role"
     },
     {
       "id": "guild.role.delete",
@@ -630,7 +635,8 @@
       "description": "删除频道身份组。",
       "response": "HTTP 204",
       "errors": "详见官方 OpenAPI 错误码总表；对应页面未逐项列出错误码。",
-      "sdk_access": "qqb_api_request / qqbot::Client::request / 易语言 qqb_api_request"
+      "sdk_access": "qqb_api_request / qqbot::Client::request / 易语言 qqb_api_request",
+      "sdk_wrapper": "qqb_delete_guild_role / qqbot::Client::delete_guild_role / 易语言 qqb_delete_guild_role"
     },
     {
       "id": "guild.member_role.add",
@@ -863,7 +869,8 @@
       "description": "全员禁言（非管理员）或解除；成功 HTTP 204。",
       "response": "HTTP 204",
       "errors": "详见官方 OpenAPI 错误码总表；对应页面未逐项列出错误码。",
-      "sdk_access": "qqb_api_request / qqbot::Client::request / 易语言 qqb_api_request"
+      "sdk_access": "qqb_api_request / qqbot::Client::request / 易语言 qqb_api_request",
+      "sdk_wrapper": "qqb_mute_guild / qqbot::Client::mute_guild / 易语言 qqb_mute_guild"
     },
     {
       "id": "guild.member.mute",
@@ -901,7 +908,8 @@
       "description": "指定成员禁言或解除；成功 HTTP 204。",
       "response": "HTTP 204",
       "errors": "详见官方 OpenAPI 错误码总表；对应页面未逐项列出错误码。",
-      "sdk_access": "qqb_api_request / qqbot::Client::request / 易语言 qqb_api_request"
+      "sdk_access": "qqb_api_request / qqbot::Client::request / 易语言 qqb_api_request",
+      "sdk_wrapper": "qqb_mute_guild_member / qqbot::Client::mute_guild_member / 易语言 qqb_mute_guild_member"
     },
     {
       "id": "guild.announce.create",
@@ -1123,5 +1131,5 @@
       "sdk_access": "qqb_api_request / qqbot::Client::request / 易语言 qqb_api_request"
     }
   ],
-  "typed_wrapper_status": "6 of 34 verified endpoint routes have dedicated C ABI/C++/E-language typed wrappers; remaining routes are accessible through the generic request API."
+  "typed_wrapper_status": "14 of 34 verified endpoint routes have dedicated C ABI/C++/E-language typed wrappers (4 message send + 6 guild/channel + 4 member/role/mute?); all remaining routes remain available through the generic request API."
 }
