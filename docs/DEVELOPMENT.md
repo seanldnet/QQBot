@@ -269,3 +269,10 @@
 - Windows runner 的 MINGW64 软件源当前无法通过包数据库解析 `mingw-w64-x86_64-libmicrohttpd`，构建流程改为下载固定版本归档并校验 SHA-256 后通过 pacman 安装；其余依赖仍由签名软件源解析。
 
 - Windows MINGW64 的 libmicrohttpd 已从该仓库当前软件源下架（CI 的 pacman 返回 target not found）；为保持 Server 2012/旧 CRT 兼容，Windows job 改为固定安装仍可获取的 MINGW64 1.0.10-1 历史二进制包，并从当前仓库安装其 GnuTLS 依赖。该历史包安装和完整构建仍待 CI 实证。
+
+
+## 2026-11-23 — Windows 成品包 CA bundle 路径修复
+
+- Windows full-build 已完成宿主与 SDK 编译，Windows CTest 3/3 通过；运行目录组装因 MSYS2 runner 不存在 `/etc/ssl/certs/ca-bundle.crt` 而中断。
+- 构建流程改为从 curl 官方 CA bundle 发布地址下载 `cacert.pem`，写入 `stage/certs/ca-bundle.crt` 并检查文件非空；启动脚本仍通过 `CURL_CA_BUNDLE` 指向包内证书。
+- 本修复仅消除已定位的证书路径阻塞；DLL 依赖扫描、ZIP 生成和 Server 2012–2026 实机兼容性仍待后续 CI/实机验证。
