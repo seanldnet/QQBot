@@ -394,3 +394,12 @@
 - [ ] QQ 实机分别验证 Token 错误、WSS IP 白名单拒绝、白名单未启用三种情况。
 
 > 注意：当前 C 核心只支持一个活动机器人实例；账号页目前是该实例的添加/连接入口，不代表已经实现多机器人并行托管。新的 11.1 MiB Windows 包已生成，根目录 QQBot.exe 约 3.6 MiB；目标机需安装 .NET 8 Windows Desktop Runtime x64。
+
+
+## 2026-11-24 — Windows 桌面 EXE 改为 .NET 自包含单文件
+
+- [x] `Desktop/QQBot.Desktop.csproj` 将 `SelfContained` 改为 `true`，启用 `IncludeNativeLibrariesForSelfExtract`。
+- [x] Windows CI `dotnet publish` 显式使用 `win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true`，将 .NET 8 Runtime 与 AntdUI/业务程序集打包进根目录 `QQBot.exe`。
+- [x] 更新 README、桌面 UI 规范和发布说明：目标电脑无需单独安装 .NET Runtime；C 宿主及其原生 DLL 仍放在 `runtime/`。
+- [ ] 等待 Windows CI 完成，核对自包含 EXE、依赖 DLL、ZIP 产物与压缩包大小。
+- [ ] 在干净 Windows 环境（未安装 .NET Desktop Runtime）双击实测；构建成功本身不等于目标机启动验收。
