@@ -205,7 +205,8 @@
       "body_fields": [],
       "permissions": "undocumented_here",
       "response": "Guild object",
-      "errors": "See official OpenAPI error catalogue."
+      "errors": "See official OpenAPI error catalogue.",
+      "sdk_wrapper": "qqb_get_guild / qqbot::Client::get_guild / 易语言 qqb_get_guild"
     },
     {
       "id": "channel.list",
@@ -222,7 +223,8 @@
       "body_fields": [],
       "permissions": "undocumented_here",
       "response": "Array of Channel objects",
-      "errors": "See official OpenAPI error catalogue."
+      "errors": "See official OpenAPI error catalogue.",
+      "sdk_wrapper": "qqb_list_channels / qqbot::Client::list_channels / 易语言 qqb_list_channels"
     },
     {
       "id": "channel.get",
@@ -239,7 +241,8 @@
       "body_fields": [],
       "permissions": "undocumented_here",
       "response": "Channel object",
-      "errors": "See official OpenAPI error catalogue."
+      "errors": "See official OpenAPI error catalogue.",
+      "sdk_wrapper": "qqb_get_channel / qqbot::Client::get_channel / 易语言 qqb_get_channel"
     },
     {
       "id": "channel.create",
@@ -302,7 +305,8 @@
       ],
       "permissions": "Requires Manage Channels; bot must be configured as administrator.",
       "response": "Channel object",
-      "errors": "See official OpenAPI error catalogue."
+      "errors": "See official OpenAPI error catalogue.",
+      "sdk_wrapper": "qqb_create_channel / qqbot::Client::create_channel / 易语言 qqb_create_channel"
     },
     {
       "id": "channel.update",
@@ -345,7 +349,8 @@
       ],
       "permissions": "Requires Manage Channel; bot must be configured as administrator.",
       "response": "Channel object",
-      "errors": "See official OpenAPI error catalogue."
+      "errors": "See official OpenAPI error catalogue.",
+      "sdk_wrapper": "qqb_update_channel / qqbot::Client::update_channel / 易语言 qqb_update_channel"
     },
     {
       "id": "channel.delete",
@@ -362,7 +367,9 @@
       "body_fields": [],
       "permissions": "Requires Manage Channel; bot must be configured as administrator.",
       "response": "HTTP 200; irreversible operation.",
-      "errors": "See official OpenAPI error catalogue."
+      "errors": "See official OpenAPI error catalogue.",
+      "sdk_wrapper": "qqb_delete_channel / qqbot::Client::delete_channel / 易语言 qqb_delete_channel"
     }
-  ]
+  ],
+  "typed_wrapper_status": "6 of 10 verified endpoint routes have dedicated C ABI, C++ and E-language import wrappers; four message routes retain existing typed text-send helpers."
 }
