@@ -382,20 +382,7 @@
           "required": true
         }
       ],
-      "body_fields": [
-        {
-          "name": "after",
-          "type": "string",
-          "required": true,
-          "description": "string (默认 0；下一页使用上一页最后一个 user id)"
-        },
-        {
-          "name": "limit",
-          "type": "uint32",
-          "required": true,
-          "description": "uint32 (1-400，默认 1)"
-        }
-      ],
+      "body_fields": [],
       "query_parameters": [
         {
           "name": "after",
@@ -433,20 +420,7 @@
           "required": true
         }
       ],
-      "body_fields": [
-        {
-          "name": "start_index",
-          "type": "string",
-          "required": true,
-          "description": "string (默认 0；下一页使用 next)"
-        },
-        {
-          "name": "limit",
-          "type": "uint32",
-          "required": true,
-          "description": "uint32 (1-400，默认 1)"
-        }
-      ],
+      "body_fields": [],
       "query_parameters": [
         {
           "name": "start_index",
