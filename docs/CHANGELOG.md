@@ -231,6 +231,15 @@
 - 更新 `docs/API.md` 和 `docs/TASKS.md` 记录接口要求与待验收项。
 - 验证边界：代码提交后由 CI 自动编译/测试；当前尚未取得本次改动的 CI 结果，也未进行真实 QQ WSS/Webhook 实机联调。
 
+## 2026-11-23 — AntdUI Windows 桌面版首次构建通过
+
+- 修复 Desktop/MainForm.cs 中 AntdUI Message.error 缺少 Target 参数的问题，改为传入主窗口实例与提示文本。
+- GitHub Actions run 45200701206 全部成功：Linux 构建、Windows callback-security、Windows full-build；AntdUI .NET 8 WinForms 单文件自包含发布成功，C 后端 CTest 3/3 通过。
+- 完成 runtime DLL 依赖闭包扫描、PE x64 / Windows API 子系统基线审计及 ZIP Artifact 上传。
+- Artifact QQBot-AntdUI-Windows-x64 下载后，内层 ZIP CRC 检查通过；根目录包含唯一桌面入口 QQBot.exe，协议核心和依赖位于 runtime/，另有 data/ 与 certs/。
+- 验证边界：CI 构建成功不代表已在用户 Windows 桌面验证 UI 外观、中文字体/DPI 和交互；QQ 官方 WSS/Webhook 实机联调仍待用户环境验收。
+
+
 ## 2026-11-23 — Windows 桌面 UI 切换 AntdUI
 
 - 新增 Desktop/QQBot.Desktop.csproj、Desktop/Program.cs、Desktop/MainForm.cs：桌面客户端使用 C# WinForms + 官方 AntdUI 2.4.20，登录与主界面业务控件统一使用 AntdUI 组件。
