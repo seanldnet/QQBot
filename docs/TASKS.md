@@ -220,3 +220,6 @@
 - [x] CMake 与 Makefile 增加 Windows `ws2_32` 链接。
 - [ ] 在 Windows MSVC 与 MinGW 环境分别构建并运行 callback security tests。
 - [ ] 接入 callback_url 写入校验，再实现 DNS pinning 与安全 HTTP worker；完成前禁止实际出站投递。
+
+- [x] 增加 GitHub Actions Windows-latest + MSYS2/MinGW64 callback security 编译/测试 job。
+- [ ] 确认首次 Windows runner 结果并按日志修复兼容问题；该 job 当前仅覆盖 callback security 模块。
