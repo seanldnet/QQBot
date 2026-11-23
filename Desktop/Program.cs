@@ -17,11 +17,12 @@ internal static class Program
         AntdUI.Config.TextRenderingHighQuality = true;
         AntdUI.Config.Theme().Dark("#141414", "#ffffff").Light("#ffffff", "#141414").FormBorderColor();
 
+        var mainForm = new MainForm();
         Application.ThreadException += (_, e) =>
-            AntdUI.Message.error(e.Exception.Message, "界面发生异常");
+            AntdUI.Message.error(mainForm, "界面发生异常：" + e.Exception.Message);
         AppDomain.CurrentDomain.UnhandledException += (_, e) =>
             MessageBox.Show(e.ExceptionObject?.ToString() ?? "未知异常", "QQBot", MessageBoxButtons.OK, MessageBoxIcon.Error);
 
-        Application.Run(new MainForm());
+        Application.Run(mainForm);
     }
 }
