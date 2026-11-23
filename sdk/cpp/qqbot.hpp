@@ -161,5 +161,48 @@ public:
         if(out){response.assign(out);qqb_free_string(out);}return rc;
     }
 
+
+    int list_guild_role_members(const std::string& guild,const std::string& role,const std::string& start,
+                                unsigned int limit,std::string& response,long& status) const {
+        char*out=nullptr;int rc=qqb_list_guild_role_members(p_,guild.c_str(),role.c_str(),
+          start.empty()?nullptr:start.c_str(),limit,&out,&status);
+        if(out){response.assign(out);qqb_free_string(out);}return rc;
+    }
+    int kick_guild_member(const std::string& guild,const std::string& user,const std::string& body,
+                          std::string& response,long& status) const {
+        char*out=nullptr;int rc=qqb_kick_guild_member(p_,guild.c_str(),user.c_str(),body.c_str(),&out,&status);
+        if(out){response.assign(out);qqb_free_string(out);}return rc;
+    }
+    int add_guild_member_role(const std::string& guild,const std::string& user,const std::string& role,
+                              const std::string& body,std::string& response,long& status) const {
+        char*out=nullptr;int rc=qqb_add_guild_member_role(p_,guild.c_str(),user.c_str(),role.c_str(),body.c_str(),&out,&status);
+        if(out){response.assign(out);qqb_free_string(out);}return rc;
+    }
+    int remove_guild_member_role(const std::string& guild,const std::string& user,const std::string& role,
+                                 const std::string& body,std::string& response,long& status) const {
+        char*out=nullptr;int rc=qqb_remove_guild_member_role(p_,guild.c_str(),user.c_str(),role.c_str(),body.c_str(),&out,&status);
+        if(out){response.assign(out);qqb_free_string(out);}return rc;
+    }
+    int get_channel_member_permissions(const std::string& channel,const std::string& user,
+                                        std::string& response,long& status) const {
+        char*out=nullptr;int rc=qqb_get_channel_member_permissions(p_,channel.c_str(),user.c_str(),&out,&status);
+        if(out){response.assign(out);qqb_free_string(out);}return rc;
+    }
+    int update_channel_member_permissions(const std::string& channel,const std::string& user,const std::string& body,
+                                           std::string& response,long& status) const {
+        char*out=nullptr;int rc=qqb_update_channel_member_permissions(p_,channel.c_str(),user.c_str(),body.c_str(),&out,&status);
+        if(out){response.assign(out);qqb_free_string(out);}return rc;
+    }
+    int get_channel_role_permissions(const std::string& channel,const std::string& role,
+                                     std::string& response,long& status) const {
+        char*out=nullptr;int rc=qqb_get_channel_role_permissions(p_,channel.c_str(),role.c_str(),&out,&status);
+        if(out){response.assign(out);qqb_free_string(out);}return rc;
+    }
+    int update_channel_role_permissions(const std::string& channel,const std::string& role,const std::string& body,
+                                        std::string& response,long& status) const {
+        char*out=nullptr;int rc=qqb_update_channel_role_permissions(p_,channel.c_str(),role.c_str(),body.c_str(),&out,&status);
+        if(out){response.assign(out);qqb_free_string(out);}return rc;
+    }
+
 };
 }
