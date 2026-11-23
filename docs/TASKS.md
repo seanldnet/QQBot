@@ -352,3 +352,16 @@
 - [ ] 等待本次提交触发的 Linux/Windows CI 全部通过，并重新生成 Windows x64 一键测试包。
 - [ ] 真实 QQ Gateway 心跳 ACK、异常断线恢复、群 @ 与 C2C 消息实测。
 - [ ] Webhook 官方签名向量与公网回调实测；当前仍未完成实机验收。
+
+## 2026-11-23 — Windows 原生桌面 EXE 第一阶段
+
+- [x] 新增 Win32 原生 GUI 入口 `src/windows_gui.c`，提供独立 Windows 窗口，不依赖浏览器。
+- [x] 桌面程序启动 QQ 协议核心子进程，自动生成本机管理员 API Token，并通过本机 HTTP API 完成登录与状态/日志读取。
+- [x] 登录窗口提供 AppID、AppSecret 和 WSS/Webhook 选择。
+- [x] 登录后显示首页状态与可刷新的消息/运行日志。
+- [x] Windows CMake 增加 `QQBot.exe` 桌面目标，核心程序改名为 `qqbot-core.exe`，打包脚本扫描两个 EXE 的 DLL 依赖。
+- [x] Windows ZIP 启动入口改为桌面 EXE；桌面程序自动设置本机核心进程的 CA bundle 路径。
+- [ ] 等待本次 Windows GUI 编译、链接、PE 审计和 ZIP CI 验证。
+- [ ] 在真实 Windows 桌面环境验证登录窗口、WSS READY、Webhook 回调、窗口关闭时核心进程退出。
+- [ ] 完成首页、账号、消息、应用、设置等完整导航和 UI 视觉打磨；当前为桌面 GUI 第一阶段，不是最终 UI。
+- [ ] 实机确认 WSS 和 Webhook 官方平台连接及真实消息接收。
