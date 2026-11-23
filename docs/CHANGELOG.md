@@ -1,5 +1,10 @@
 # 变更日志
 
+## 2026-11-23 — 跨语言插件事件模型
+
+- 新增 sdk/event-schema.md：定义宿主向插件 POST 的统一事件 JSON 字段，保留官方 event_type 与 raw_event，并明确 group/c2c/channel 的 chat_type、openid 映射和被动回复上下文。
+- 新增 sdk/cpp/event.hpp 与 sdk/e-language/event-fields.md：提供 C++ 事件结构和易语言字段映射；事件投递器尚未实现，该文件是先行固定的跨语言契约。
+
 ## 2026-11-23 — 插件管理与 SDK 官方 API 代理首版
 
 - 后续修正：插件 PATCH/DELETE 路由按无尾缀的 `/{id}` 正确匹配；SDK null body 不再向上游发送字面 `null`；状态接口在回调公网可达性未验证前固定报告 `transport_ready=false`；协议文档纠正此前 API host 记录冲突，以官方 api-use.md 的 `api.sgroup.qq.com` + `bots.qq.com/app/getAppAccessToken` 为默认。
