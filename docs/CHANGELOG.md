@@ -2,6 +2,9 @@
 
 ## 2026-11-23 — 插件管理与 SDK 官方 API 代理首版
 
+- 后续修正：插件 PATCH/DELETE 路由按无尾缀的 `/{id}` 正确匹配；SDK null body 不再向上游发送字面 `null`；状态接口在回调公网可达性未验证前固定报告 `transport_ready=false`；协议文档纠正此前 API host 记录冲突，以官方 api-use.md 的 `api.sgroup.qq.com` + `bots.qq.com/app/getAppAccessToken` 为默认。
+- 文档同步：刷新 DEVELOPMENT 当前基线、API 插件代理契约、PROTOCOL-RESEARCH 域名核验和 TASKS 状态；README 增加 SDK 快速接入与 Windows DLL 指南。
+
 - 修改 src/main.c：新增管理员 Bearer Token 鉴权（QQBOT_ADMIN_TOKEN，至少 24 字符）；新增插件注册、列表、启停、删除 API；注册时使用 OpenSSL RAND_bytes 生成高熵插件 ID/Token，数据库只存 SHA-256 Token 摘要，Token 仅返回一次。
 - 修改 src/main.c：新增 POST /api/v1/plugins/{id}/qq-api；校验 X-Plugin-ID / X-Plugin-Token、插件启用状态和 method/path/body，再通过宿主 access_token 代理到官方 API Base URL；固定官方域名，拒绝绝对 URL、路径穿越和非法 method；设置 TLS 校验、超时和响应体上限。
 - 修改 SDK：增加频道私信（/dms/{guild_id}/messages）便利发送函数；C++ 和易语言接口映射同步更新；修复 SDK JSON 字符串转义、插件 Header CRLF 注入风险和空 body 处理。
