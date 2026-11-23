@@ -29,7 +29,7 @@ Desktop/
 ## 发布包布局
 
 ```
-QQBot.exe                 # 唯一桌面主程序，AntdUI + .NET 单文件框架依赖发布
+QQBot.exe                 # 唯一桌面主程序，AntdUI + .NET 8 自包含单文件发布
 runtime/
   qqbot-core.exe          # C 语言 QQ 协议宿主
   libqqbot_sdk.dll        # SDK
@@ -38,7 +38,7 @@ data/                     # SQLite 数据
 certs/                    # CA bundle
 ```
 
-用户双击根目录 `QQBot.exe` 直接进入主界面，在“账号管理”页添加机器人。不提供 BAT 作为启动入口，不要求用户打开浏览器或手动启动后台核心。为减少安装包体积，桌面程序改为 .NET 8 Desktop Runtime 框架依赖发布；目标电脑需预先安装 .NET 8 Windows Desktop Runtime x64，AntdUI 与业务程序集仍合并进单文件 EXE。
+用户双击根目录 `QQBot.exe` 直接进入主界面，在“账号管理”页添加机器人。不提供 BAT 作为启动入口，不要求用户打开浏览器或手动启动后台核心。桌面程序采用 .NET 8 self-contained single-file 发布，.NET Runtime、AntdUI 与业务程序集一并打包进根目录 QQBot.exe；目标电脑无需预先安装 .NET Runtime 或 .NET Desktop Runtime。为实现单文件发布，必要的原生运行库在首次启动时由 .NET 从 EXE 内解压到系统临时目录。协议核心及其原生依赖仍放在 runtime/ 文件夹，不与桌面 EXE 混淆。
 
 ## 构建与验收
 
@@ -47,10 +47,10 @@ certs/                    # CA bundle
 ```powershell
 dotnet restore Desktop/QQBot.Desktop.csproj
 dotnet build Desktop/QQBot.Desktop.csproj -c Release
-dotnet publish Desktop/QQBot.Desktop.csproj -c Release -r win-x64 --self-contained false -o publish/desktop
+dotnet publish Desktop/QQBot.Desktop.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o publish/desktop
 ```
 
-Windows CI 必须完成 .NET restore/build/publish、C 后端构建与测试、DLL 依赖闭包扫描、PE 基线检查及 ZIP 完整性检查。
+Windows CI 必须完成 .NET self-contained single-file restore/build/publish、C 后端构建与测试、DLL 依赖闭包扫描、PE 基线检查及 ZIP 完整性检查；还要检查桌面 EXE 已包含 .NET runtimeconfig/deps 所需内容，不依赖目标机全局 .NET 安装。
 
 构建成功不等于 GUI 验收成功。发布候选还必须在 Windows 10/11 桌面环境实测：
 1. 首次启动无空白窗口、无中文乱码。
