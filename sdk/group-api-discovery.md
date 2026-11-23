@@ -78,3 +78,15 @@
 - GROUP_MSG_RECEIVE：群管理员开启机器人主动消息；字段 timestamp、group_openid、op_member_openid。
 
 该官方事件页标注推送方式为 WebSocket。群消息事件 GROUP_AT_MESSAGE_CREATE 位于单独消息事件文档，不与上述四个群管理事件混为一组。
+
+
+
+## 第二批：黑名单与入群申请 SDK（2026-11-23）
+
+新增 C ABI / C++14 / 易语言 DLL typed wrapper：
+- GET /v2/groups/{group_openid}/member_blacklist：`qqb_list_group_blacklist`，固定请求 limit=100，cursor 自动 URL 编码。
+- POST 同一路由：`qqb_update_group_blacklist`，body 由调用方传入 JSON object（第三方 DTO 交叉核验结构为 op=add/del、member_openids；单次最多 20 人）。
+- GET /v2/groups/{group_openid}/join_request_list：`qqb_list_group_join_requests`，固定请求 limit=50，cursor 自动 URL 编码。
+- POST /v2/groups/{group_openid}/approval_join_request/{member_openid}：`qqb_approve_group_join_request`，body 包含 op=approve/decline，可选 join_request_id、reject_reason。
+
+第三方接口实现注释指出黑名单操作需白名单；入群申请列表/审批需机器人具备群管理员身份。该信息只作为交叉核验线索，尚未逐页核验腾讯官方自动生成接口页面，因此不计入已核验 42 条 REST 路由。黑名单与申请列表 limit/cursor 参数亦须在官方页面复核后才视为正式协议约束。
