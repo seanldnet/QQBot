@@ -228,3 +228,9 @@
 - 新增管理员 `GET /api/v1/event-deliveries`，最多返回最近 200 条投递任务状态。
 - 测试覆盖启用插件扇出、空 callback/停用插件过滤、重复扇出幂等性。
 - 安全边界：目前仅建立 durable pending delivery queue，未启动 HTTP callback worker；不向 callback_url 发起任何网络请求。DNS 解析与 IP 分类、DNS pinning、禁止重定向、HTTPS-only 复核完成前不得启用实际投递。
+
+## 7. 插件回调地址安全基线（第一阶段）
+
+新增 `src/qq/callback_security.h/.c`，提供 callback URL 校验和 DNS 解析结果结构：仅接受 HTTPS、443 端口、DNS 主机名；拒绝 userinfo、IP 字面量、非 443 端口；解析所有 DNS A/AAAA 结果，只要其中任意地址不是公网单播地址即整体拒绝。IPv4 拒绝私网、环回、链路本地、共享地址、文档网段、多播和保留网段；IPv6 仅接受 2000::/3 全球单播，并排除特殊用途、6to4 和文档地址。DNS 结果暂存于固定容量结构中，供后续 CURLOPT_RESOLVE pinning 使用。
+
+重要边界：本阶段仅提供校验/解析原语，尚未接入插件注册 URL 校验，也未实现 DNS pinning、HTTP worker、禁止重定向、响应体限制和重试。因此不能把它视为完整 SSRF 防护，也不得启用 callback 出站请求。当前实现使用 POSIX `getaddrinfo`/`inet_pton`，Windows Winsock 适配尚待完成。
