@@ -61,7 +61,10 @@ static int start_core(void) {
     char *q=env+used;
     q+=sprintf(q,"QQBOT_ADMIN_TOKEN=%s",g_admin_token)+1;
     q+=sprintf(q,"QQBOT_BIND=127.0.0.1")+1;
-    q+=sprintf(q,"QQBOT_PORT=8080")+1; *q=0;
+    q+=sprintf(q,"QQBOT_PORT=8080")+1;
+    char ca_path[MAX_PATH+32];
+    snprintf(ca_path,sizeof(ca_path),"CURL_CA_BUNDLE=%s\\certs\\ca-bundle.crt",g_root);
+    q+=sprintf(q,"%s",ca_path)+1; *q=0;
     snprintf(exe,sizeof(exe),"\"%s\"",g_core_path);
     snprintf(cwd,sizeof(cwd),"%s",g_root);
     STARTUPINFOA si; PROCESS_INFORMATION pi; ZeroMemory(&si,sizeof(si)); ZeroMemory(&pi,sizeof(pi)); si.cb=sizeof(si);
