@@ -121,22 +121,24 @@ static enum MHD_Result handler(void *cls, struct MHD_Connection *c, const char *
         char *response = NULL; unsigned int status = 400;
         int rc = qq_webhook_process(secret, q->body ? q->body : "", q->size, sig, ts, &response, &status);
         OPENSSL_cleanse(secret, sizeof(secret));
-        if (rc != 0 || !response) { free(response); return json_reply(c, 400, "{\\"error\\":\\"invalid_webhook_payload\\"}"); }
+        if (rc != 0 || !response) { free(response); return json_reply(c, 400, "{\"error\":\"invalid_webhook_payload\"}"); }
         if (status == 200) log_line("INFO", "QQ Webhook payload accepted; signature/challenge processed");
         enum MHD_Result result = json_reply(c, status, response); free(response); return result;
     }
     if (strcmp(method, "GET") == 0 && strcmp(url, "/api/v1/status") == 0) {
-        char out[256]; snprintf(out, sizeof(out), "{\"ok\":true,\"authenticated\":%s,\"transport_connected\":false,\"mode\":\"websocket\",\"version\":\"0.1.0\"}", g_app.access_token[0] ? "true" : "false"); return json_reply(c, 200, out);
+        char out[256]; snprintf(out, sizeof(out), "{\"ok\":true,\"authenticated\":%s,\"transport_ready\":%s,\"mode\":\"%s\",\"version\":\"0.1.0\"}", g_app.access_token[0] ? "true" : "false", strcmp(g_app.connection_mode, "webhook") == 0 ? "true" : "false", g_app.connection_mode[0] ? g_app.connection_mode : "none"); return json_reply(c, 200, out);
     }
     if (strcmp(method, "POST") == 0 && strcmp(url, "/api/v1/auth/login") == 0) {
         cJSON *j = cJSON_Parse(q->body ? q->body : ""); cJSON *id = j ? cJSON_GetObjectItemCaseSensitive(j, "app_id") : NULL;
         cJSON *secret = j ? cJSON_GetObjectItemCaseSensitive(j, "app_secret") : NULL;
         cJSON *mode = j ? cJSON_GetObjectItemCaseSensitive(j, "mode") : NULL;
         if (!cJSON_IsString(id) || !cJSON_IsString(secret) || !id->valuestring[0] || !secret->valuestring[0] || strlen(id->valuestring) >= sizeof(g_app.app_id) || strlen(secret->valuestring) >= sizeof(g_app.app_secret)) { cJSON_Delete(j); return json_reply(c, 400, "{\"error\":\"invalid_credentials\"}"); }
-        if (mode && cJSON_IsString(mode) && strcmp(mode->valuestring, "webhook") == 0) { cJSON_Delete(j); return json_reply(c, 501, "{\"error\":\"webhook_transport_not_implemented_yet\"}"); }
+        const char *selected_mode = cJSON_IsString(mode) ? mode->valuestring : "websocket";
+        if (strcmp(selected_mode, "webhook") != 0 && strcmp(selected_mode, "websocket") != 0) { cJSON_Delete(j); return json_reply(c, 400, "{\"error\":\"invalid_connection_mode\"}"); }
+        if (strcmp(selected_mode, "websocket") == 0) { cJSON_Delete(j); return json_reply(c, 501, "{\"error\":\"websocket_transport_not_available_use_webhook\"}"); }
         pthread_mutex_lock(&g_app.lock); snprintf(g_app.app_id, sizeof(g_app.app_id), "%s", id->valuestring); OPENSSL_cleanse(g_app.app_secret, sizeof(g_app.app_secret)); snprintf(g_app.app_secret, sizeof(g_app.app_secret), "%s", secret->valuestring);  snprintf(g_app.connection_mode, sizeof(g_app.connection_mode), "%s", selected_mode); pthread_mutex_unlock(&g_app.lock); cJSON_Delete(j);
         if (ensure_token() != 0) { OPENSSL_cleanse(g_app.app_secret, sizeof(g_app.app_secret)); g_app.app_id[0] = 0; log_line("ERROR", "QQ login failed: access_token request failed"); return json_reply(c, 502, "{\"error\":\"qq_auth_failed\"}"); }
-        log_line("INFO", "QQ credentials accepted; token acquired"); return json_reply(c, 200, "{\"ok\":true,\"message\":\"access_token acquired; transport startup is being implemented\"}");
+        log_line("INFO", "QQ credentials accepted; token acquired"); return json_reply(c, 200, "{\"ok\":true,\"message\":\"QQ access_token acquired. Configure the public HTTPS callback URL as /webhook/qq in the QQ developer console.\"}");
     }
     if (strcmp(method, "GET") == 0 && strcmp(url, "/") == 0) {
         FILE *f = fopen("web/index.html", "rb"); if (!f) return reply(c, 404, "web/index.html not found", "text/plain");
