@@ -313,3 +313,10 @@
 - [ ] QQ 官方机器人实机测试：WSS 登录、群消息、C2C 单聊、Webhook challenge 与事件。
 - [ ] 消息日志补齐频道、频道私信、附件/图片元信息、昵称映射和日志筛选/分页。
 - [ ] 取得 CI 通过结果后重新生成 Windows x64 一键运行包，交由用户实测；实测前不标记接入功能已验收。
+
+
+## WSS 构建依赖补充（2026-11-23）
+
+- [x] 明确 libcurl WebSocket API 最低版本为 7.86.0，并在 Make/CMake 中增加版本检查。
+- [x] 修正 WSS 就绪状态：仅在 Gateway 下发 READY 后显示 connected；握手完成但未 READY 时显示 authenticating。
+- [ ] 最新代码 CI run 45188659260 仍在执行，待确认 Linux/Windows 全部通过。
