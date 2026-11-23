@@ -234,3 +234,14 @@
 - [ ] 在 Windows Server 2012、2012 R2、2016、2019、2022、2025/2026 实机或虚拟机逐版本启动验证。
 - [ ] 验证 SDK DLL 的 C ABI / stdcall 导出、插件加载和易语言调用；补齐 x86 发行包。
 - [ ] 发布正式 Release ZIP，并提供稳定下载地址；未完成上述验证前不宣称全版本兼容。
+
+
+## Windows 可直接运行成品交付
+
+- [x] 主程序加入 Windows 条件编译：Winsock、Windows 时间函数、目录/文件访问兼容及休眠兼容。
+- [x] CMake 避免在 Windows 宿主目标定义 POSIX feature macro。
+- [x] 增加 Windows x64 完整宿主+SDK 构建、CTest 和 ZIP artifact 工作流。
+- [ ] 解决 Windows 完整构建/测试中暴露的编译与链接问题。
+- [ ] 验证 ZIP 内 DLL 依赖闭包，剔除不必要开发工具 DLL，补齐可信 CA 证书包。
+- [ ] 在 Windows Server 2012/2012 R2、2016、2019、2022、2025、2026 实机/镜像逐版本启动验收。
+- [ ] 完成旧系统 TLS 1.2、证书链和系统 API 兼容性测试后，才发布正式稳定成品。
