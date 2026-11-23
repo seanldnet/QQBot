@@ -148,7 +148,7 @@ static void do_login(void) {
     }
 }
 static HWND control(const char *cls,const char *text,DWORD style,int x,int y,int w,int h,int id) {
-    return CreateWindowExA(0,cls,text,WS_CHILD|style,x,y,w,h,g_main,(HMENU)(INT_PTR)id,g_instance,NULL);
+    return CreateWindowExA(0,cls,text,WS_CHILD|WS_VISIBLE|style,x,y,w,h,g_main,(HMENU)(INT_PTR)id,g_instance,NULL);
 }
 static void create_login(void) {
     control("STATIC","QQBot",SS_CENTER|SS_CENTERIMAGE,190,38,420,52,0);
