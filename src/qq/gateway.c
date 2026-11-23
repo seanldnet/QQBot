@@ -44,6 +44,17 @@ static void state(qq_gateway_t *g, const char *name, const char *detail) {
     if (g->state_fn) g->state_fn(g->context, name, detail ? detail : "");
 }
 
+static void pause_milliseconds(unsigned int milliseconds) {
+#ifdef _WIN32
+    Sleep(milliseconds);
+#else
+    struct timespec ts;
+    ts.tv_sec = (time_t)(milliseconds / 1000U);
+    ts.tv_nsec = (long)(milliseconds % 1000U) * 1000000L;
+    nanosleep(&ts, NULL);
+#endif
+}
+
 static void pause_seconds(qq_gateway_t *g, unsigned int seconds) {
     unsigned int ticks = seconds * 10U;
     while (ticks-- && !g->stopping) {
@@ -100,9 +111,9 @@ static int get_gateway_url(qq_gateway_t *g, const char *token, char *url, size_t
 static int send_json(CURL *ws, const char *json) {
     size_t length = strlen(json), sent = 0;
     CURLcode rc = curl_ws_send(ws, json, length, &sent, 0, CURLWS_TEXT);
-    while (rc == CURLE_AGAIN) {
-        int fds = 0;
-        curl_easy_wait(ws, NULL, 0, 1000, &fds);
+    unsigned int retries = 0;
+    while (rc == CURLE_AGAIN && retries++ < 100) {
+        pause_milliseconds(10);
         rc = curl_ws_send(ws, json, length, &sent, 0, CURLWS_TEXT);
     }
     return rc == CURLE_OK && sent == length ? 0 : -1;
@@ -227,8 +238,7 @@ static void *gateway_thread(void *opaque) {
             const struct curl_ws_frame *meta = NULL;
             CURLcode rc = curl_ws_recv(ws, frame, sizeof(frame), &received, &meta);
             if (rc == CURLE_AGAIN) {
-                int fds = 0;
-                curl_easy_wait(ws, NULL, 0, 250, &fds);
+                pause_milliseconds(250);
             } else if (rc != CURLE_OK) {
                 state(g, "disconnected", "WSS 接收失败");
                 reconnect = 1;
