@@ -208,3 +208,6 @@
 - `server-inter/message/send-receive/event.md`：群 @机器人消息事件。
 - `server-inter/group/manage/event.md`：机器人入群/退群及主动消息设置事件。
 - `server-inter/group/manage/README.md`：群管理 REST 能力开放状态。
+
+
+> 群管理 REST 路由专项发现记录见 `sdk/group-api-discovery.md`。该文件中的 17 条路由目前标记为已发现、待官方自动生成页面逐页复核，不计入已核验的 42 条 endpoint。
