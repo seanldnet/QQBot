@@ -467,7 +467,7 @@ static enum MHD_Result handler(void *cls, struct MHD_Connection *c, const char *
         enum MHD_Result result = json_reply(c, 200, encoded); free(encoded); return result;
     }
     if (strcmp(method, "GET") == 0 && strcmp(url, "/api/v1/logs") == 0) {
-        if (!admin_authorized(c)) return json_reply(c, 401, "{\\"error\\":\\"admin_auth_required\\"}");
+        if (!admin_authorized(c)) return json_reply(c, 401, "{\"error\":\"admin_auth_required\"}");
         cJSON *array = cJSON_CreateArray(); sqlite3_stmt *st = NULL;
         if (!array) return json_reply(c, 500, "{\"error\":\"out_of_memory\"}");
         pthread_mutex_lock(&g_app.lock);
