@@ -272,7 +272,7 @@ static enum MHD_Result handler(void *cls, struct MHD_Connection *c, const char *
         }
     }
     if (strcmp(method, "GET") == 0 && strcmp(url, "/api/v1/status") == 0) {
-        char out[256]; snprintf(out, sizeof(out), "{\"ok\":true,\"authenticated\":%s,\"transport_ready\":%s,\"mode\":\"%s\",\"version\":\"0.1.0\"}", g_app.access_token[0] ? "true" : "false", strcmp(g_app.connection_mode, "webhook") == 0 ? "true" : "false", g_app.connection_mode[0] ? g_app.connection_mode : "none"); return json_reply(c, 200, out);
+        char out[256]; snprintf(out, sizeof(out), "{\"ok\":true,\"authenticated\":%s,\"transport_ready\":%s,\"mode\":\"%s\",\"version\":\"0.1.0\"}", g_app.access_token[0] ? "true" : "false", "false", g_app.connection_mode[0] ? g_app.connection_mode : "none"); return json_reply(c, 200, out);
     }
     if (strcmp(method, "GET") == 0 && strcmp(url, "/api/v1/logs") == 0) {
         cJSON *array = cJSON_CreateArray(); sqlite3_stmt *st = NULL;
@@ -328,7 +328,7 @@ int main(void) {
     struct sockaddr_in bind_addr; memset(&bind_addr, 0, sizeof(bind_addr));
     bind_addr.sin_family = AF_INET; bind_addr.sin_port = htons((uint16_t)port);
     const char *bind_host = getenv("QQBOT_BIND") ? getenv("QQBOT_BIND") : "127.0.0.1";
-    if (inet_pton(AF_INET, bind_host, &bind_addr.sin_addr) != 1) { fprintf(stderr, "Invalid QQBOT_BIND IPv4 address\\n"); return 1; }
+    if (inet_pton(AF_INET, bind_host, &bind_addr.sin_addr) != 1) { fprintf(stderr, "Invalid QQBOT_BIND IPv4 address\n"); return 1; }
     struct MHD_Daemon *daemon = MHD_start_daemon(MHD_USE_INTERNAL_POLLING_THREAD, (uint16_t)port, NULL, NULL, &handler, NULL, MHD_OPTION_SOCK_ADDR, (struct sockaddr *)&bind_addr, MHD_OPTION_NOTIFY_COMPLETED, request_completed, NULL, MHD_OPTION_END);
     if (!daemon) { log_line("ERROR", "failed to start HTTP server"); return 1; }
     signal(SIGINT, on_signal); signal(SIGTERM, on_signal);
