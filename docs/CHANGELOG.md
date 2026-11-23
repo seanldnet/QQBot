@@ -230,3 +230,12 @@
 - `web/index.html`：增加管理员令牌输入，状态与日志轮询携带 Bearer 头；令牌不写入 localStorage。
 - 更新 `docs/API.md` 和 `docs/TASKS.md` 记录接口要求与待验收项。
 - 验证边界：代码提交后由 CI 自动编译/测试；当前尚未取得本次改动的 CI 结果，也未进行真实 QQ WSS/Webhook 实机联调。
+
+## 2026-11-23 — Windows 原生桌面 EXE 第一阶段
+
+- 新增 `src/windows_gui.c`：基于 Win32 API 构建独立桌面窗口，包含 AppID/AppSecret 输入、WSS/Webhook 选择和登录按钮；登录后轮询本机状态与日志 API，并将日志格式化显示在桌面窗口中。
+- 桌面 GUI 启动同目录 `qqbot-core.exe` 子进程，使用系统 CNG 随机数生成进程内管理员令牌，通过继承环境变量传递给核心；核心绑定 127.0.0.1，GUI 通过 WinHTTP 访问本机 API。
+- CMake Windows 构建新增 GUI 子系统目标 `QQBot.exe`，核心目标输出名改为 `qqbot-core.exe`；GUI 链接 WinHTTP、BCrypt、Common Controls 和 cJSON。
+- Windows 打包流程改为依赖扫描 GUI 与核心两个 EXE；ZIP 内提供双击 GUI 启动脚本，不再要求用户打开浏览器或输入管理员令牌。
+- GUI 通过核心进程环境变量配置包内 CA bundle 路径。原有 Web UI 保留为开发/诊断资源，不再作为最终用户入口。
+- 验证边界：本次提交后需等待 Windows CI 首次编译 GUI、扫描 DLL 并生成 ZIP；当前尚未声称 GUI 已编译通过，也未做 Windows 桌面实机或 QQ 官方平台联调。当前 GUI 的账号/应用/设置导航和视觉完善仍待后续迭代。
