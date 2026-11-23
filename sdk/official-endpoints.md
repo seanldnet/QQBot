@@ -83,7 +83,40 @@
 
 本批次共新增 16 条已核验路由，累计已核验 26 条。错误码均链接官方错误码总表；源页面未列出逐接口错误码，因此未臆造。所有路由可经 C ABI 通用 qqb_api_request 调用，C++ 与易语言均复用该 ABI。
 
+## 第三批：公告、精华消息与日程
+
+| guild.announce.create | POST | `/guilds/{guild_id}/announces` | 消息公告与推荐子频道公告互斥；推荐子频道最多 3 条且必须全员可见。 |
+| guild.announce.delete | DELETE | `/guilds/{guild_id}/announces/{message_id}` | 删除指定公告；message_id=all 删除全部推荐子频道公告。 |
+| channel.pin.create | PUT | `/channels/{channel_id}/pins/{message_id}` | 添加精华消息；单个子频道最多 20 条，消息必须可见。 |
+| channel.pin.delete | DELETE | `/channels/{channel_id}/pins/{message_id}` | 删除指定精华消息；message_id=all 删除全部精华消息。 |
+| channel.pins.list | GET | `/channels/{channel_id}/pins` | 获取子频道精华消息。 |
+| channel.schedules.list | GET | `/channels/{channel_id}/schedules` | 获取日程列表；since 单位为毫秒。 |
+| channel.schedule.get | GET | `/channels/{channel_id}/schedules/{schedule_id}` | 获取日程详情。 |
+| channel.schedule.create | POST | `/channels/{channel_id}/schedules` | 创建日程；单个管理员每天最多 10 次，单频道每天最多 100 次。 |
+
+- **guild.announce.create**：路径参数 guild_id；字段 message_id:string (optional)；channel_id:string (required when message_id is set)；announces_type:uint32 (0 member, 1 welcome; default 0)；recommend_channels:RecommendChannel[] (replaces the complete recommendation list)。消息公告与推荐子频道公告互斥；推荐子频道最多 3 条且必须全员可见。 权限：源页引用错误码总表，未列具体权限。 返回：Announces object
+- **guild.announce.delete**：路径参数 guild_id, message_id；字段 message_id='all' deletes all announcement items。删除指定公告；message_id=all 删除全部推荐子频道公告。 权限：源页引用错误码总表，未列具体权限。 返回：HTTP 204
+- **channel.pin.create**：路径参数 channel_id, message_id；字段 无。添加精华消息；单个子频道最多 20 条，消息必须可见。 权限：源页引用错误码总表，未列具体权限。 返回：PinsMessage object
+- **channel.pin.delete**：路径参数 channel_id, message_id；字段 message_id='all' deletes all pins in the channel。删除指定精华消息；message_id=all 删除全部精华消息。 权限：源页引用错误码总表，未列具体权限。 返回：HTTP 204
+- **channel.pins.list**：路径参数 channel_id；字段 无。获取子频道精华消息。 权限：源页引用错误码总表，未列具体权限。 返回：PinsMessage object
+- **channel.schedules.list**：路径参数 channel_id；字段 since:uint64 (milliseconds; returns schedules ending after this timestamp; default current day)。获取日程列表；since 单位为毫秒。 权限：源页引用错误码总表，未列具体权限。 返回：Schedule[]
+- **channel.schedule.get**：路径参数 channel_id, schedule_id；字段 无。获取日程详情。 权限：源页引用错误码总表，未列具体权限。 返回：Schedule object
+- **channel.schedule.create**：路径参数 channel_id；字段 schedule:Schedule (without id)。创建日程；单个管理员每天最多 10 次，单频道每天最多 100 次。 权限：需管理频道权限；机器人必须为管理员。错误码引用官方总表。 返回：Schedule object
+
+本批新增 8 条路由，累计核验 34 条。日程 since 使用毫秒时间戳；创建日程有管理员/频道日配额。公告与精华消息支持 all 特殊值的语义按各自接口原文记录。
+
 ## 本批官方原文
+
+- [guild.announce.create](https://github.com/tencent-connect/bot-docs/blob/main/docs/develop/api-v2/server-inter/channel/content/announces/post_guild_announces.md)
+- [guild.announce.delete](https://github.com/tencent-connect/bot-docs/blob/main/docs/develop/api-v2/server-inter/channel/content/announces/delete_guild_announces.md)
+- [channel.pin.create](https://github.com/tencent-connect/bot-docs/blob/main/docs/develop/api-v2/server-inter/channel/content/pins/put_pins_message.md)
+- [channel.pin.delete](https://github.com/tencent-connect/bot-docs/blob/main/docs/develop/api-v2/server-inter/channel/content/pins/delete_pins_message.md)
+- [channel.pins.list](https://github.com/tencent-connect/bot-docs/blob/main/docs/develop/api-v2/server-inter/channel/content/pins/get_pins_message.md)
+- [channel.schedules.list](https://github.com/tencent-connect/bot-docs/blob/main/docs/develop/api-v2/server-inter/channel/content/schedule/get_schedules.md)
+- [channel.schedule.get](https://github.com/tencent-connect/bot-docs/blob/main/docs/develop/api-v2/server-inter/channel/content/schedule/get_schedule.md)
+- [channel.schedule.create](https://github.com/tencent-connect/bot-docs/blob/main/docs/develop/api-v2/server-inter/channel/content/schedule/post_schedule.md)
+
+
 
 - [guild.members.list](https://github.com/tencent-connect/bot-docs/blob/main/docs/develop/api-v2/server-inter/channel/role/member/get_members.md)
 - [guild.role_members.list](https://github.com/tencent-connect/bot-docs/blob/main/docs/develop/api-v2/server-inter/channel/role/member/get_role_members.md)
