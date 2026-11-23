@@ -80,5 +80,50 @@ public:
         char*out=nullptr;int rc=qqb_send_channel_text(p_,id.c_str(),text.c_str(),nullptr,nullptr,1,&out,&status);
         if(out){response.assign(out);qqb_free_string(out);}return rc;
     }
+
+    int list_guild_members(const std::string& guild,const std::string& after,unsigned int limit,
+                           std::string& response,long& status) const {
+        char*out=nullptr;int rc=qqb_list_guild_members(p_,guild.c_str(),
+          after.empty()?nullptr:after.c_str(),limit,&out,&status);
+        if(out){response.assign(out);qqb_free_string(out);}return rc;
+    }
+    int get_guild_member(const std::string& guild,const std::string& user,
+                         std::string& response,long& status) const {
+        char*out=nullptr;int rc=qqb_get_guild_member(p_,guild.c_str(),user.c_str(),&out,&status);
+        if(out){response.assign(out);qqb_free_string(out);}return rc;
+    }
+    int list_guild_roles(const std::string& guild,std::string& response,long& status) const {
+        char*out=nullptr;int rc=qqb_list_guild_roles(p_,guild.c_str(),&out,&status);
+        if(out){response.assign(out);qqb_free_string(out);}return rc;
+    }
+    int create_guild_role(const std::string& guild,const std::string& body,
+                          std::string& response,long& status) const {
+        char*out=nullptr;int rc=qqb_create_guild_role(p_,guild.c_str(),body.c_str(),&out,&status);
+        if(out){response.assign(out);qqb_free_string(out);}return rc;
+    }
+    int update_guild_role(const std::string& guild,const std::string& role,const std::string& body,
+                          std::string& response,long& status) const {
+        char*out=nullptr;int rc=qqb_update_guild_role(p_,guild.c_str(),role.c_str(),body.c_str(),&out,&status);
+        if(out){response.assign(out);qqb_free_string(out);}return rc;
+    }
+    int delete_guild_role(const std::string& guild,const std::string& role,
+                          std::string& response,long& status) const {
+        char*out=nullptr;int rc=qqb_delete_guild_role(p_,guild.c_str(),role.c_str(),&out,&status);
+        if(out){response.assign(out);qqb_free_string(out);}return rc;
+    }
+    int mute_guild(const std::string& guild,const std::string& end_timestamp,const std::string& seconds,
+                   std::string& response,long& status) const {
+        char*out=nullptr;int rc=qqb_mute_guild(p_,guild.c_str(),
+          end_timestamp.empty()?nullptr:end_timestamp.c_str(),seconds.empty()?nullptr:seconds.c_str(),&out,&status);
+        if(out){response.assign(out);qqb_free_string(out);}return rc;
+    }
+    int mute_guild_member(const std::string& guild,const std::string& user,
+                          const std::string& end_timestamp,const std::string& seconds,
+                          std::string& response,long& status) const {
+        char*out=nullptr;int rc=qqb_mute_guild_member(p_,guild.c_str(),user.c_str(),
+          end_timestamp.empty()?nullptr:end_timestamp.c_str(),seconds.empty()?nullptr:seconds.c_str(),&out,&status);
+        if(out){response.assign(out);qqb_free_string(out);}return rc;
+    }
+
 };
 }
