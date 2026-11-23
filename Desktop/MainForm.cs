@@ -17,11 +17,11 @@ public sealed class MainForm : AntdUI.Window
     private bool _loggedIn;
 
     private readonly AntdUI.Panel _surface = new() { Dock = DockStyle.Fill, Back = Color.FromArgb(245, 247, 250) };
-    private readonly AntdUI.Panel _loginCard = new() { Back = Color.White, Radius = 14, Shadow = 12, Size = new Size(520, 510) };
-    private readonly AntdUI.Input _appId = new() { PlaceholderText = "请输入 QQ 官方机器人 AppID", AllowClear = true, Size = new Size(410, 42) };
+    private readonly AntdUI.Panel _loginCard = new() { Back = Color.White, Radius = 14, Shadow = 12, Size = new Size(900, 540), Visible = false };
+    private readonly AntdUI.Input _appId = new() { PlaceholderText = "请输入 QQ 官方机器人 AppID", AllowClear = true, Size = new Size(780, 42) };
     private readonly AntdUI.Input _appSecret = new() { PlaceholderText = "请输入 AppSecret", UseSystemPasswordChar = true, AllowClear = true, Size = new Size(410, 42) };
     private readonly AntdUI.Select _mode = new() { Size = new Size(410, 42), DropDownArrow = true };
-    private readonly AntdUI.Button _loginButton = new() { Text = "连接机器人", Size = new Size(410, 46), Radius = 8 };
+    private readonly AntdUI.Button _loginButton = new() { Text = "添加并连接机器人", Size = new Size(780, 46), Radius = 8 };
     private readonly AntdUI.Label _loginHint = new() { Text = "凭据仅用于本机连接，管理接口仅监听 127.0.0.1。", ForeColor = Color.Gray, AutoSize = true };
 
     private readonly AntdUI.Panel _sidebar = new() { Back = Color.White, Size = new Size(210, 700) };
@@ -32,8 +32,8 @@ public sealed class MainForm : AntdUI.Window
     private readonly AntdUI.Input _logs = new() { Multiline = true, ReadOnly = true, AutoScroll = true, WordWrap = false, Font = new Font("Consolas", 9.5f), Size = new Size(820, 440) };
     private readonly AntdUI.Button _navOverview = new() { Text = "运行概览", Size = new Size(176, 42), Ghost = true, TextAlign = ContentAlignment.MiddleLeft };
     private readonly AntdUI.Button _navMessages = new() { Text = "消息日志", Size = new Size(176, 42), Ghost = true, TextAlign = ContentAlignment.MiddleLeft };
-    private readonly AntdUI.Button _navSettings = new() { Text = "连接设置", Size = new Size(176, 42), Ghost = true, TextAlign = ContentAlignment.MiddleLeft };
-    private readonly AntdUI.Button _logoutButton = new() { Text = "退出连接", Size = new Size(176, 40), Ghost = true };
+    private readonly AntdUI.Button _navSettings = new() { Text = "账号管理", Size = new Size(176, 42), Ghost = true, TextAlign = ContentAlignment.MiddleLeft };
+    private readonly AntdUI.Button _logoutButton = new() { Text = "返回首页", Size = new Size(176, 40), Ghost = true };
 
     public MainForm()
     {
@@ -44,12 +44,20 @@ public sealed class MainForm : AntdUI.Window
         Mode = AntdUI.TAMode.Auto;
         BuildLogin();
         BuildDashboard();
+        _surface.Visible = false;
+        _surface.Controls.Remove(_loginCard);
+        _content.Controls.Add(_loginCard);
+        _loginCard.Location = new Point(30, 110);
+        _loginCard.Anchor = AnchorStyles.Top | AnchorStyles.Left;
+        _sidebar.Visible = true;
+        _content.Visible = true;
+        ShowPage("运行概览");
         _refreshTimer.Tick += async (_, _) => await RefreshDataAsync();
         _loginButton.Click += async (_, _) => await LoginAsync();
         _navOverview.Click += (_, _) => ShowPage("运行概览");
         _navMessages.Click += (_, _) => ShowPage("消息日志");
-        _navSettings.Click += (_, _) => ShowPage("连接设置");
-        _logoutButton.Click += (_, _) => Logout();
+        _navSettings.Click += (_, _) => ShowPage("账号管理");
+        _logoutButton.Click += (_, _) => ShowPage("运行概览");
         FormClosed += (_, _) => ShutdownCore();
         StartCore();
     }
@@ -64,7 +72,7 @@ public sealed class MainForm : AntdUI.Window
             Font = new Font("Microsoft YaHei UI", 26, FontStyle.Bold),
             ForeColor = Color.FromArgb(22, 119, 255),
             AutoSize = true,
-            Location = new Point(190, 48)
+            Location = new Point(370, 42)
         };
         var subtitle = new AntdUI.Label
         {
@@ -72,26 +80,18 @@ public sealed class MainForm : AntdUI.Window
             Font = new Font("Microsoft YaHei UI", 12),
             ForeColor = Color.FromArgb(90, 98, 110),
             AutoSize = true,
-            Location = new Point(194, 94)
+            Location = new Point(374, 88)
         };
-        AddLoginField("AppID", _appId, 160);
-        AddLoginField("AppSecret", _appSecret, 252);
-        var modeLabel = MakeLabel("连接方式", 54, 350);
+        AddLoginField("AppID", _appId, 150);
+        AddLoginField("AppSecret", _appSecret, 245);
+        var modeLabel = MakeLabel("连接方式", 54, 340);
         _mode.Items.AddRange(new object[] { "WSS（WebSocket）", "Webhook（HTTP 回调）" });
         _mode.SelectedIndex = 0;
-        _mode.Location = new Point(54, 378);
-        _loginButton.Location = new Point(54, 442);
-        _loginHint.Location = new Point(54, 478);
+        _mode.Location = new Point(54, 368);
+        _loginButton.Location = new Point(54, 435);
+        _loginHint.Location = new Point(54, 490);
         _loginCard.Controls.AddRange(new Control[] { brand, subtitle, modeLabel, _appId, _appSecret, _mode, _loginButton, _loginHint });
-        _loginCard.Location = new Point((ClientSize.Width - _loginCard.Width) / 2, (ClientSize.Height - _loginCard.Height) / 2);
-        _loginCard.Anchor = AnchorStyles.None;
         _surface.Controls.Add(_loginCard);
-        Resize += (_, _) =>
-        {
-            if (!_loggedIn)
-                _loginCard.Location = new Point(Math.Max(20, (_surface.ClientSize.Width - _loginCard.Width) / 2),
-                    Math.Max(20, (_surface.ClientSize.Height - _loginCard.Height) / 2));
-        };
     }
 
     private void AddLoginField(string caption, AntdUI.Input input, int y)
@@ -183,9 +183,10 @@ public sealed class MainForm : AntdUI.Window
                 throw new InvalidOperationException(ExtractError(body));
             _appSecret.Text = "";
             _loggedIn = true;
-            _surface.Visible = false;
+            _loginCard.Visible = false;
             _sidebar.Visible = true;
             _content.Visible = true;
+            ShowPage("运行概览");
             _refreshTimer.Start();
             await RefreshDataAsync();
             AntdUI.Message.success(this, "机器人登录请求已提交。");
@@ -243,10 +244,14 @@ public sealed class MainForm : AntdUI.Window
     private void ShowPage(string title)
     {
         _pageTitle.Text = title;
-        _logs.Visible = title != "连接设置";
-        _statusText.Visible = title != "消息日志";
-        if (title == "连接设置")
-            _statusText.Text = "当前接入模式和连接状态可在运行概览查看。Webhook 需要公网 HTTPS 回调地址，并在 QQ 开放平台配置 /webhook/qq。";
+        bool accountPage = title == "账号管理";
+        _loginCard.Visible = accountPage;
+        _logs.Visible = !accountPage && title != "连接设置";
+        _statusText.Visible = !accountPage && title != "消息日志";
+        if (accountPage)
+            _statusText.Text = "在此添加 QQ 官方机器人账号。当前宿主核心暂支持一个活动机器人实例。";
+        else if (title == "连接设置")
+            _statusText.Text = "Webhook 需要公网 HTTPS 回调地址，并在 QQ 开放平台配置 /webhook/qq。IP 白名单由 QQ 开放平台管理。";
         else if (title == "消息日志")
             _statusText.Text = "显示宿主收到的最近日志；当前首批覆盖群 @ 消息与 C2C 单聊消息。";
         else
@@ -258,10 +263,10 @@ public sealed class MainForm : AntdUI.Window
     {
         _refreshTimer.Stop();
         _loggedIn = false;
-        _content.Visible = false;
-        _sidebar.Visible = false;
-        _surface.Visible = true;
+        _connectionTag.Text = "已断开";
+        _connectionTag.ForeColor = Color.Gray;
         _appSecret.Text = "";
+        ShowPage("账号管理");
     }
 
     private void ShutdownCore()
