@@ -83,7 +83,7 @@
 - 仓库地址：https://github.com/seanldnet/QQBot
 - 已有 C11 宿主首阶段：HTTP 服务、SQLite 日志、Access Token 获取、Webhook Ed25519 challenge / event 验签、日志查询。
 - 已有插件注册/列表/启停/删除与插件 Token 鉴权、官方 API 代理首版；管理操作使用 QQBOT_ADMIN_TOKEN。
-- 已有统一 C ABI SDK、C++14 封装、易语言 Windows DLL ABI 映射、Windows MinGW 构建脚本，以及官方 API v2 目录 81 页索引。\n- 已新增 `sdk/official-endpoints.md` / `sdk/official-endpoints.json`，从腾讯官方原文逐项核验 10 条 REST 路由（四种消息发送、频道详情与子频道 CRUD）；6 条频道管理路由已提供 C ABI、C++ 和易语言导入封装。这只是增量清单，不代表全部 API 已覆盖。
+- 已有统一 C ABI SDK、C++14 封装、易语言 Windows DLL ABI 映射、Windows MinGW 构建脚本，以及官方 API v2 目录 81 页索引。\n- 已新增 `sdk/official-endpoints.md` / `sdk/official-endpoints.json`，从腾讯官方原文逐项核验 42 条 REST 路由（四种消息发送、频道详情与子频道 CRUD）；25 条 REST 路由已提供 C ABI、C++ 和易语言导入封装。这只是增量清单，不代表全部 API 已覆盖。
 - 官方当前 API 根地址与 Token URL 已按官方文档修正；用户原始需求中的 api.bot.qq.com 仍保留为历史原文。
 - 插件事件并发分发、完整前端、WebSocket 兼容、全量 endpoint 逐项核验与类型化 wrapper、真实消息闭环仍待开发。
 - 当前上述新代码尚未取得 CI、本地编译、Windows 易语言 IDE 或 QQ 实机联调结果；不可标记为已验证完成。
@@ -124,3 +124,12 @@
 - 从腾讯官方原文新增 8 条路由：日程修改/删除、语音上麦/下麦、论坛帖子列表/详情/发表/删除；更新 JSON 清单、Markdown 清单、易语言 DLL 声明和开发任务记录。
 - 安全/权限约束：since_ms 按十进制字符串校验并保持毫秒单位；路径 ID 仅允许安全字符；音频上/下麦仅限音频类机器人且当前文档要求联系平台申请权限；论坛接口标记 PrivateDomain，不宣称普通机器人可直接调用。
 - 验证：成员/身份组/禁言 C ABI 与 C++ 代码的 CI 已通过 Make、CMake 和 C++ 示例编译；本批日程/音频代码与文档提交后将触发新 CI，尚未取得结果。易语言 IDE、Windows DLL 加载和 QQ 实机权限测试仍未执行。
+
+
+## 当前 SDK 覆盖快照（2026-11-23）
+
+- 官方 API v2 文档目录索引：81 个页面。
+- 逐页核验 REST endpoint：42 条（增量清单，非全量）。
+- C ABI/C++/易语言类型化入口：25 条 endpoint；其余已登记路由可通过通用 `qqb_api_request` / `qqbot::Client::request` 调用。
+- 当前类型化范围：消息发送 4、频道管理 6、成员/身份组/禁言 8、日程/音频 7。
+- 易语言内容仍是 DLL ABI 声明映射文档，未声称已在易语言 IDE 编译验证。
