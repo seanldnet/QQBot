@@ -12,6 +12,8 @@
 - [QQ 协议核验记录](docs/PROTOCOL-RESEARCH.md)
 - [依赖安装说明](DEPENDENCIES.md)
 - [多语言 SDK 总览](sdk/README.md)
+- [SDK 快速接入](sdk/QUICKSTART.md)
+- [Windows / 易语言 DLL 构建](sdk/windows/README.md)
 - [官方 API v2 全量目录（81 页）](sdk/official-api-catalog.md)
 - [机器可读 API 目录](sdk/official-api-index.json)
 - [C ABI SDK 头文件](sdk/include/qqbot_sdk.h)
