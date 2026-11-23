@@ -4,6 +4,16 @@
 
 
 
+
+## 2026-11-23 — 日志接口、安全默认值与 CI 构建流程
+
+- 修改 `src/main.c`：新增 `/api/v1/logs` 最近 100 条日志查询；Webhook 请求校验 `X-Bot-Appid`（请求头存在时必须与当前配置一致）；管理 HTTP 服务默认仅绑定 `127.0.0.1`，通过 `QQBOT_BIND` 才可显式暴露其他 IPv4 地址。
+- 修改 `src/qq/webhook.c`：签名 hex 解码改为逐字符严格校验，拒绝包含非十六进制字符的签名。
+- 修改 `web/index.html`：默认连接方式切换为 Webhook，登录后显示并轮询运行日志。
+- 新增 `.github/workflows/build.yml`：在 push / pull request 时安装依赖，分别执行 Make 与 CMake 构建。
+- 修改 `README.md`、`docs/DEVELOPMENT.md`、`docs/TASKS.md`、`DEPENDENCIES.md`：同步当前实现范围、官方协议约束与未完成事项。
+- 验证：GitHub 已接受工作流文件提交；当前未取得 Actions 构建结果，因此编译仍标记为未验证。
+
 ## 2026-11-23 — Webhook 接入与运行日志首版
 
 - 新增 `src/qq/webhook.h` / `src/qq/webhook.c`：实现 QQ op=13 challenge 签名生成，以及 op=0 事件的 Ed25519 验签；seed 按官方规则由 Bot Secret 重复并截取 32 字节，事件签名消息按 `timestamp + raw_body` 拼接。
