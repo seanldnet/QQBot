@@ -57,6 +57,9 @@ int qq_callback_target_validate(const char *url, qq_callback_target *out) {
     CURLU *u=NULL; char scheme[16], port_text[16]; char *explicit_port=NULL;
     struct addrinfo hints, *list=NULL, *it; struct in_addr v4; struct in6_addr v6;
     size_t n=0; int rc=-1; long port;
+#ifdef _WIN32
+    int winsock_started = 0;
+#endif
     if (!url || !url[0] || !out || strlen(url)>2048) return -1;
     memset(out,0,sizeof(*out)); u=curl_url(); if (!u) return -1;
     if (curl_url_set(u,CURLUPART_URL,url,CURLU_DISALLOW_USER)!=CURLUE_OK ||
@@ -77,14 +80,10 @@ int qq_callback_target_validate(const char *url, qq_callback_target *out) {
     {
         WSADATA wsa;
         if (WSAStartup(MAKEWORD(2,2), &wsa) != 0) goto done;
+        winsock_started = 1;
     }
 #endif
-    if (getaddrinfo(out->host,"443",&hints,&list)!=0 || !list) {
-#ifdef _WIN32
-        WSACleanup();
-#endif
-        goto done;
-    }
+    if (getaddrinfo(out->host,"443",&hints,&list)!=0 || !list) goto done;
     for (it=list;it;it=it->ai_next) {
         char ip[INET6_ADDRSTRLEN]; const void *src; int is6=0;
         if (it->ai_family==AF_INET) src=&((struct sockaddr_in*)it->ai_addr)->sin_addr;
@@ -101,7 +100,7 @@ done:
     if (explicit_port) curl_free(explicit_port);
     if (list) freeaddrinfo(list);
 #ifdef _WIN32
-    WSACleanup();
+    if (winsock_started) WSACleanup();
 #endif
     curl_url_cleanup(u);
     if (rc) memset(out,0,sizeof(*out));
