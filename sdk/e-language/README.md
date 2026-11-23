@@ -143,3 +143,18 @@ qqb_send_group_text(client, group_openid, content, event_id, msg_id, msg_seq, re
 ## 群聊完整消息体发送
 
 `qqb_send_group_message(client, group_openid, body_json, response_json*, http_status*)` 支持完整 JSON 消息体；C++ 对应 `Client::send_group_message`。群聊消息类型与回复限制见 `sdk/group-api-discovery.md`。
+
+
+## QQ 群管理（群 API，不是频道 API）
+
+以下 C ABI 均为 Windows __stdcall 导出；response_json 用 qqb_free_string 释放。群标识使用 group_openid，成员标识使用 member_openid：
+
+- qqb_get_group_info(client, group_openid, response_json, http_status)：GET /v2/groups/{group_openid}/info
+- qqb_get_group_bot_state(client, group_openid, response_json, http_status)：GET /v2/groups/{group_openid}/bot_state
+- qqb_get_group_mute_state(client, group_openid, response_json, http_status)：GET /v2/groups/{group_openid}/restrict_chat_setting
+- qqb_set_group_member_mutes(client, group_openid, body_json, response_json, http_status)：POST 同一禁言路由；body 为完整 JSON object
+- qqb_list_group_members(client, group_openid, cursor, limit, response_json, http_status)：GET /members；cursor 为不透明分页游标，limit 1–30
+- qqb_get_group_member(client, group_openid, member_openid, response_json, http_status)：GET /members/{member_openid}
+- qqb_batch_remove_group_members(client, group_openid, body_json, response_json, http_status)：POST /batch_remove_members；body 为完整 JSON object
+
+权限说明：群资料、机器人状态、成员查询等能力可能受平台白名单控制；禁言、移除成员等操作还受机器人群管理员身份及单次操作人数限制。字段与限制目前以第三方维护 Go SDK fork 作交叉核验线索，腾讯官方自动生成页面尚未逐项复核；不得将白名单状态视为已获授权。官方未明确列出的字段/错误码不作推断。
