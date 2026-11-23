@@ -93,3 +93,13 @@
 - 中间提交曾因事件投递 API 错误 JSON 字符串转义和 event_queue.c 缺少标准 NULL 定义导致 Make 编译失败；已分别修正。失败的中间 run 未作为通过依据。
 - 最终修复提交 `3e4320fb6ad939e5cd6e9ef5d529d77185fa0974` 对应 GitHub Actions run `45176688074` 已成功：C++ SDK 示例、Make 构建、Make 单元测试、CMake 构建和 CTest 均通过。
 - 当前验证仅覆盖事件持久化与逐插件 pending 任务扇出；尚未启用 callback HTTP worker，也未做 DNS/IP SSRF 防护和真实 QQ Webhook 回调实测。
+
+
+
+## 2026-11-23 — 插件 callback SSRF 防护第一阶段
+
+- 新增 `src/qq/callback_security.h/.c`：严格解析 HTTPS callback URL，限定 TCP 443，拒绝 URL userinfo 和 IP literal；通过 `getaddrinfo` 检查全部 DNS A/AAAA 答案，任一答案落入非公网地址范围即拒绝。
+- IPv4 地址分类拒绝私网、环回、链路本地、共享地址、文档、组播和保留网段；IPv6 仅接受全球单播 2000::/3，并拒绝特殊用途、6to4、文档地址。
+- 新增 `tests/test_callback_security.c`，覆盖公网/私网/环回/链路本地/文档/IPv4-mapped IPv6 和 URL 协议、userinfo、IP literal、端口策略；接入 Make 与 CMake/CTest。
+- 当前仅为安全校验原语，未接入 callback_url 写入口，未实现 DNS pinning 和 HTTP worker；不允许出站投递。当前解析依赖 POSIX 网络 API，Windows 适配待做。
+- CI 将由本批代码提交触发；本地构建未执行。
