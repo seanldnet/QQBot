@@ -124,3 +124,17 @@ qqb_update_channel_role_permissions(client, channel_id, role_id, body_json, resp
 - 权限修改 body_json 传 `{"add":"权限位图","remove":"权限位图"}`。add 授权、remove 撤权；同一位同时设置时平台按删除处理；不能通过该接口修改“可管理子频道”权限。
 - 权限接口要求管理子频道权限，机器人必须为管理员；最终仍由 QQ 平台校验。
 - 本文仅描述 DLL ABI 映射，未声称已在易语言 IDE 编译验证。
+
+
+## QQ 群聊专用 API（与频道接口分离）
+
+```text
+qqb_send_group_message(client, group_openid, body_json, response_json*, http_status*) -> 整数型
+qqb_send_group_text(client, group_openid, content, event_id, msg_id, msg_seq, response_json*, http_status*) -> 整数型
+```
+
+`qqb_send_group_message` 传入完整 JSON 对象，可使用官方支持的 msg_type：0 文本、2 Markdown、3 Ark、4 Embed、7 Media，并按消息类型提供 markdown、ark、media、keyboard 等字段。群聊被动回复窗口为 5 分钟，每条入站消息最多回复 5 次；主动推送能力自 2025-04-21 起已停止提供。消息引用字段在官方文档中标注暂未支持。常见错误码：22009、304082、304083。
+
+### 当前官方群管理开放边界（避免误报）
+
+腾讯官方 bot-docs 当前群管理 README 中，获取群资料、获取机器人入群列表、群成员列表和群成员增退事件等 REST/事件条目仍处于注释/暂不开放状态；不能将这些未开放项目当作可调用接口。现阶段可明确使用的群相关接口是群聊消息发送，以及 WebSocket 群消息/机器人入退群等已公开事件。群管理接口待官方正式开放后再登记。
