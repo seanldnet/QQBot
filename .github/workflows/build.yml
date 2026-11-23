@@ -47,3 +47,68 @@ jobs:
           gcc -std=c11 -D_WIN32 -Wall -Wextra -Wpedantic -Isrc tests/test_callback_security.c src/qq/callback_security.c -o test_callback_security.exe $(pkg-config --cflags --libs libcurl) -lws2_32
       - name: Run Windows callback security test
         run: ./test_callback_security.exe
+
+  windows-full-build:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up MinGW64 environment
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: true
+      - name: Refresh package databases and install native dependencies
+        run: |
+          pacman -Syyu --noconfirm
+          pacman -S --needed --noconfirm mingw-w64-x86_64-gcc mingw-w64-x86_64-cmake mingw-w64-x86_64-ninja mingw-w64-x86_64-pkgconf mingw-w64-x86_64-libmicrohttpd mingw-w64-x86_64-curl mingw-w64-x86_64-sqlite3 mingw-w64-x86_64-cjson mingw-w64-x86_64-openssl zip ca-certificates
+          pacman -Ss libmicrohttpd
+      - name: Configure Windows Server 2012 API baseline
+        run: cmake -S . -B build-win -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=stage -DCMAKE_C_FLAGS="-D_WIN32_WINNT=0x0602 -DWINVER=0x0602"
+      - name: Build Windows host and SDK
+        run: cmake --build build-win --parallel
+      - name: Run Windows tests
+        run: ctest --test-dir build-win --output-on-failure
+      - name: Install and assemble runtime layout
+        run: |
+          cmake --install build-win
+          mkdir -p stage/data
+          cp -r web stage/
+          cp README.md DEPENDENCIES.md stage/
+          openssl rand -hex 32 > stage/admin-token.txt
+          mkdir -p stage/certs
+          cp /etc/ssl/certs/ca-bundle.crt stage/certs/ca-bundle.crt
+          cat > stage/启动QQBot.bat <<'EOF'
+          @echo off
+          cd /d "%~dp0"
+          if not exist data mkdir data
+          set /p QQBOT_ADMIN_TOKEN=<admin-token.txt
+          set QQBOT_BIND=127.0.0.1
+          set QQBOT_PORT=8080
+          set CURL_CA_BUNDLE=%~dp0certs\ca-bundle.crt
+          bin\qqbot.exe
+          pause
+          EOF
+          cat > stage/运行环境说明.txt <<'EOF'
+          QQBot Windows x64 一键运行包
+          目标 Windows API baseline：Windows 8.1 / Server 2012 (0x0602)
+          已包含宿主、SDK DLL、非系统运行时 DLL、Web UI 和初始化管理员 API Token。
+          双击“启动QQBot.bat”启动，默认监听 127.0.0.1:8080。
+          管理员 API Token 保存在 admin-token.txt，请妥善保管。
+          数据库位于 data\qqbot.db。
+          本包仍须在各目标 Windows Server 版本实机验收后才能宣称全版本兼容。
+          EOF
+      - name: Bundle and verify all non-system DLL dependencies
+        run: |
+          bash scripts/package-windows.sh stage/bin stage/bin/qqbot.exe stage/bin/libqqbot_sdk.dll
+      - name: Create ready-to-run ZIP
+        run: zip -qr QQBot-Windows-x64-Server2012plus.zip stage
+      - name: Upload Windows ready-to-run package
+        uses: actions/upload-artifact@v4
+        with:
+          name: QQBot-Windows-x64-Server2012plus
+          path: QQBot-Windows-x64-Server2012plus.zip
+          if-no-files-found: error
+          retention-days: 30
