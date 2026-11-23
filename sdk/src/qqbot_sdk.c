@@ -146,4 +146,79 @@ int QQB_CALL qqb_update_channel(qqb_client*c,const char*id,const char*body,char*
 int QQB_CALL qqb_delete_channel(qqb_client*c,const char*id,char**out,long*status) {
     return endpoint_call(c,"DELETE","/channels/",id,"",NULL,out,status);
 }
+
+static int valid_decimal_string(const char *s) {
+    if(!s || !*s) return 0;
+    for(const unsigned char *p=(const unsigned char*)s; *p; ++p)
+        if(*p<'0'||*p>'9') return 0;
+    return 1;
+}
+int QQB_CALL qqb_list_guild_members(qqb_client*c,const char*guild,const char*after,
+    unsigned int limit,char**out,long*status) {
+    if(!valid_path_id(guild)|| (after && !valid_path_id(after)) || limit<1 || limit>400) return -1;
+    if(!after) after="0";
+    char path[512];
+    int n=snprintf(path,sizeof(path),"/guilds/%s/members?after=%s&limit=%u",guild,after,limit);
+    if(n<0||(size_t)n>=sizeof(path)) return -1;
+    return qqb_api_request(c,"GET",path,NULL,out,status);
+}
+int QQB_CALL qqb_get_guild_member(qqb_client*c,const char*guild,const char*user,
+    char**out,long*status) {
+    if(!valid_path_id(guild)||!valid_path_id(user)) return -1;
+    char path[512]; int n=snprintf(path,sizeof(path),"/guilds/%s/members/%s",guild,user);
+    if(n<0||(size_t)n>=sizeof(path)) return -1;
+    return qqb_api_request(c,"GET",path,NULL,out,status);
+}
+int QQB_CALL qqb_list_guild_roles(qqb_client*c,const char*guild,char**out,long*status) {
+    return endpoint_call(c,"GET","/guilds/",guild,"/roles",NULL,out,status);
+}
+int QQB_CALL qqb_create_guild_role(qqb_client*c,const char*guild,const char*body,
+    char**out,long*status) {
+    if(!body||body[0]!='{') return -1;
+    return endpoint_call(c,"POST","/guilds/",guild,"/roles",body,out,status);
+}
+int QQB_CALL qqb_update_guild_role(qqb_client*c,const char*guild,const char*role,
+    const char*body,char**out,long*status) {
+    if(!valid_path_id(guild)||!valid_path_id(role)||!body||body[0]!='{') return -1;
+    char path[512]; int n=snprintf(path,sizeof(path),"/guilds/%s/roles/%s",guild,role);
+    if(n<0||(size_t)n>=sizeof(path)) return -1;
+    return qqb_api_request(c,"PATCH",path,body,out,status);
+}
+int QQB_CALL qqb_delete_guild_role(qqb_client*c,const char*guild,const char*role,
+    char**out,long*status) {
+    if(!valid_path_id(guild)||!valid_path_id(role)) return -1;
+    char path[512]; int n=snprintf(path,sizeof(path),"/guilds/%s/roles/%s",guild,role);
+    if(n<0||(size_t)n>=sizeof(path)) return -1;
+    return qqb_api_request(c,"DELETE",path,NULL,out,status);
+}
+static int mute_request(qqb_client*c,const char*path,const char*end,const char*seconds,
+    char**out,long*status) {
+    if((!end||!*end)&&(!seconds||!*seconds)) return -1;
+    if(end&&!valid_decimal_string(end)) return -1;
+    if(seconds&&!valid_decimal_string(seconds)) return -1;
+    char *qe=end?json_quote(end):NULL, *qs=seconds?json_quote(seconds):NULL;
+    if((end&&!qe)||(seconds&&!qs)){free(qe);free(qs);return -3;}
+    size_t cap=(qe?strlen(qe):0)+(qs?strlen(qs):0)+96;
+    char *body=(char*)malloc(cap); if(!body){free(qe);free(qs);return -3;}
+    snprintf(body,cap,"{%s%s%s%s%s}",
+      qe?"\"mute_end_timestamp\":":"",qe?qe:"",
+      (qe&&qs)?",":"",qs?"\"mute_seconds\":":"",qs?qs:"");
+    int rc=qqb_api_request(c,"PATCH",path,body,out,status);
+    free(qe);free(qs);free(body);return rc;
+}
+int QQB_CALL qqb_mute_guild(qqb_client*c,const char*guild,const char*end,const char*seconds,
+    char**out,long*status) {
+    if(!valid_path_id(guild)) return -1;
+    char path[384]; int n=snprintf(path,sizeof(path),"/guilds/%s/mute",guild);
+    if(n<0||(size_t)n>=sizeof(path)) return -1;
+    return mute_request(c,path,end,seconds,out,status);
+}
+int QQB_CALL qqb_mute_guild_member(qqb_client*c,const char*guild,const char*user,
+    const char*end,const char*seconds,char**out,long*status) {
+    if(!valid_path_id(guild)||!valid_path_id(user)) return -1;
+    char path[512]; int n=snprintf(path,sizeof(path),"/guilds/%s/members/%s/mute",guild,user);
+    if(n<0||(size_t)n>=sizeof(path)) return -1;
+    return mute_request(c,path,end,seconds,out,status);
+}
+
 const char *QQB_CALL qqb_version(void){return "0.2.0";}
