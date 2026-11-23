@@ -505,6 +505,8 @@ static enum MHD_Result handler(void *cls, struct MHD_Connection *c, const char *
         if (g_app.gateway) { qq_gateway_stop(g_app.gateway); g_app.gateway = NULL; }
         pthread_mutex_lock(&g_app.lock);
         snprintf(g_app.app_id, sizeof(g_app.app_id), "%s", id->valuestring);
+        OPENSSL_cleanse(g_app.access_token, sizeof(g_app.access_token));
+        g_app.token_expires = 0;
         OPENSSL_cleanse(g_app.app_secret, sizeof(g_app.app_secret));
         snprintf(g_app.app_secret, sizeof(g_app.app_secret), "%s", secret->valuestring);
         snprintf(g_app.connection_mode, sizeof(g_app.connection_mode), "%s", selected_mode);
