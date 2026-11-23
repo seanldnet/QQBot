@@ -81,7 +81,7 @@
 - **guild.mute.all**（PATCH）：路径参数 guild_id；字段/查询参数：mute_end_timestamp:string (绝对秒级时间戳)；mute_seconds:string (秒数；与前者同时传时前者优先；任一传 '0' 可解除)。全员禁言（非管理员）或解除；成功 HTTP 204。 权限：需频道管理员权限；机器人必须为管理员。错误码引用官方总表。 返回：HTTP 204
 - **guild.member.mute**（PATCH）：路径参数 guild_id, user_id；字段/查询参数：mute_end_timestamp:string (绝对秒级时间戳)；mute_seconds:string (秒数；与前者同时传时前者优先；任一传 '0' 可解除)。指定成员禁言或解除；成功 HTTP 204。 权限：需频道管理员权限；机器人必须为管理员。错误码引用官方总表。 返回：HTTP 204
 
-本批次共新增 16 条已核验路由。错误码均链接官方错误码总表；源页面未列出逐接口错误码，因此未臆造。所有路由可经 C ABI 通用 qqb_api_request 调用，C++ 与易语言均复用该 ABI。
+本批次共新增 16 条已核验路由，累计已核验 26 条。错误码均链接官方错误码总表；源页面未列出逐接口错误码，因此未臆造。所有路由可经 C ABI 通用 qqb_api_request 调用，C++ 与易语言均复用该 ABI。
 
 ## 本批官方原文
 
