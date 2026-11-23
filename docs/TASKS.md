@@ -320,3 +320,9 @@
 - [x] 明确 libcurl WebSocket API 最低版本为 7.86.0，并在 Make/CMake 中增加版本检查。
 - [x] 修正 WSS 就绪状态：仅在 Gateway 下发 READY 后显示 connected；握手完成但未 READY 时显示 authenticating。
 - [ ] 最新代码 CI run 45188659260 仍在执行，待确认 Linux/Windows 全部通过。
+
+
+## 2026-11-23 — WSS 依赖检查脚本修复
+
+- [x] 修复 Makefile `check-deps` 循环中的 Make 变量转义，避免包名变量被 Make 提前展开为空。
+- [ ] 修复后完整 CI run 45188880579 执行中。
