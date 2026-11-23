@@ -2,7 +2,8 @@ CC ?= cc
 PKG_CONFIG ?= pkg-config
 BUILD_DIR ?= build
 TARGET := $(BUILD_DIR)/qqbot
-SRC := src/main.c
+SRC := src/main.c src/qq/webhook.c
+CFLAGS += -Isrc
 CFLAGS += -std=c11 -D_POSIX_C_SOURCE=200809L -Wall -Wextra -Wpedantic -O2 $(shell $(PKG_CONFIG) --cflags libmicrohttpd libcurl sqlite3 libcjson openssl 2>/dev/null)
 LDLIBS += $(shell $(PKG_CONFIG) --libs libmicrohttpd libcurl sqlite3 libcjson openssl 2>/dev/null) -lpthread
 
