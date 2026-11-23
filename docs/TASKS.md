@@ -109,3 +109,15 @@
 - [x] 新增 C ABI 通过 GitHub Actions Make、CMake、C++ 示例构建（run 45148983234）；Windows DLL 和易语言 IDE 实测仍待执行。
 
 当前覆盖统计：81 个官方文档目录页；42 条逐页核验 REST 路由（增量，非全量）；33 条具备独立 C ABI/C++/易语言类型化入口。剩余 9 条可经通用请求入口调用。GitHub Actions run 45148983234 已通过 Make、CMake 与 C++ SDK 示例编译；Windows DLL 加载、易语言 IDE 和 QQ 实机联调未执行。
+
+
+## 群聊 API 优先级纠偏（2026-11-23）
+
+- [x] 复核腾讯官方 bot-docs 的群聊发送 API、群消息事件和群管理开放状态。
+- [x] 新增群聊完整 JSON 消息发送函数 `qqb_send_group_message`，支持 msg_type 0/2/3/4/7 与官方 body 扩展字段；保留文本快捷接口。
+- [x] 新增 C++ `Client::send_group_message` 与易语言 DLL 导入说明。
+- [x] 将群消息事件文档纳入官方文档目录索引；明确区分群聊与频道。
+- [ ] 实现 Gateway/WebSocket 对 GROUP_AT_MESSAGE_CREATE、GROUP_ADD_ROBOT、GROUP_DEL_ROBOT、GROUP_MSG_REJECT、GROUP_MSG_RECEIVE 的解析和插件事件分发。
+- [ ] 按官方开放状态持续核验群资料/成员/禁言/入群审批 API；当前公开 README 将部分管理接口标记为暂不开放，禁止伪造 endpoint。
+
+群聊优先级调整：后续优先做群消息收发闭环和群事件分发；频道管理/日程/音频功能转入维护队列。
