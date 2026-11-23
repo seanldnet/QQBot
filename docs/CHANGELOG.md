@@ -1,5 +1,18 @@
 # 变更日志
 
+## 2026-11-23 — C ABI / C++ / 易语言 SDK 首版与官方 API 目录
+
+- 新增 sdk/include/qqbot_sdk.h、sdk/src/qqbot_sdk.c：提供统一 C ABI 插件 SDK；libcurl 调用宿主插件代理契约，包含任意官方 REST method/path/body 通用调用、响应内存释放、HTTPS 校验、超时、响应体上限和插件 Token 头鉴权。
+- 新增 sdk/cpp/qqbot.hpp、sdk/cpp/example.cpp：提供 C++ RAII 客户端封装、通用 API 调用和群聊/单聊/频道文本发送封装；支持传递 event_id、msg_id、msg_seq 被动回复上下文。
+- 新增 sdk/e-language/README.md、sdk/e-language/example.md：记录易语言 Windows DLL ABI、__stdcall、x86/x64 位数匹配、UTF-8 参数和返回内存释放约定。当前是 DLL 导入映射文档，尚未在易语言 IDE 实测。
+- 新增 sdk/official-api-catalog.md 与 sdk/official-api-index.json：从腾讯官方 tencent-connect/bot-docs API v2 目录配置整理 81 个官方文档页面，覆盖消息、消息结构/交互、频道、群聊、用户、协议和错误说明；SDK 通用调用入口可将这些文档定义的 REST path 交给宿主代理。
+- 修改 Makefile / CMake：增加 libqqbot_sdk 共享库构建与安装目标；make all 同时构建宿主和 SDK。
+- 修正 src/main.c 默认官方 API 地址：OpenAPI 根地址 https://api.sgroup.qq.com，Token URL https://bots.qq.com/app/getAppAccessToken。与用户原始需求中的 https://api.bot.qq.com 不同；原始需求保留，实际默认值按官方 api-use.md，并支持 QQBOT_API_BASE / QQBOT_TOKEN_URL 覆盖。
+- 新增接口契约 POST /api/v1/plugins/{id}/qq-api：插件 ID + Token 鉴权，代理 {method,path,body}；当前宿主端代理路由和插件注册/Token 管理尚未实现，因此 SDK 尚不能端到端调用真实 QQ API。
+- 官方消息发送规则：主动推送自 2025-04-21 起不再提供，SDK 便利方法不能绕过被动回复时效、频次和事件上下文限制。
+- 验证：GitHub 文件提交成功；未运行本地 Make/CMake 编译，未进行 Windows DLL 构建、易语言 IDE 验证或真实 QQ API 联调。不得标记为已验证。
+
+
 所有代码或文档变更均按时间倒序记录。每条记录必须包含变更范围、原因、行为影响和验证结果。不得将未执行的测试描述为通过。
 
 
