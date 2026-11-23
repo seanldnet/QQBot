@@ -231,6 +231,6 @@
 
 ## 7. 插件回调地址安全基线（第一阶段）
 
-新增 `src/qq/callback_security.h/.c`，提供 callback URL 校验和 DNS 解析结果结构：仅接受 HTTPS、443 端口、DNS 主机名；拒绝 userinfo、IP 字面量、非 443 端口；解析所有 DNS A/AAAA 结果，只要其中任意地址不是公网单播地址即整体拒绝。IPv4 拒绝私网、环回、链路本地、共享地址、文档网段、多播和保留网段；IPv6 仅接受 2000::/3 全球单播，并排除特殊用途、6to4 和文档地址。DNS 结果暂存于固定容量结构中，供后续 CURLOPT_RESOLVE pinning 使用。
+新增 `src/qq/callback_security.h/.c`，提供 callback URL 校验和 DNS 解析结果结构：仅接受 HTTPS、443 端口、DNS 主机名；拒绝 userinfo、IP 字面量、非 443 端口；解析所有 DNS A/AAAA 结果，只要其中任意地址不是公网单播地址即整体拒绝。IPv4 拒绝私网、环回、链路本地、共享地址、文档网段、多播和保留网段；IPv6 仅接受 2000::/3 全球单播，并排除特殊用途、6to4 和文档地址。DNS 结果暂存于固定容量结构中，并可格式化为 libcurl `CURLOPT_RESOLVE` 所需的 host:port:address 列表。该格式化函数只生成 pinning 参数字符串；当前尚未由 HTTP 请求使用它，因此实际 DNS pinning 仍未完成。
 
 重要边界：本阶段仅提供校验/解析原语，尚未接入插件注册 URL 校验，也未实现 DNS pinning、HTTP worker、禁止重定向、响应体限制和重试。因此不能把它视为完整 SSRF 防护，也不得启用 callback 出站请求。当前实现使用 POSIX `getaddrinfo`/`inet_pton`，Windows Winsock 适配尚待完成。
