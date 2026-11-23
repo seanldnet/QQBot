@@ -28,3 +28,5 @@ make
 ## Windows 成品运行
 
 项目目标改为提供包含宿主、SDK DLL 和运行时依赖的 Windows x64 ZIP 成品，使用者不需要安装编译工具。正式发布前必须逐版本验证 Windows Server 2012/2012 R2、2016、2019、2022、2025、2026；尤其 Server 2012 的 TLS/根证书和系统 API 兼容需要独立验收。CI artifact 属于测试包，不应在逐版本验收完成前标记为正式稳定版。
+
+Windows Server 2012 目标构建固定使用 MINGW64 CRT 方案。由于 MSYS2 当前 MINGW64 软件源不再列出 libmicrohttpd，CI 固定下载 1.0.10-1 历史 MINGW64 包并安装匹配 GnuTLS 依赖；该方案须以实际 CI 构建及 DLL 依赖闭包检查结果为准。
