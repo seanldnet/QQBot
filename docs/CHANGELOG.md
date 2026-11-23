@@ -145,3 +145,10 @@
 - 从腾讯官方原文新增 8 条路由：日程修改/删除、语音上麦/下麦、论坛帖子列表/详情/发表/删除；更新 JSON 清单、Markdown 清单、易语言 DLL 声明和开发任务记录。
 - 安全/权限约束：since_ms 按十进制字符串校验并保持毫秒单位；路径 ID 仅允许安全字符；音频上/下麦仅限音频类机器人且当前文档要求联系平台申请权限；论坛接口标记 PrivateDomain，不宣称普通机器人可直接调用。
 - 验证：成员/身份组/禁言 C ABI 与 C++ 代码的 CI 已通过 Make、CMake 和 C++ 示例编译；本批日程/音频代码与文档提交后将触发新 CI，尚未取得结果。易语言 IDE、Windows DLL 加载和 QQ 实机权限测试仍未执行。
+
+## 2026-11-23 — SDK 覆盖快照与构建验证更新
+
+- 同步刷新 docs/DEVELOPMENT.md、docs/TASKS.md、sdk/official-api-index.json：当前目录索引 81 页、逐页核验 42 条 REST 路由、25 条已提供 C ABI/C++/易语言类型化入口；明确仍为增量覆盖。
+- 将此前错误的 14 条类型化覆盖计数修正为 18 条，再计入本批 7 条日程/音频 wrapper 后，当前准确计数为 25 条。
+- GitHub Actions run 45147601516 对日程/音频 C ABI 实现通过 Make、CMake 与 C++ SDK 示例构建；成员/身份组/禁言 C ABI/C++ 实现 run 45147339957、45147345153 同样成功。
+- 更新 sdk/cpp/example.cpp，加入禁用执行的类型化 API 编译示例；该示例更新的 CI run 尚待最终结果。未执行 Windows DLL 加载、易语言 IDE 编译或 QQ 实机 API 权限验证。
