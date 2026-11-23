@@ -28,6 +28,12 @@
 4. 并发启动需通过 SQLite 写锁/事务串行化；重复启动不得重复创建表或丢失数据。
 5. 测试空库首次启动、已有库二次启动、迁移中断恢复和外键约束。
 
-## 4. 当前事件表行为\n\n- Webhook 只有在 Ed25519 验签通过且事件可被群事件解析器识别后，才写入 `event_inbox`。\n- 事件入箱后，系统为当时启用且 callback_url 非空的插件创建独立 `pending` delivery；重复 Webhook 不会重复创建同一事件/插件任务。\n- 当前没有实际 HTTP delivery worker；`attempts` 保持 0，任务不会被自动置为 delivered。启用 worker 前必须先完成 callback_url DNS/IP 防护与 DNS pinning。\n\n## 5. 数据保留与备份
+## 4. 当前事件表行为
+
+- Webhook 只有在 Ed25519 验签通过且事件可被群事件解析器识别后，才写入 `event_inbox`。
+- 事件入箱后，系统为当时启用且 callback_url 非空的插件创建独立 `pending` delivery；重复 Webhook 不会重复创建同一事件/插件任务。
+- 当前没有实际 HTTP delivery worker；`attempts` 保持 0，任务不会被自动置为 delivered。启用 worker 前必须先完成 callback_url DNS/IP 防护与 DNS pinning。
+
+## 5. 数据保留与备份
 
 日志需可配置保留期限与容量上限。升级前备份数据库；迁移失败时保留原库并明确报错，不得自动删除或重建用户数据库。
