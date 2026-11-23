@@ -118,6 +118,9 @@
 - [x] 新增 C++ `Client::send_group_message` 与易语言 DLL 导入说明。
 - [x] 将群消息事件文档纳入官方文档目录索引；明确区分群聊与频道。
 - [ ] 实现 Gateway/WebSocket 对 GROUP_AT_MESSAGE_CREATE、GROUP_ADD_ROBOT、GROUP_DEL_ROBOT、GROUP_MSG_REJECT、GROUP_MSG_RECEIVE 的解析和插件事件分发。
-- [ ] 按官方开放状态持续核验群资料/成员/禁言/入群审批 API；当前公开 README 将部分管理接口标记为暂不开放，禁止伪造 endpoint。
+- [ ] 逐页核验新发现的 17 条群管理 REST 路由（群资料、bot_state、成员、禁言、黑名单、入群申请/审批、自动审批策略）；当前状态记录于 sdk/group-api-discovery.md，未复核前不计入 verified endpoint。
 
 群聊优先级调整：后续优先做群消息收发闭环和群事件分发；频道管理/日程/音频功能转入维护队列。
+
+
+群聊专项纠偏：已新增 `qqb_send_group_message` 完整 JSON 发送接口；另发现 17 条较新的群管理 REST 路由，尚待逐页核验官方自动生成页面及白名单权限，后续优先处理群 API。
