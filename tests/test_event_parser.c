@@ -24,6 +24,8 @@ int main(void) {
                       "management event uses group chat type");
     failures += check(json && strstr(json, "\"user_id\":\"member-1\"") != NULL,
                       "management actor is mapped to user_id");
+    failures += check(json && strstr(json, "\"timestamp\":\"1699240248\"") != NULL,
+                      "management timestamp is normalized to text");
     free(json); json = NULL;
 
     failures += check(qq_event_normalize("GROUP_AT_MESSAGE_CREATE", message, &json) == 0,
@@ -32,6 +34,8 @@ int main(void) {
                       "message id is preserved for passive reply");
     failures += check(json && strstr(json, "\"content\":\"hello\"") != NULL,
                       "message content is normalized");
+    failures += check(json && strstr(json, "\"timestamp\":\"2023-11-06T13:37:18+08:00\"") != NULL,
+                      "message timestamp is preserved");
     failures += check(json && strstr(json, "\"raw_event\"") != NULL,
                       "raw event is retained");
     free(json); json = NULL;
