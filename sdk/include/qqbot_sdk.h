@@ -128,6 +128,19 @@ QQB_API int QQB_CALL qqb_get_channel_role_permissions(qqb_client *client, const 
     const char *role_id, char **response_json, long *http_status);
 QQB_API int QQB_CALL qqb_update_channel_role_permissions(qqb_client *client, const char *channel_id,
     const char *role_id, const char *body_json, char **response_json, long *http_status);
+
+/* QQ group administration (distinct from guild/channel APIs).
+ * Cursor is an opaque server cursor; limit is 1..30 for member pages.
+ * JSON request bodies must be complete objects.
+ */
+QQB_API int QQB_CALL qqb_get_group_info(qqb_client *client, const char *group_openid, char **response_json, long *http_status);
+QQB_API int QQB_CALL qqb_get_group_bot_state(qqb_client *client, const char *group_openid, char **response_json, long *http_status);
+QQB_API int QQB_CALL qqb_get_group_mute_state(qqb_client *client, const char *group_openid, char **response_json, long *http_status);
+QQB_API int QQB_CALL qqb_set_group_member_mutes(qqb_client *client, const char *group_openid, const char *body_json, char **response_json, long *http_status);
+QQB_API int QQB_CALL qqb_list_group_members(qqb_client *client, const char *group_openid, const char *cursor, unsigned int limit, char **response_json, long *http_status);
+QQB_API int QQB_CALL qqb_get_group_member(qqb_client *client, const char *group_openid, const char *member_openid, char **response_json, long *http_status);
+QQB_API int QQB_CALL qqb_batch_remove_group_members(qqb_client *client, const char *group_openid, const char *body_json, char **response_json, long *http_status);
+
 QQB_API const char *QQB_CALL qqb_version(void);
 #ifdef __cplusplus
 }
