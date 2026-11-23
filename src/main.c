@@ -36,6 +36,7 @@
 #include "qq/webhook.h"
 #include "qq/events.h"
 #include "qq/event_queue.h"
+#include "qq/gateway.h"
 
 #define DEFAULT_PORT 8080
 #define MAX_BODY (1024U * 1024U)
@@ -53,6 +54,8 @@ typedef struct {
     char api_base[256];
     char token_url[512];
     char connection_mode[16];
+    char connection_state[32];
+    qq_gateway_t *gateway;
 } app_t;
 
 typedef struct { char *body; size_t size; } request_t;
@@ -82,6 +85,74 @@ static void log_line(const char *level, const char *message) {
         sqlite3_finalize(st); pthread_mutex_unlock(&g_app.lock);
     }
 }
+static void store_qq_event(const char *event_type, const char *event_data) {
+    char *normalized = NULL;
+    cJSON *evt = NULL, *chat = NULL, *user = NULL, *msg = NULL, *stamp = NULL, *content = NULL, *chat_type = NULL;
+    char dedupe[768], line[4096];
+    const char *primary, *chat_id, *user_id, *body, *kind;
+    int queued, fanout;
+    if (qq_event_normalize(event_type, event_data, &normalized) != 0) return;
+    evt = cJSON_Parse(normalized);
+    chat = evt ? cJSON_GetObjectItemCaseSensitive(evt, "chat_id") : NULL;
+    user = evt ? cJSON_GetObjectItemCaseSensitive(evt, "user_id") : NULL;
+    msg = evt ? cJSON_GetObjectItemCaseSensitive(evt, "msg_id") : NULL;
+    stamp = evt ? cJSON_GetObjectItemCaseSensitive(evt, "timestamp") : NULL;
+    content = evt ? cJSON_GetObjectItemCaseSensitive(evt, "content") : NULL;
+    chat_type = evt ? cJSON_GetObjectItemCaseSensitive(evt, "chat_type") : NULL;
+    primary = cJSON_IsString(msg) ? msg->valuestring : (cJSON_IsString(stamp) ? stamp->valuestring : "no-time");
+    chat_id = cJSON_IsString(chat) ? chat->valuestring : "";
+    user_id = cJSON_IsString(user) ? user->valuestring : "";
+    body = cJSON_IsString(content) ? content->valuestring : "";
+    kind = cJSON_IsString(chat_type) ? chat_type->valuestring : "unknown";
+    snprintf(dedupe, sizeof(dedupe), "%s|%s|%s|%s", event_type, chat_id, user_id, primary);
+    pthread_mutex_lock(&g_app.lock);
+    queued = qq_event_queue_enqueue(g_app.db, dedupe, event_type, normalized);
+    fanout = queued >= 0 ? qq_event_queue_fanout(g_app.db, dedupe) : -1;
+    pthread_mutex_unlock(&g_app.lock);
+    if (queued > 0) {
+        if (body[0])
+            snprintf(line, sizeof(line), "收到消息 | 类型=%s | 会话=%s | 发送者=%s | 内容=%.*s", kind, chat_id, user_id, 1800, body);
+        else
+            snprintf(line, sizeof(line), "收到事件 | 类型=%s | 会话=%s | 操作者=%s", event_type, chat_id, user_id);
+        log_line("INFO", line);
+    } else if (queued == 0) {
+        log_line("DEBUG", "重复 QQ 事件已忽略");
+    } else {
+        log_line("ERROR", "QQ 事件写入数据库失败");
+    }
+    if (fanout > 0) log_line("INFO", "已创建插件事件待投递任务");
+    else if (fanout < 0) log_line("ERROR", "创建插件事件待投递任务失败");
+    cJSON_Delete(evt);
+    free(normalized);
+}
+
+static int gateway_get_token(void *context, char *token, size_t capacity) {
+    (void)context;
+    if (ensure_token() != 0) return -1;
+    pthread_mutex_lock(&g_app.lock);
+    if (strlen(g_app.access_token) >= capacity) {
+        pthread_mutex_unlock(&g_app.lock);
+        return -1;
+    }
+    snprintf(token, capacity, "%s", g_app.access_token);
+    pthread_mutex_unlock(&g_app.lock);
+    return 0;
+}
+
+static void gateway_event(void *context, const char *event_type,
+                          const char *event_data, long long sequence) {
+    (void)context; (void)sequence;
+    store_qq_event(event_type, event_data);
+}
+
+static void gateway_state(void *context, const char *state, const char *detail) {
+    (void)context;
+    pthread_mutex_lock(&g_app.lock);
+    snprintf(g_app.connection_state, sizeof(g_app.connection_state), "%s", state);
+    pthread_mutex_unlock(&g_app.lock);
+    log_line(strcmp(state, "error") == 0 ? "ERROR" : "INFO", detail);
+}
+
 static int db_init(void) {
     if (sqlite3_open("data/qqbot.db", &g_app.db) != SQLITE_OK) return -1;
     sqlite3_busy_timeout(g_app.db, 5000);
@@ -113,7 +184,7 @@ static int fetch_access_token(const char *app_id, const char *secret, char *out,
     cJSON *token = cJSON_GetObjectItemCaseSensitive(json, "access_token");
     cJSON *ttl = cJSON_GetObjectItemCaseSensitive(json, "expires_in");
     int ok = cJSON_IsString(token) && token->valuestring && strlen(token->valuestring) < outcap;
-    if (ok) { snprintf(out, outcap, "%s", token->valuestring); *expires = cJSON_IsNumber(ttl) ? (long)ttl->valuedouble : 7200L; }
+    if (ok) { snprintf(out, outcap, "%s", token->valuestring); *expires = cJSON_IsNumber(ttl) ? (long)ttl->valuedouble : (cJSON_IsString(ttl) ? strtol(ttl->valuestring, NULL, 10) : 7200L); }
     cJSON_Delete(json); return ok ? 0 : -1;
 }
 static int ensure_token(void) {
@@ -332,35 +403,9 @@ static enum MHD_Result handler(void *cls, struct MHD_Connection *c, const char *
             free(response); free(event_type); free(event_data);
             return json_reply(c, 400, "{\"error\":\"invalid_webhook_payload\"}");
         }
-        if (status == 200 && event_type && event_data) {
-            char *normalized = NULL;
-            if (qq_event_normalize(event_type, event_data, &normalized) == 0) {
-                cJSON *evt = cJSON_Parse(normalized);
-                cJSON *chat = evt ? cJSON_GetObjectItemCaseSensitive(evt, "chat_id") : NULL;
-                cJSON *user = evt ? cJSON_GetObjectItemCaseSensitive(evt, "user_id") : NULL;
-                cJSON *msg = evt ? cJSON_GetObjectItemCaseSensitive(evt, "msg_id") : NULL;
-                cJSON *stamp = evt ? cJSON_GetObjectItemCaseSensitive(evt, "timestamp") : NULL;
-                char dedupe[768];
-                const char *primary = cJSON_IsString(msg) ? msg->valuestring :
-                                      (cJSON_IsString(stamp) ? stamp->valuestring : "no-time");
-                snprintf(dedupe, sizeof(dedupe), "%s|%s|%s|%s",
-                         event_type, cJSON_IsString(chat) ? chat->valuestring : "",
-                         cJSON_IsString(user) ? user->valuestring : "", primary);
-                pthread_mutex_lock(&g_app.lock);
-                int queued = qq_event_queue_enqueue(g_app.db, dedupe, event_type, normalized);
-                int fanout = queued >= 0 ? qq_event_queue_fanout(g_app.db, dedupe) : -1;
-                pthread_mutex_unlock(&g_app.lock);
-                if (queued > 0) log_line("INFO", "Verified QQ group event stored in persistent inbox");
-                else if (queued == 0) log_line("INFO", "Duplicate QQ group event ignored");
-                else log_line("ERROR", "Failed to persist verified QQ group event");
-                if (fanout > 0) log_line("INFO", "Created per-plugin pending event deliveries");
-                else if (fanout < 0) log_line("ERROR", "Failed to create per-plugin event deliveries");
-                cJSON_Delete(evt);
-                free(normalized);
-            }
-        }
+        if (status == 200 && event_type && event_data) store_qq_event(event_type, event_data);
         free(event_type); free(event_data);
-        if (status == 200) log_line("INFO", "QQ Webhook payload accepted; signature/challenge processed");
+        if (status == 200) { pthread_mutex_lock(&g_app.lock); if (strcmp(g_app.connection_mode, "webhook") == 0) snprintf(g_app.connection_state, sizeof(g_app.connection_state), "webhook_active"); pthread_mutex_unlock(&g_app.lock); log_line("INFO", "QQ Webhook payload accepted; signature/challenge processed"); }
         enum MHD_Result result = json_reply(c, status, response);
         free(response);
         return result;
@@ -399,7 +444,19 @@ static enum MHD_Result handler(void *cls, struct MHD_Connection *c, const char *
             return plugin_proxy(c,plugin_id,q->body);
     }
     if (strcmp(method, "GET") == 0 && strcmp(url, "/api/v1/status") == 0) {
-        char out[256]; snprintf(out, sizeof(out), "{\"ok\":true,\"authenticated\":%s,\"transport_ready\":%s,\"mode\":\"%s\",\"version\":\"0.1.0\"}", g_app.access_token[0] ? "true" : "false", "false", g_app.connection_mode[0] ? g_app.connection_mode : "none"); return json_reply(c, 200, out);
+        cJSON *out = cJSON_CreateObject();
+        if (!out) return json_reply(c, 500, "{\\"error\\":\\"out_of_memory\\"}");
+        pthread_mutex_lock(&g_app.lock);
+        cJSON_AddBoolToObject(out, "ok", 1);
+        cJSON_AddBoolToObject(out, "authenticated", g_app.access_token[0] != 0);
+        cJSON_AddBoolToObject(out, "transport_ready", strcmp(g_app.connection_state, "connected") == 0 || strcmp(g_app.connection_state, "webhook_active") == 0);
+        cJSON_AddStringToObject(out, "mode", g_app.connection_mode[0] ? g_app.connection_mode : "none");
+        cJSON_AddStringToObject(out, "connection_state", g_app.connection_state[0] ? g_app.connection_state : "disconnected");
+        pthread_mutex_unlock(&g_app.lock);
+        cJSON_AddStringToObject(out, "version", "0.1.0");
+        char *encoded = cJSON_PrintUnformatted(out); cJSON_Delete(out);
+        if (!encoded) return json_reply(c, 500, "{\\"error\\":\\"json_encode_failed\\"}");
+        enum MHD_Result result = json_reply(c, 200, encoded); free(encoded); return result;
     }
     if (strcmp(method, "GET") == 0 && strcmp(url, "/api/v1/logs") == 0) {
         cJSON *array = cJSON_CreateArray(); sqlite3_stmt *st = NULL;
@@ -421,16 +478,50 @@ static enum MHD_Result handler(void *cls, struct MHD_Connection *c, const char *
         enum MHD_Result result = json_reply(c, 200, encoded); free(encoded); return result;
     }
     if (strcmp(method, "POST") == 0 && strcmp(url, "/api/v1/auth/login") == 0) {
-        cJSON *j = cJSON_Parse(q->body ? q->body : ""); cJSON *id = j ? cJSON_GetObjectItemCaseSensitive(j, "app_id") : NULL;
+        cJSON *j = cJSON_Parse(q->body ? q->body : "");
+        cJSON *id = j ? cJSON_GetObjectItemCaseSensitive(j, "app_id") : NULL;
         cJSON *secret = j ? cJSON_GetObjectItemCaseSensitive(j, "app_secret") : NULL;
         cJSON *mode = j ? cJSON_GetObjectItemCaseSensitive(j, "mode") : NULL;
-        if (!cJSON_IsString(id) || !cJSON_IsString(secret) || !id->valuestring[0] || !secret->valuestring[0] || strlen(id->valuestring) >= sizeof(g_app.app_id) || strlen(secret->valuestring) >= sizeof(g_app.app_secret)) { cJSON_Delete(j); return json_reply(c, 400, "{\"error\":\"invalid_credentials\"}"); }
-        const char *selected_mode = cJSON_IsString(mode) ? mode->valuestring : "websocket";
-        if (strcmp(selected_mode, "webhook") != 0 && strcmp(selected_mode, "websocket") != 0) { cJSON_Delete(j); return json_reply(c, 400, "{\"error\":\"invalid_connection_mode\"}"); }
-        if (strcmp(selected_mode, "websocket") == 0) { cJSON_Delete(j); return json_reply(c, 501, "{\"error\":\"websocket_transport_not_available_use_webhook\"}"); }
-        pthread_mutex_lock(&g_app.lock); snprintf(g_app.app_id, sizeof(g_app.app_id), "%s", id->valuestring); OPENSSL_cleanse(g_app.app_secret, sizeof(g_app.app_secret)); snprintf(g_app.app_secret, sizeof(g_app.app_secret), "%s", secret->valuestring);  snprintf(g_app.connection_mode, sizeof(g_app.connection_mode), "%s", selected_mode); pthread_mutex_unlock(&g_app.lock); cJSON_Delete(j);
-        if (ensure_token() != 0) { OPENSSL_cleanse(g_app.app_secret, sizeof(g_app.app_secret)); g_app.app_id[0] = 0; log_line("ERROR", "QQ login failed: access_token request failed"); return json_reply(c, 502, "{\"error\":\"qq_auth_failed\"}"); }
-        log_line("INFO", "QQ credentials accepted; token acquired"); return json_reply(c, 200, "{\"ok\":true,\"message\":\"QQ access_token acquired. Configure the public HTTPS callback URL as /webhook/qq in the QQ developer console.\"}");
+        if (!cJSON_IsString(id) || !cJSON_IsString(secret) || !id->valuestring[0] ||
+            !secret->valuestring[0] || strlen(id->valuestring) >= sizeof(g_app.app_id) ||
+            strlen(secret->valuestring) >= sizeof(g_app.app_secret)) {
+            cJSON_Delete(j); return json_reply(c, 400, "{\\"error\\":\\"invalid_credentials\\"}");
+        }
+        const char *selected_mode = cJSON_IsString(mode) ? mode->valuestring : "webhook";
+        if (strcmp(selected_mode, "webhook") != 0 && strcmp(selected_mode, "websocket") != 0) {
+            cJSON_Delete(j); return json_reply(c, 400, "{\\"error\\":\\"invalid_connection_mode\\"}");
+        }
+        if (strcmp(selected_mode, "websocket") == 0 && !qq_gateway_available()) {
+            cJSON_Delete(j); return json_reply(c, 501, "{\\"error\\":\\"websocket_not_supported_by_libcurl\\",\\"message\\":\\"当前运行库不支持 WebSocket\\"}");
+        }
+        if (g_app.gateway) { qq_gateway_stop(g_app.gateway); g_app.gateway = NULL; }
+        pthread_mutex_lock(&g_app.lock);
+        snprintf(g_app.app_id, sizeof(g_app.app_id), "%s", id->valuestring);
+        OPENSSL_cleanse(g_app.app_secret, sizeof(g_app.app_secret));
+        snprintf(g_app.app_secret, sizeof(g_app.app_secret), "%s", secret->valuestring);
+        snprintf(g_app.connection_mode, sizeof(g_app.connection_mode), "%s", selected_mode);
+        snprintf(g_app.connection_state, sizeof(g_app.connection_state), "%s", "authenticating");
+        pthread_mutex_unlock(&g_app.lock);
+        cJSON_Delete(j);
+        if (ensure_token() != 0) {
+            OPENSSL_cleanse(g_app.app_secret, sizeof(g_app.app_secret));
+            g_app.app_id[0] = 0;
+            pthread_mutex_lock(&g_app.lock); snprintf(g_app.connection_state, sizeof(g_app.connection_state), "auth_failed"); pthread_mutex_unlock(&g_app.lock);
+            log_line("ERROR", "QQ 登录失败：access_token 获取失败");
+            return json_reply(c, 502, "{\\"error\\":\\"qq_auth_failed\\"}");
+        }
+        if (strcmp(selected_mode, "websocket") == 0) {
+            g_app.gateway = qq_gateway_start(g_app.api_base, gateway_get_token, gateway_event, gateway_state, &g_app);
+            if (!g_app.gateway) {
+                pthread_mutex_lock(&g_app.lock); snprintf(g_app.connection_state, sizeof(g_app.connection_state), "start_failed"); pthread_mutex_unlock(&g_app.lock);
+                return json_reply(c, 500, "{\\"error\\":\\"websocket_start_failed\\"}");
+            }
+            log_line("INFO", "QQ WSS 网关客户端已启动，等待 READY 事件");
+            return json_reply(c, 200, "{\\"ok\\":true,\\"message\\":\\"access_token 已获取，WSS 正在连接；请查看连接状态和消息日志\\"}");
+        }
+        pthread_mutex_lock(&g_app.lock); snprintf(g_app.connection_state, sizeof(g_app.connection_state), "awaiting_webhook"); pthread_mutex_unlock(&g_app.lock);
+        log_line("INFO", "QQ Webhook 模式已启用，等待平台回调");
+        return json_reply(c, 200, "{\\"ok\\":true,\\"message\\":\\"access_token 已获取；请在 QQ 开放平台配置公网 HTTPS 回调地址 /webhook/qq\\"}");
     }
     if (strcmp(method, "GET") == 0 && strcmp(url, "/") == 0) {
         FILE *f = fopen("web/index.html", "rb"); if (!f) return reply(c, 404, "web/index.html not found", "text/plain");
@@ -476,7 +567,7 @@ int main(void) {
         sleep(1);
 #endif
     }
-    MHD_stop_daemon(daemon); OPENSSL_cleanse(g_app.app_secret, sizeof(g_app.app_secret)); OPENSSL_cleanse(g_app.access_token, sizeof(g_app.access_token));
+    MHD_stop_daemon(daemon); if (g_app.gateway) { qq_gateway_stop(g_app.gateway); g_app.gateway = NULL; } OPENSSL_cleanse(g_app.app_secret, sizeof(g_app.app_secret)); OPENSSL_cleanse(g_app.access_token, sizeof(g_app.access_token));
     sqlite3_close(g_app.db); curl_global_cleanup(); pthread_mutex_destroy(&g_app.lock);
 #ifdef _WIN32
     WSACleanup();
