@@ -125,5 +125,41 @@ public:
         if(out){response.assign(out);qqb_free_string(out);}return rc;
     }
 
+
+    int list_channel_schedules(const std::string& channel,const std::string& since_ms,
+                               std::string& response,long& status) const {
+        char*out=nullptr;int rc=qqb_list_channel_schedules(p_,channel.c_str(),
+          since_ms.empty()?nullptr:since_ms.c_str(),&out,&status);
+        if(out){response.assign(out);qqb_free_string(out);}return rc;
+    }
+    int get_channel_schedule(const std::string& channel,const std::string& schedule,
+                             std::string& response,long& status) const {
+        char*out=nullptr;int rc=qqb_get_channel_schedule(p_,channel.c_str(),schedule.c_str(),&out,&status);
+        if(out){response.assign(out);qqb_free_string(out);}return rc;
+    }
+    int create_channel_schedule(const std::string& channel,const std::string& body,
+                                std::string& response,long& status) const {
+        char*out=nullptr;int rc=qqb_create_channel_schedule(p_,channel.c_str(),body.c_str(),&out,&status);
+        if(out){response.assign(out);qqb_free_string(out);}return rc;
+    }
+    int update_channel_schedule(const std::string& channel,const std::string& schedule,const std::string& body,
+                                std::string& response,long& status) const {
+        char*out=nullptr;int rc=qqb_update_channel_schedule(p_,channel.c_str(),schedule.c_str(),body.c_str(),&out,&status);
+        if(out){response.assign(out);qqb_free_string(out);}return rc;
+    }
+    int delete_channel_schedule(const std::string& channel,const std::string& schedule,
+                                std::string& response,long& status) const {
+        char*out=nullptr;int rc=qqb_delete_channel_schedule(p_,channel.c_str(),schedule.c_str(),&out,&status);
+        if(out){response.assign(out);qqb_free_string(out);}return rc;
+    }
+    int audio_mic_up(const std::string& channel,std::string& response,long& status) const {
+        char*out=nullptr;int rc=qqb_audio_mic_up(p_,channel.c_str(),&out,&status);
+        if(out){response.assign(out);qqb_free_string(out);}return rc;
+    }
+    int audio_mic_down(const std::string& channel,std::string& response,long& status) const {
+        char*out=nullptr;int rc=qqb_audio_mic_down(p_,channel.c_str(),&out,&status);
+        if(out){response.assign(out);qqb_free_string(out);}return rc;
+    }
+
 };
 }
