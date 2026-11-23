@@ -18,13 +18,20 @@
 | GET | `/api/v1/status` | 获取运行状态与连接模式 |
 | GET | `/api/v1/logs` | 读取最近 100 条运行日志（首版已实现） |
 | GET | `/api/v1/logs/stream` | 实时日志流（协议待选型） |
-| GET/POST | `/api/v1/plugins` | 管理员查询/注册插件；注册返回一次性插件 Token（需 Authorization: Bearer 管理令牌） |
+| GET | `/api/v1/plugins` | 管理员查询插件列表 |
+| POST | `/api/v1/plugins` | 管理员注册插件；注册返回一次性插件 Token（需 Authorization: Bearer 管理令牌） |
 | PATCH/DELETE | `/api/v1/plugins/{id}` | 管理员启停/删除插件（PATCH body: `{"enabled":true}`） |
 | POST | `/api/v1/plugins/{id}/messages` | 插件发送宿主标准消息（待实现） |
 | POST | `/api/v1/plugins/{id}/qq-api` | SDK 官方 API 代理：插件 ID + Token 鉴权，JSON `{method,path,body}`（SDK 已按此契约编写，宿主路由待实现） |
 | POST | `/webhook/qq` | QQ 官方 Webhook 回调；op=13 challenge、op=0 Ed25519 验签与 op=12 ACK（首版已实现） |
 
-其中 `/api/v1/auth/login`、`/api/v1/status`、`/api/v1/logs` 和 `/webhook/qq` 已有首版实现；插件列表/注册/启停/删除和 `/api/v1/plugins/{id}/qq-api` 官方 API 代理已有首版实现；插件事件回调分发、完整管理会话认证、插件消息抽象 API 和实时流尚未实现。SDK 当前通过该代理契约调用。
+其中 `/api/v1/auth/login`、`/api/v1/status`、`/api/v1/logs` 和 `/webhook/qq` 已有首版实现；插件列表/注册/启停/删除和 `/api/v1/plugins/{id}/qq-api` 官方 API 代理已有首版实现；管理操作通过环境变量 `QQBOT_ADMIN_TOKEN` 做 Bearer 鉴权。插件事件回调分发、完整管理会话认证、插件消息抽象 API 和实时流尚未实现。SDK 当前通过该代理契约调用。
+
+### 2.1 SDK 官方 API 代理请求
+
+请求头：`X-Plugin-ID`、`X-Plugin-Token`。请求体：`{"method":"POST","path":"/v2/groups/{group_openid}/messages","body":{"content":"...","msg_type":0}}`。代理固定请求官方配置的 API Base URL，不接受绝对 URL；仅允许 GET/POST/PUT/PATCH/DELETE，插件必须启用且 Token 摘要校验成功。响应透传官方 HTTP 状态码与 JSON body。
+
+管理员令牌通过环境变量 `QQBOT_ADMIN_TOKEN` 设置，长度至少 24 字符；注册插件时 Token 只返回一次，数据库仅存 SHA-256 摘要。
 
 ## 3. 插件事件 JSON 契约（初步）
 
